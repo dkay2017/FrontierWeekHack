@@ -4,7 +4,10 @@
 Keep this file current at every checkpoint and **commit + push it** — a Codespace
 rebuild loses anything uncommitted (see the `codespace-data-loss` memory).
 
-_Last updated: 2026-09-02 (session 3) — Stages A–J done + A1/tracing in progress_
+_Last updated: 2026-09-02 (end of session 3). Resume point: **Stage L — write the
+`TireForge.ApiProxy` HTTP endpoints** over the finished `Core/Reporting/Reports`
+service; then the **Stage M spike** (D9). All work committed + pushed through
+`c833ff6`. 102 tests green._
 
 ---
 
@@ -231,14 +234,32 @@ session-3 analysis; drops recorded in DECISIONS.md D8.
 | Shorter display IDs | 4 | 2 | deferred (cosmetic) |
 | Sim drift/stall, live 429 log, WO Draft state | — | — | **dropped** (D8) |
 
-## `dotnet` / EF note (Codespace)
+## Fresh-Codespace setup (do this first in a new Codespace)
 
-`dotnet` SDK is at `~/.dotnet`; `dotnet-ef` at `~/.dotnet/tools`. Both need:
 ```bash
+# 1. dotnet on PATH (devcontainer installs the SDK to ~/.dotnet; also in ~/.bashrc)
 export PATH="$HOME/.dotnet:$HOME/.dotnet/tools:$PATH"
 export DOTNET_ROOT="$HOME/.dotnet"
+
+# 2. global tools are NOT restored by a new Codespace — reinstall:
+dotnet tool install --global dotnet-ef --version 8.0.11
+
+# 3. bicep CLI (only if touching infra/):
+az bicep install
+
+# 4. Foundry config (factory/.env is git-ignored — gone on a new Codespace):
+az login          # subscription DkaySubscription
+bash tireforge/scripts/restore-env.sh
+
+# 5. sanity check — expect 102 green (34 Core + 46 Data + 22 Agents):
+cd tireforge && dotnet build TireForge.sln && dotnet test TireForge.sln
 ```
+
+**Prefer resuming the SAME Codespace** (github.com/codespaces) — it keeps `factory/.env`,
+the global tools, and the local SQLite file. Steps 2–4 are only needed on a brand-new one.
+
 Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
+(from `tireforge/`). `dotnet-ef` migrations: see `src/TireForge.Data/README.md`.
 
 ---
 
