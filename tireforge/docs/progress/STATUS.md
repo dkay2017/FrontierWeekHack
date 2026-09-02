@@ -129,8 +129,8 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 | — | C# solution scaffold (10 projects, per-project READMEs) | ☑ commit `5a07367` |
 | — | Design docs + DECISIONS.md in repo | ☑ commit `dc8ca68` |
 | A | Data model — 5-table schema, seed 5 machines + bands, ~8 history incidents, data-access | ☑ `InitialCreate` migration + 14 tests green |
-| B | `make_reading(machine, mode)` normal/warn/crit + `reading_id()` | ☐ |
-| C | ThresholdCheck (T1) pure — per-sensor status + severity + trace line | ☐ |
+| B | `make_reading(machine, mode)` normal/warn/crit + `reading_id()` | ☑ `ReadingFactory` + `Ids` |
+| C | ThresholdCheck (T1) pure — per-sensor status + severity + trace line | ☑ reproduces Ch1 (2 warn + 1 crit) |
 | D | Anomaly Detection (A1) stubbed — `IAgentClient`, early-exit on not-anomaly | ☐ |
 | E | HistoryMatch (T2) pure — fault signature + incident match | ☐ |
 | F | Fault Diagnosis (A2) stubbed — structured `{fault,severity,confidence,text,cites}` | ☐ |
@@ -152,17 +152,21 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 
 ## Next actions
 
-**Stage A is done** — entities + enums in `TireForge.Core/Model`, ports in
-`TireForge.Core/Abstractions`, `TireForgeDbContext` + stores + seeder +
-`InitialCreate` migration in `TireForge.Data`, 14 tests green.
+**Stages A–C done.** 33 tests green (18 Core + 14 Data + 1 placeholder).
+- A: `TireForge.Core/Model` + `/Abstractions`, `TireForge.Data` context/stores/seeder/migration.
+- B: `TireForge.Core/Sensing/ReadingFactory` (normal/warn/crit, injectable clock+RNG) + `Model/Ids` (sortable `rdg-`/`dx-`/`WO-` ids).
+- C: `TireForge.Core/Thresholds/ThresholdCheck` → `ThresholdReport` (per-sensor
+  `SensorEvaluation` ok/low/high + deviation%, worst-deviation `Severity`, citing
+  `T1 …` trace). Severity rule: no breach→Info; worst ≥50% OR ≥3 breaches→Crit;
+  else Warn. Reproduces Challenge 1 (MX-001/IS-005 Warn, CP-003 Crit).
 
-1. **Stage B** — `ReadingFactory.Make(machine, mode)` (normal/warn/crit) +
-   `ReadingId.New()` → `rdg-<ticks>-<rand>`, in `TireForge.Core`. Tests: normal
-   in-band, crit out of band, ids unique + sortable.
-2. **Stage C** — `ThresholdCheck` (T1): per-sensor `{value, band, status:
-   ok/low/high, deviation%}` + worst-deviation severity + a trace line citing the
-   `rdg-id` and offending sensor. This is the C# port of Challenge 1's
-   `check_thresholds`. Table-driven tests against the 5 seeded machines.
+1. **Stage D** — Anomaly Detection (A1), stubbed. Interface
+   `IAnomalyDetector.Detect(reading, t1, recent) → {IsAnomaly, Text, Cites}` in
+   `TireForge.Agents`; stub = "any sensor out of band" from the T1 report; write
+   `IsAnomaly` back on the reading; early-exit path when not anomalous.
+2. **Stage E** — HistoryMatch (T2): fault signature from T1 breaches (e.g.
+   `temp-high+vibration-high`, sensors sorted), `history_match(machine, signature)`
+   over `IHistoryStore`, `T2 …` trace citing `inc-` ids.
 
 ## `dotnet` / EF note (Codespace)
 
@@ -188,5 +192,8 @@ Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
   build C# equivalents. Read + mapped Challenge 1.
 - **Session 3 cont. — Stage A shipped.** `TireForge.Core` model + ports,
   `TireForge.Data` DbContext + 5 stores + JSON-backed seeder (5 machines, snapshot
-  readings, 8 history incidents) + `InitialCreate` migration. 14 xUnit tests green,
-  full solution builds. Next: Stage B + C.
+  readings, 8 history incidents) + `InitialCreate` migration. 14 xUnit tests green.
+- **Session 3 cont. — Stages B + C shipped.** `ReadingFactory` + `Ids` (Stage B),
+  `ThresholdCheck`/`ThresholdReport` (Stage C, C# port of Challenge 1's
+  `check_thresholds`, reproduces its 2-warn/1-crit outcome). 18 Core tests green,
+  33 total. Next: Stage D + E.
