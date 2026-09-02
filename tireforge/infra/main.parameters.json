@@ -7,6 +7,21 @@
     },
     "location": {
       "value": "${AZURE_LOCATION}"
+    },
+    "projectName": {
+      "value": "${FOUNDRY_PROJECT_NAME=factory-project}"
+    },
+    "modelDeploymentName": {
+      "value": "${MODEL_DEPLOYMENT_NAME=gpt-5.4}"
+    },
+    "modelName": {
+      "value": "${MODEL_NAME=gpt-5.4}"
+    },
+    "modelVersion": {
+      "value": "${MODEL_VERSION=2026-03-05}"
+    },
+    "modelCapacity": {
+      "value": "${MODEL_CAPACITY=10}"
     }
   }
 }

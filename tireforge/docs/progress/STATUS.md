@@ -102,6 +102,7 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 | — | Dashboard (port of v1.6) | ☐ |
 | — | APIM AI Gateway + token policies | ☐ |
 | — | Eval harness (4 scenarios) + Health Workbook | ☐ |
+| — | `infra/main.bicep` — Bicep port of `deploy.sh` (Challenge-0 Foundry stack) | ☑ compiles; not yet deployed |
 
 ---
 
@@ -121,4 +122,7 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
   Design docs transcribed into `docs/design/`. DECISIONS.md (D1–D5) agreed + committed.
   Earlier ad-hoc work (root files, docs subfolder) lost to a Codespace rebuild.
 - **Session 3 (2026-09-02):** Reloaded context. Walked all three design docs.
-  Created this STATUS.md. Next: Stage A.
+  Created this STATUS.md. Added architecture SVG. Ported `deploy.sh` to
+  `infra/main.bicep` + `infra/modules/foundry.bicep` (+ params, README) so the
+  Challenge-0 stack is reproducible in another environment — compiles clean,
+  not yet test-deployed. Next: Stage A.
