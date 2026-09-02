@@ -43,6 +43,19 @@ tireforge/
 
 `TireForge.Dashboard` is a static site (no `.csproj`, not in the solution).
 
+## Foundry environment (Challenge 0)
+
+Challenge 0 is deployed. Config lives in `factory/.env` (git-ignored).
+After a Codespace rebuild, regenerate it from the live Azure resources:
+
+```bash
+az login
+bash tireforge/scripts/restore-env.sh
+```
+
+Do **not** re-run `factory/challenge-0-setup/deploy.sh` unless the resource group
+is gone — it provisions a brand-new resource group with a new suffix.
+
 ## Prerequisites
 
 - .NET 8 SDK (`global.json` pins the version; the devcontainer installs it)
