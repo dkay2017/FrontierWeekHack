@@ -131,8 +131,8 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 | A | Data model — 5-table schema, seed 5 machines + bands, ~8 history incidents, data-access | ☑ `InitialCreate` migration + 14 tests green |
 | B | `make_reading(machine, mode)` normal/warn/crit + `reading_id()` | ☑ `ReadingFactory` + `Ids` |
 | C | ThresholdCheck (T1) pure — per-sensor status + severity + trace line | ☑ reproduces Ch1 (2 warn + 1 crit) |
-| D | Anomaly Detection (A1) stubbed — `IAgentClient`, early-exit on not-anomaly | ☐ |
-| E | HistoryMatch (T2) pure — fault signature + incident match | ☐ |
+| D | Anomaly Detection (A1) stubbed — `IAgentClient`, early-exit on not-anomaly | ☑ `IAnomalyDetector` + `StubAnomalyDetector` |
+| E | HistoryMatch (T2) pure — fault signature + incident match | ☑ `FaultSignature` + `HistoryMatch` (exact + overlap) |
 | F | Fault Diagnosis (A2) stubbed — structured `{fault,severity,confidence,text,cites}` | ☐ |
 | G | The Gate — `gate(dx) → {route, reason}` | ☐ |
 | H | Work Order draft (A3) stubbed | ☐ |
@@ -152,21 +152,26 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 
 ## Next actions
 
-**Stages A–C done.** 33 tests green (18 Core + 14 Data + 1 placeholder).
-- A: `TireForge.Core/Model` + `/Abstractions`, `TireForge.Data` context/stores/seeder/migration.
-- B: `TireForge.Core/Sensing/ReadingFactory` (normal/warn/crit, injectable clock+RNG) + `Model/Ids` (sortable `rdg-`/`dx-`/`WO-` ids).
-- C: `TireForge.Core/Thresholds/ThresholdCheck` → `ThresholdReport` (per-sensor
-  `SensorEvaluation` ok/low/high + deviation%, worst-deviation `Severity`, citing
-  `T1 …` trace). Severity rule: no breach→Info; worst ≥50% OR ≥3 breaches→Crit;
-  else Warn. Reproduces Challenge 1 (MX-001/IS-005 Warn, CP-003 Crit).
+**Stages A–E done.** 42 tests green (24 Core + 14 Data + 4 Agents).
+- A: model + ports + EF Core data layer.
+- B: `Sensing/ReadingFactory` + `Model/Ids`.
+- C: `Thresholds/ThresholdCheck` → `ThresholdReport` (per-sensor ok/low/high +
+  deviation%, worst-deviation Severity: no breach→Info, ≥50% or ≥3 breaches→Crit,
+  else Warn; `T1 …` trace). Reproduces Challenge 1's 2-warn/1-crit.
+- D: `Agents/Anomaly/IAnomalyDetector` + `StubAnomalyDetector` (anomaly iff
+  `t1.AnyBreach`; `AnomalyVerdict.ApplyTo(reading)` writes `IsAnomaly` back).
+- E: `Core/History/FaultSignature` (canonical `sensor-high/low` tokens, sorted) +
+  `Core/History/HistoryMatch.RunAsync` — exact signature match, else best
+  token-overlap; `T2 …` trace citing `inc-` ids. Seed `History` signatures use the
+  canonical form.
 
-1. **Stage D** — Anomaly Detection (A1), stubbed. Interface
-   `IAnomalyDetector.Detect(reading, t1, recent) → {IsAnomaly, Text, Cites}` in
-   `TireForge.Agents`; stub = "any sensor out of band" from the T1 report; write
-   `IsAnomaly` back on the reading; early-exit path when not anomalous.
-2. **Stage E** — HistoryMatch (T2): fault signature from T1 breaches (e.g.
-   `temp-high+vibration-high`, sensors sorted), `history_match(machine, signature)`
-   over `IHistoryStore`, `T2 …` trace citing `inc-` ids.
+1. **Stage F** — Fault Diagnosis (A2), stubbed. `Agents/Diagnosis/IFaultDiagnoser`
+   → structured `{Fault, Severity, Confidence 0–1, Text, Cites:[rdg,inc]}`. Stub
+   derives fault/severity/confidence from T1 deviation + T2 history (tune so some
+   land < 0.70 and some Crit). Persist a `Diagnosis` row with the full trace.
+2. **Stage G** — the Gate: `Core/Gate.Evaluate(dx) → {Route: Auto/Review, Reason}`
+   per invariant 1.3 (`confidence < 0.70` OR `severity == Crit` → Review; exactly
+   0.70 → Auto). Record the reason on the `Diagnosis` row.
 
 ## `dotnet` / EF note (Codespace)
 
@@ -195,5 +200,7 @@ Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
   readings, 8 history incidents) + `InitialCreate` migration. 14 xUnit tests green.
 - **Session 3 cont. — Stages B + C shipped.** `ReadingFactory` + `Ids` (Stage B),
   `ThresholdCheck`/`ThresholdReport` (Stage C, C# port of Challenge 1's
-  `check_thresholds`, reproduces its 2-warn/1-crit outcome). 18 Core tests green,
-  33 total. Next: Stage D + E.
+  `check_thresholds`, reproduces its 2-warn/1-crit outcome). 33 tests total.
+- **Session 3 cont. — Stages D + E shipped.** `StubAnomalyDetector` (A1 stub,
+  Stage D); `FaultSignature` + `HistoryMatch` (T2, Stage E, exact + overlap).
+  Seed history signatures canonicalised. 42 tests green. Next: Stage F + G.

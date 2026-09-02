@@ -65,7 +65,7 @@ public static class DbSeeder
         new HistoryIncident
         {
             Id = "inc-001", MachineId = "MX-001", OccurredOn = new(2025, 11, 8),
-            Signature = "temp-high", Fault = "drive motor overheating", Severity = Severity.Warn,
+            Signature = "temperature-high", Fault = "drive motor overheating", Severity = Severity.Warn,
             Resolution = "cleaned cooling fins, replaced thermostat, verified airflow",
         },
         new HistoryIncident
@@ -77,7 +77,7 @@ public static class DbSeeder
         new HistoryIncident
         {
             Id = "inc-003", MachineId = "EX-002", OccurredOn = new(2025, 12, 3),
-            Signature = "pressure-high+temp-high", Fault = "die head blockage / restricted flow", Severity = Severity.Crit,
+            Signature = "pressure-high+temperature-high", Fault = "die head blockage / restricted flow", Severity = Severity.Crit,
             Resolution = "cleared die head, replaced screen pack, flushed barrel",
         },
         new HistoryIncident
@@ -89,7 +89,7 @@ public static class DbSeeder
         new HistoryIncident
         {
             Id = "inc-005", MachineId = "CP-003", OccurredOn = new(2025, 10, 29),
-            Signature = "temp-high+vibration-high", Fault = "platen bearing failure", Severity = Severity.Crit,
+            Signature = "temperature-high+vibration-high", Fault = "platen bearing failure", Severity = Severity.Crit,
             Resolution = "replaced platen bearings, re-greased, re-calibrated press alignment",
         },
         new HistoryIncident
@@ -101,7 +101,7 @@ public static class DbSeeder
         new HistoryIncident
         {
             Id = "inc-007", MachineId = "CU-004", OccurredOn = new(2026, 1, 5),
-            Signature = "temp-high", Fault = "coolant pump underperforming", Severity = Severity.Info,
+            Signature = "temperature-high", Fault = "coolant pump underperforming", Severity = Severity.Info,
             Resolution = "replaced coolant pump impeller, topped up refrigerant charge",
         },
         new HistoryIncident

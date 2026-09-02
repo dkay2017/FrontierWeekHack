@@ -77,7 +77,7 @@ public class RepositoryTests
         await DbSeeder.SeedAsync(db.Context);
         var store = new HistoryStore(db.NewContext());
 
-        var hits = await store.MatchAsync("CP-003", "temp-high+vibration-high");
+        var hits = await store.MatchAsync("CP-003", "temperature-high+vibration-high");
 
         Assert.Single(hits);
         Assert.Equal("inc-005", hits[0].Id);

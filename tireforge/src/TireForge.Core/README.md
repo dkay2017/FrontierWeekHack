@@ -16,7 +16,9 @@ Building blocks:
 - `Thresholds/ThresholdCheck` (T1) — `Evaluate(reading, machine)` → `ThresholdReport`
   (per-sensor status + deviation%, seeded `Severity`, citing trace line). C# port of
   Challenge 1's `check_thresholds`. **[Stage C — done]**
-- `History` (T2) — fault-signature match against `HistoryIncident`. *[Stage E]*
+- `History/FaultSignature` + `History/HistoryMatch` (T2) — canonical
+  `sensor-high/low` signature from T1, exact + token-overlap match against
+  `IHistoryStore`, citing `T2 …` trace. **[Stage E — done]**
 - `Gate` — `confidence < 0.70` OR `severity == Crit` → review. *[Stage G]*
 - `Pipeline` — orchestrates C→D→E→F→G→H→I under one trace id. *[Stage J]*
 

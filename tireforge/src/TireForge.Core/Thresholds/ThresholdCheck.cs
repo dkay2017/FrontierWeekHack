@@ -126,20 +126,11 @@ public static class ThresholdCheck
             {
                 var edge = b.Status == SensorStatus.High ? $"> {b.Max}" : $"< {b.Min}";
                 var dir = b.Status == SensorStatus.High ? "above max" : "below min";
-                return $"{Name(b.Sensor)} {b.Value} {b.Unit} {edge} ({b.DeviationPct}% {dir})";
+                return $"{b.Sensor.Slug()} {b.Value} {b.Unit} {edge} ({b.DeviationPct}% {dir})";
             })));
         }
 
         sb.Append($" — severity={severity}");
         return sb.ToString();
     }
-
-    private static string Name(SensorKind kind) => kind switch
-    {
-        SensorKind.Temperature => "temperature",
-        SensorKind.Pressure => "pressure",
-        SensorKind.Vibration => "vibration",
-        SensorKind.Rpm => "rpm",
-        _ => kind.ToString().ToLowerInvariant(),
-    };
 }
