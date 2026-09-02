@@ -57,6 +57,21 @@ reference only — never run for the submission. Challenge → stage map:
   `LIKELY CAUSE / MAINTENANCE ACTIONS / URGENCY`. Our design adds HistoryMatch +
   confidence + citations on top (superset).
 
+**Where our design goes beyond Challenge 1 (superset deltas — keep explicit):**
+
+| Aspect | Challenge 1 (workshop) | TireForge design |
+|---|---|---|
+| Agent count | **2** — Anomaly Detection, Fault Diagnosis | **3** — + **Work Order agent** (drafts the WO, cites the reading; Stages H–I) |
+| Grounding for diagnosis | Foundry **knowledge base / File Search** over maintenance manuals, historical incident reports, supplier spec sheets (suggested on the Ch1 slide, not wired in `agents.py`) | Deterministic **HistoryMatch (T2)** — SQLite `History` table, fault-signature lookup, returns cited `inc-…` ids. Testable, no vector store. |
+| Post-diagnosis flow | ends at a recommendation printed to terminal | **Gate** (confidence/severity) → **Work Order Adapter** (sole write path) → **Reviewer** loop |
+| Threshold logic | `check_thresholds` tool inside the agent | pure `Core` **ThresholdCheck (T1)**, agent-independent, unit-tested |
+
+Open option (roadmap, not v1): add a Foundry File Search knowledge base
+(manuals / incident reports / supplier specs) as an *extra* grounding tool for the
+Fault Diagnosis agent, alongside the deterministic HistoryMatch. Deterministic
+T2 stays the primary path (citeable, testable); File Search would be the "richer
+context" layer if time allows.
+
 ## Key rules (from Build Plan §1 invariants)
 
 - Work Order Adapter is the **only** write path.
