@@ -34,5 +34,9 @@ Building blocks:
   emits a root `pipeline.run` span + one child per step, `Diagnosis.TraceId` = the
   W3C trace id. Hosts register with `.WithTracing(t => t.AddSource(Telemetry.SourceName))`.
   **[Tracing stage — done, Challenge 2]**
+- `Reviewing/Reviewer` — `ApproveAsync` (issue the drafted WO `by=reviewer`,
+  `Status=Approved`), `RejectAsync` (write a `Rejected` audit row + note, no active
+  WO), `CloseAsync` (`Closed`, only from `Issued`/`Approved`). All writes via
+  `IWorkOrderStore` (invariant 1.1). **[Stage K — done]**
 
 Covered by `tests/TireForge.Core.Tests` (the Stage A–L checks).

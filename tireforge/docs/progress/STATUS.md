@@ -149,7 +149,7 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 | J | Compose `run_pipeline(reading)` C→D→E→F→G→H→I, one trace_id | ☑ `Core/Pipeline/Pipeline` — **first end-to-end run** |
 | A1 | Persist A3 draft on every route (`Diagnosis.DraftActionText`) — D7 | ☑ `WorkOrderWriter` sets it both routes + migration |
 | J.5 | Tracing — `Activity`-based correlation + host export (D6) = Challenge 2 | ☑ `Core/Observability/Telemetry`, root+child spans, hosts registered |
-| K | Reviewer decisions — approve / reject / close lifecycle | ☐ |
+| K | Reviewer decisions — approve / reject / close lifecycle | ☑ `Core/Reviewing/Reviewer` — 10 tests |
 | L | Report logic — `/status` `/queue` `/workorders` `/cost` + health metrics | ☐ |
 | M | Swap stubs for real Foundry agents, one at a time | ☐ |
 | — | Ingestion Function + Storage Queue wiring | ☐ |
@@ -188,8 +188,10 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
    (`reading_id`/`machine_id`/`severity`/`confidence`/`gate_route`); `Diagnosis.TraceId`
    = W3C trace id (32-hex); all three Functions `Program.cs` register the source
    alongside the existing Azure Monitor exporter. 4 tracing tests via `ActivityListener`.
-3. **Stage K** — reviewer approve / reject / close. ← **next**
-4. **Stage L** — read models `/status /queue /workorders /cost` + health metrics + `TireForge.ApiProxy`.
+3. ✅ **Stage K** — `Core/Reviewing/Reviewer`: `ApproveAsync` / `RejectAsync` (note
+   required, `Rejected` audit row) / `CloseAsync` (only from `Issued`/`Approved`).
+   All writes via `IWorkOrderStore`. 10 tests.
+4. **Stage L** — read models `/status /queue /workorders /cost` + health metrics + `TireForge.ApiProxy`. ← **next**
 5. **Dashboard port** — `TireForge.Dashboard`: real `fetch`, `gpt-5.4` labels, mojibake
    fix, sim cut to normal/warn/crit.
 6. **Ingestion + Orchestrator wiring** — timer → queue → Durable → `Pipeline.RunAsync` = Challenge 4 shape.
@@ -205,7 +207,7 @@ session-3 analysis; drops recorded in DECISIONS.md D8.
 |---|---|---|---|
 | A1 persist draft | 8 | 2 | ✅ done |
 | Activity tracing + export | 9 | 4 | ✅ done (host export untested live) |
-| Stage K reviewer | 7 | 3 | queued |
+| Stage K reviewer | 7 | 3 | ✅ done |
 | Stage L read models + ApiProxy | 8 | 4 | queued |
 | Dashboard port (fetch, gpt-5.4 labels, mojibake, sim trim) | 7 | 3 | queued |
 | Ingestion + Orchestrator wiring | 7 | 4 | queued |
@@ -261,4 +263,8 @@ Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
   migration). `Core/Observability/Telemetry` `ActivitySource`; `Pipeline` emits a
   root + child span per step with tags; `Diagnosis.TraceId` = W3C trace id; all 3
   Functions hosts register the source next to the scaffold's Azure Monitor exporter.
-  84 tests green (34 Core + 28 Data + 22 Agents). Next: Stage K.
+  84 tests green.
+- **Session 3 cont. — Stage K shipped.** `Core/Reviewing/Reviewer` — approve
+  (issue drafted WO `by=reviewer`), reject (`Rejected` audit row + required note),
+  close (only from `Issued`/`Approved`); all writes via the Adapter; review spans
+  traced. 94 tests green (34 Core + 38 Data + 22 Agents). Next: Stage L.

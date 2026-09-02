@@ -41,6 +41,14 @@ internal sealed class PipelineHarness : IDisposable
     public WorkOrderStore WorkOrders() => new(_db.NewContext());
     public ReadingStore Readings() => new(_db.NewContext());
 
+    /// <summary>A Reviewer whose two stores share one context (scoped-lifetime shape).</summary>
+    public TireForge.Core.Reviewing.Reviewer NewReviewer()
+    {
+        var ctx = _db.NewContext();
+        return new TireForge.Core.Reviewing.Reviewer(
+            new DiagnosisStore(ctx), new WorkOrderStore(ctx), new FixedClock(Now));
+    }
+
     public void Dispose() => _db.Dispose();
 }
 
