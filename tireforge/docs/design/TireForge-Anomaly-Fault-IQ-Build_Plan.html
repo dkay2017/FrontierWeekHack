@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TireForge Anomaly-Fault IQ — Build Logic Plan</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font: 15px/1.55 "Segoe UI", -apple-system, Roboto, Helvetica, Arial, sans-serif;
+         color: #1a1d21; max-width: 820px; margin: 40px auto; padding: 0 24px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 28px 0 8px; padding-bottom: 4px; border-bottom: 2px solid #e3e6ea; }
+  p.sub { color: #5b636c; margin: 0 0 18px; }
+  ul.meta { list-style: none; padding: 0; margin: 0 0 24px; color: #3d444c; font-size: 13.5px; }
+  ul.meta li { margin: 2px 0; }
+  ol { margin: 6px 0 6px; padding-left: 24px; }
+  ol li { margin: 4px 0; }
+  em { color: #6a7280; font-style: italic; }
+  code { font: 13px/1.4 "Cascadia Code", "Consolas", monospace; background: #f2f4f6;
+         padding: 1px 5px; border-radius: 4px; }
+  .flow { background: #f2f4f6; border-radius: 6px; padding: 10px 14px; font-size: 13.5px; margin: 10px 0; }
+  @media print {
+    body { margin: 0; max-width: none; font-size: 11pt; }
+    h2 { page-break-after: avoid; }
+    ol, ul { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<h1>TireForge Anomaly-Fault IQ — Build Logic Plan</h1>
+<p class="sub">Baby-steps sequence for the functional build. Pure functions first, AI stubbed, Adapter-only-write from the start. Every step has a check in <em>italics</em>.</p>
+
+<ul class="meta">
+  <li><strong>Project:</strong> TireForge Anomaly-Fault IQ — MS Agent-a-Thon, Architect Track, Factory scenario</li>
+  <li><strong>Author:</strong> Deepak Kumar &nbsp;·&nbsp; <strong>Date:</strong> 2026-09-01</li>
+  <li><strong>Source of truth:</strong> <code>TireForge-Anomaly-Fault-IQ-TDD.docx</code>, <code>Tireforge-Architecture_design.html/.svg</code></li>
+  <li><strong>Working dir:</strong> <code>Implementation/</code> (greenfield)</li>
+</ul>
+
+<h2>1. Invariants (hold for every step)</h2>
+<ol>
+  <li>Work Order Adapter is the only write path.</li>
+  <li>Every agent verdict cites its source record (<code>rdg-…</code> / <code>inc-…</code>).</li>
+  <li><code>confidence &lt; 0.70</code> OR <code>severity == "crit"</code> → human review. Exactly <code>0.70</code> → auto.</li>
+  <li>Agents may only read + write WorkOrders. Nothing touches equipment.</li>
+  <li>Cost figures come from real APIM token metrics, never mocked.</li>
+  <li>Health Report is a dashboard tab, not an agent.</li>
+</ol>
+<p class="flow">Flow: Emit → Buffer → Trigger → Check → Detect → Match → Diagnose → Gate → Act → Review → Report</p>
+
+<h2>2. Stage A — Data model</h2>
+<ol>
+  <li>Schema DDL: <code>Machines</code>, <code>Readings</code> (+<code>is_anomaly</code>), <code>History</code>, <code>Diagnoses</code>, <code>WorkOrders</code>. <em>(5 tables create)</em></li>
+  <li>Seed 5 machines + bands <code>t/p/v/r [lo,hi]</code> + units. <em>(query returns 5)</em></li>
+  <li>Seed <code>History</code> with ~8 past incidents. <em>(rows present)</em></li>
+  <li>Data-access module: <code>get_machine</code>, <code>insert_reading</code>, etc. <em>(round-trip tests pass)</em></li>
+</ol>
+
+<h2>3. Stage B — Make a reading</h2>
+<ol>
+  <li><code>make_reading(machine, mode)</code> — modes <code>normal / warn / crit</code>. <em>(normal in-band, crit out)</em></li>
+  <li><code>reading_id()</code> → <code>rdg-&lt;ts&gt;-&lt;rand&gt;</code>. <em>(unique, sortable)</em></li>
+  <li>Persist reading with <code>is_anomaly = NULL</code>. <em>(row present)</em></li>
+</ol>
+
+<h2>4. Stage C — ThresholdCheck (T1), pure</h2>
+<ol>
+  <li><code>threshold_check(reading, machine)</code> → per-sensor <code>{value, band, status: ok/low/high, deviation%}</code>. <em>(table tests)</em></li>
+  <li>Seed severity from worst deviation → <code>info / warn / crit</code>. <em>(boundary tests)</em></li>
+  <li>"T1" trace line cites <code>rdg-id</code> + offending sensor. <em>(id in string)</em></li>
+</ol>
+
+<h2>5. Stage D — Anomaly Detection (A1), stubbed</h2>
+<ol>
+  <li>Interface: <code>detect_anomaly(reading, t1, recent) → {is_anomaly, text, cites}</code>.</li>
+  <li>Stub: <code>is_anomaly = any sensor out of band</code>; text cites <code>rdg-id</code>. <em>(tests)</em></li>
+  <li>Write <code>is_anomaly</code> back onto the reading. <em>(column updated)</em></li>
+  <li>Early exit: not anomaly → stop. <em>(no Diagnoses/WO rows)</em></li>
+</ol>
+
+<h2>6. Stage E — HistoryMatch (T2), pure</h2>
+<ol>
+  <li>Fault signature from T1 (e.g. <code>vib-high+temp-high</code>). <em>(tests)</em></li>
+  <li><code>history_match(machine, signature) → {incidents, text, cites:[inc-…]}</code>. <em>(matches seed data)</em></li>
+  <li>"T2" trace line cites <code>inc-id</code>. <em>(id in string)</em></li>
+</ol>
+
+<h2>7. Stage F — Fault Diagnosis (A2), stubbed</h2>
+<ol>
+  <li>Interface + structured output: <code>{fault, severity, confidence 0–1, text, cites:[rdg,inc]}</code>. <em>(schema validates)</em></li>
+  <li>Stub: deviation + history → fault/severity/confidence; tune so some <code>&lt;0.70</code>, some <code>crit</code>. <em>(spread across inputs)</em></li>
+  <li>Persist <code>Diagnoses</code> row with full trace (detect/match/diagnose text). <em>(row present)</em></li>
+</ol>
+
+<h2>8. Stage G — The Gate</h2>
+<ol>
+  <li><code>gate(dx) → {route: auto/review, reason}</code> per rule 1.3. <em>(truth table)</em></li>
+  <li>Record gate reason on the <code>Diagnoses</code> row. <em>(field set)</em></li>
+</ol>
+
+<h2>9. Stage H — Work Order draft (A3), stubbed</h2>
+<ol>
+  <li>Interface: <code>draft_work_order(dx) → {machine, fault, severity, reading_id, action_text}</code>.</li>
+  <li>Stub: template from diagnosis; cites reading. <em>(fields populated)</em></li>
+</ol>
+
+<h2>10. Stage I — Act (only write path)</h2>
+<ol>
+  <li>Adapter <code>write_work_order(payload, by) → WO-id</code>, <code>status = issued</code>. Sole writer. <em>(WO row)</em></li>
+  <li><code>auto</code> route → Adapter directly; <code>Diagnoses.status = auto-issued</code>. <em>(WO + link)</em></li>
+  <li><code>review</code> route → <code>Diagnoses.status = pending</code>, no WO. <em>(zero WO rows)</em></li>
+</ol>
+
+<h2>11. Stage J — Compose</h2>
+<ol>
+  <li><code>run_pipeline(reading)</code> = C→D→E→F→G→H→I, one <code>trace_id</code>. <em>(normal stops at D · warn → auto WO · crit → pending)</em></li>
+  <li>One structured log line per step (trace_id + citation). <em>(one trace shows all steps)</em></li>
+</ol>
+
+<h2>12. Stage K — Reviewer decisions</h2>
+<ol>
+  <li><code>approve(dx-id, reviewer)</code> → Adapter writes WO <code>by=reviewer</code>; <code>status = approved</code>. <em>(WO row)</em></li>
+  <li><code>reject(dx-id, reviewer, note)</code> → Adapter writes audit row <code>status = rejected</code>; no active WO. <em>(audit row)</em></li>
+  <li><code>close(WO-id)</code> → <code>closed</code>, only from <code>issued / approved</code>. <em>(bad transitions rejected)</em></li>
+</ol>
+
+<h2>13. Stage L — Report logic (pure reads)</h2>
+<ol>
+  <li><code>/status</code> → machines + bands + latest reading. <em>(matches contract)</em></li>
+  <li><code>/queue</code> → pending <code>Diagnoses</code> + full trace. <em>(matches contract)</em></li>
+  <li><code>/workorders</code> → list + lifecycle. <em>(matches contract)</em></li>
+  <li>Health metrics → anomalies-by-machine-24h, resolution rate, open/closed. <em>(reconcile with store)</em></li>
+  <li><code>/cost</code> → sum stored token/cost fields (real APIM at Phase 4). <em>(matches contract)</em></li>
+</ol>
+
+<h2>14. Stage M — Swap stubs for real agents (one at a time)</h2>
+<ol>
+  <li>A1 real (<code>gpt-4.1-mini</code>) → diff vs stub on the 4 eval scenarios. <em>(agree on clear cases)</em></li>
+  <li>A2 real (<code>gpt-4.1</code>) → verify structured output + confidence sanity. <em>(schema valid, gate behaves)</em></li>
+  <li>A3 real (<code>gpt-4.1-mini</code>). <em>(WO fields well-formed)</em></li>
+</ol>
+
+<h2>15. Notes</h2>
+<ol>
+  <li>Stages A–L need no cloud and no model — all local, all testable.</li>
+  <li>Queue / Durable Functions wiring wraps around <code>run_pipeline</code> later without changing logic.</li>
+  <li>Schema additions from the dashboard-feasibility review: <code>is_anomaly</code> on <code>Readings</code>, <code>Diagnoses</code> table for the pending trace, reject = <code>WorkOrders</code> audit row.</li>
+</ol>
+
+</body>
+</html>
