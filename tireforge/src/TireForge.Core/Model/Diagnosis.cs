@@ -32,6 +32,13 @@ public class Diagnosis
     public string MatchText { get; set; } = "";
     public string DiagnoseText { get; set; } = "";
 
+    /// <summary>
+    /// The Work Order agent's drafted action (Build Plan Stage H). Recorded on
+    /// <b>every</b> route (D7) — on the Review route it is the "prepared, not issued"
+    /// text the reviewer sees; on the Auto route it also becomes the work order.
+    /// </summary>
+    public string DraftActionText { get; set; } = "";
+
     /// <summary>Incident ids the diagnosis cites (from HistoryMatch), comma-separated.</summary>
     public string IncidentCites { get; set; } = "";
 

@@ -5,6 +5,8 @@ using Microsoft.Azure.Functions.Worker.OpenTelemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OpenTelemetry;
+using OpenTelemetry.Trace;
+using TireForge.Core.Observability;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
@@ -14,6 +16,7 @@ if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPLICATIONINSIGHT
 {
     builder.Services.AddOpenTelemetry()
         .UseFunctionsWorkerDefaults()
+        .WithTracing(tracing => tracing.AddSource(Telemetry.SourceName))
         .UseAzureMonitorExporter();
 }
 

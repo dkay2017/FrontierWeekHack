@@ -46,8 +46,10 @@ public class WorkOrderWriterTests
         Assert.Equal(WorkOrderStatus.Issued, result.WorkOrder!.Status);
         Assert.Equal("system", result.WorkOrder.IssuedBy);
         Assert.Single(await new WorkOrderStore(db.NewContext()).ListAsync());
-        Assert.Equal(DiagnosisStatus.AutoIssued,
-            (await new DiagnosisStore(db.NewContext()).GetAsync("dx-act-1"))!.Status);
+
+        var stored = await new DiagnosisStore(db.NewContext()).GetAsync("dx-act-1");
+        Assert.Equal(DiagnosisStatus.AutoIssued, stored!.Status);
+        Assert.Equal("IMMEDIATE — replace platen bearings", stored.DraftActionText); // D7
     }
 
     [Fact]
@@ -63,8 +65,11 @@ public class WorkOrderWriterTests
 
         Assert.False(result.WorkOrderIssued);
         Assert.Empty(await new WorkOrderStore(db.NewContext()).ListAsync());
-        Assert.Equal(DiagnosisStatus.Pending,
-            (await new DiagnosisStore(db.NewContext()).GetAsync("dx-act-1"))!.Status);
+
+        var stored = await new DiagnosisStore(db.NewContext()).GetAsync("dx-act-1");
+        Assert.Equal(DiagnosisStatus.Pending, stored!.Status);
+        // D7 — the draft is recorded even though no work order was issued.
+        Assert.Equal("IMMEDIATE — replace platen bearings", stored.DraftActionText);
     }
 
     [Fact]

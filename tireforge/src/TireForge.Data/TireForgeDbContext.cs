@@ -75,6 +75,7 @@ public class TireForgeDbContext(DbContextOptions<TireForgeDbContext> options) : 
             e.Property(d => d.Route).HasConversion<string>().HasMaxLength(8);
             e.Property(d => d.Status).HasConversion<string>().HasMaxLength(16);
             e.Property(d => d.GateReason).HasMaxLength(128);
+            e.Property(d => d.DraftActionText).HasMaxLength(1024);
             e.Property(d => d.IncidentCites).HasMaxLength(256);
             e.Property(d => d.TraceId).HasMaxLength(64);
             e.HasOne(d => d.Reading).WithMany()

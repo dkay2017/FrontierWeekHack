@@ -4,7 +4,7 @@
 Keep this file current at every checkpoint and **commit + push it** — a Codespace
 rebuild loses anything uncommitted (see the `codespace-data-loss` memory).
 
-_Last updated: 2026-09-02 (session 3)_
+_Last updated: 2026-09-02 (session 3) — Stages A–J done + A1/tracing in progress_
 
 ---
 
@@ -39,7 +39,7 @@ reference only — never run for the submission. Challenge → stage map:
 |---|---|---|
 | 0 ✅ | Foundry infra | done (+ `infra/main.bicep`) |
 | 1 | Anomaly agent flags the 2 warning + 1 crit machine; Fault Diagnosis gives sane actions | Stages A–G, J stubbed → M1–M2 real (`gpt-5.4`) |
-| 2 | App Insights GenAI tracing, one trace per reading | trace_id in Stage J + OTel exporter in `TireForge.Agents` |
+| 2 | App Insights GenAI tracing, one trace per reading | `Core/Observability` `ActivitySource` + per-step spans (J.5); Azure Monitor exporter already in the Functions hosts |
 | 3 | Evaluation harness | `eval/TireForge.Eval` — 4 scenarios, LLM-judge |
 | 4 | Multi-agent workflow deployed | `TireForge.Orchestrator` Durable + `TireForge.Ingestion` + Work Order agent (H–I) + Functions infra |
 | superset | APIM gateway · Dashboard · Reviewer gate · Work Order Adapter | after Ch4, in TDD §8 priority order |
@@ -98,11 +98,20 @@ context" layer if time allows.
   domain). SQLite's concurrent-write risk is mitigated because the Work Order
   Adapter is the sole writer (invariant #1) — writes are serialized through one
   path. No action needed to start Stage A.
-- **OPEN — APIM ↔ Foundry spike (D3).** Confirm APIM `azure-openai-*` policies can
-  proxy the Foundry model-deployment path before building the gateway. Deferred to
-  last (governance layer). Fallback: per-agent APIM products + feed the Cost tab
-  from App Insights GenAI trace token counts.
+- **OPEN — APIM ↔ Foundry spike (D3/D8).** Confirm APIM `azure-openai-*` policies can
+  proxy the Foundry model-deployment path. **Timebox: ~1 h.** If not clean → APIM
+  moves to the roadmap; keep the TDD governance section + illustrative Cost tab +
+  App Insights GenAI token spans (Stage M) as the metering path.
 - **RESOLVED — architecture SVG** added to `docs/design/`.
+- **RESOLVED — dashboard scope (D8).** v1.6 prototype committed as mock data
+  (`docs/design/…-Dashboard_Prototype.html`). Real dashboard = a port binding the
+  mock `api` to `TireForge.ApiProxy` + seeded Challenge data. **Dropped:** sim
+  "drift"/"stall" scenarios (→ cut to normal/warn/crit), live gateway-429 log
+  (→ static card), `WorkOrderStatus.Draft` (→ draft lives on `Diagnosis`, see D7).
+- **RESOLVED — correlation / tracing (D6).** `System.Diagnostics.ActivitySource`
+  (`TireForge.Pipeline`), root + child-per-step, `Diagnosis.TraceId` = W3C trace id.
+  Functions hosts already wire the Azure Monitor exporter — just register the source.
+  Challenge 2. Complexity low.
 
 ---
 
@@ -138,6 +147,8 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 | H | Work Order draft (A3) stubbed | ☑ `IWorkOrderDrafter` + `StubWorkOrderDrafter` |
 | I | Act — Adapter `write_work_order`, sole writer; auto vs review routes | ☑ `Core/Acting/WorkOrderWriter` |
 | J | Compose `run_pipeline(reading)` C→D→E→F→G→H→I, one trace_id | ☑ `Core/Pipeline/Pipeline` — **first end-to-end run** |
+| A1 | Persist A3 draft on every route (`Diagnosis.DraftActionText`) — D7 | ☑ `WorkOrderWriter` sets it both routes + migration |
+| J.5 | Tracing — `Activity`-based correlation + host export (D6) = Challenge 2 | ☑ `Core/Observability/Telemetry`, root+child spans, hosts registered |
 | K | Reviewer decisions — approve / reject / close lifecycle | ☐ |
 | L | Report logic — `/status` `/queue` `/workorders` `/cost` + health metrics | ☐ |
 | M | Swap stubs for real Foundry agents, one at a time | ☐ |
@@ -169,15 +180,40 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
   Warn (IS-005) → auto WO, fault grounded in `inc-008`; Crit (CP-003) → Review,
   pending, no WO; one trace id threads every line.
 
-**Next — pick up the "additional functionality" / deployment track:**
-1. **Stage K** — reviewer decisions: `approve(dx)` → Adapter writes WO `by=reviewer`,
-   `Status=Approved`; `reject(dx, note)` → WorkOrders audit row `Status=Rejected`;
-   `close(WO)` → `Closed` only from `Issued`/`Approved`.
-2. **Stage L** — read models for `/status` `/queue` `/workorders` `/cost` + health
-   metrics. Then wire `TireForge.Ingestion` (timer → queue) and
-   `TireForge.Orchestrator` (Durable → `Pipeline.RunAsync`) — Challenge 4 shape.
-3. **Stage M** — swap the three stubs for real `gpt-5.4` Foundry agents, one at a
-   time — Challenge 1 genuinely passed.
+**Revised sequence (agreed session 3, see DECISIONS.md "Revised build sequence"):**
+1. ✅ **A1** — `Diagnosis.DraftActionText`, set by `WorkOrderWriter` on both routes
+   (`AddDiagnosisDraftActionText` migration).
+2. ✅ **Tracing stage (J.5)** — `Core/Observability/Telemetry` `ActivitySource`;
+   `Pipeline` emits root `pipeline.run` + a child span per step, tagged
+   (`reading_id`/`machine_id`/`severity`/`confidence`/`gate_route`); `Diagnosis.TraceId`
+   = W3C trace id (32-hex); all three Functions `Program.cs` register the source
+   alongside the existing Azure Monitor exporter. 4 tracing tests via `ActivityListener`.
+3. **Stage K** — reviewer approve / reject / close. ← **next**
+4. **Stage L** — read models `/status /queue /workorders /cost` + health metrics + `TireForge.ApiProxy`.
+5. **Dashboard port** — `TireForge.Dashboard`: real `fetch`, `gpt-5.4` labels, mojibake
+   fix, sim cut to normal/warn/crit.
+6. **Ingestion + Orchestrator wiring** — timer → queue → Durable → `Pipeline.RunAsync` = Challenge 4 shape.
+7. **Stage M** — real `gpt-5.4` agents, one at a time = Challenge 1 passed for real.
+8. **APIM** — only if the D3/D8 spike passes and time remains.
+
+### Rated change backlog (from the dashboard-prototype review)
+
+Value = matters for a judgeable submission · Cx = build cost. Full detail in the
+session-3 analysis; drops recorded in DECISIONS.md D8.
+
+| Item | Value | Cx | Status |
+|---|---|---|---|
+| A1 persist draft | 8 | 2 | ✅ done |
+| Activity tracing + export | 9 | 4 | ✅ done (host export untested live) |
+| Stage K reviewer | 7 | 3 | queued |
+| Stage L read models + ApiProxy | 8 | 4 | queued |
+| Dashboard port (fetch, gpt-5.4 labels, mojibake, sim trim) | 7 | 3 | queued |
+| Ingestion + Orchestrator wiring | 7 | 4 | queued |
+| Stage M real agents | 9 | 5 | queued |
+| Cost tab real numbers | 5 | 5 | deferred → needs Stage M token spans |
+| APIM gateway + policies | 6 | 8 | deferred → 1 h spike, else roadmap |
+| Shorter display IDs | 4 | 2 | deferred (cosmetic) |
+| Sim drift/stall, live 429 log, WO Draft state | — | — | **dropped** (D8) |
 
 ## `dotnet` / EF note (Codespace)
 
@@ -215,5 +251,14 @@ Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
 - **Session 3 cont. — Stages H + I + J shipped — first end-to-end run.**
   `StubWorkOrderDrafter` (A3); `Core/Acting/WorkOrderWriter` (Act); `Core/Pipeline`
   composes C→D→E→F→G→H→I under one trace id. Agent ports+contracts moved to
-  `Core/Agents`. 80 tests green (incl. normal-stops / warn-auto / crit-pending /
-  one-trace-id). Next: Stage K (reviewer) + L (read models) + wiring.
+  `Core/Agents`. 80 tests green.
+- **Session 3 cont. — dashboard-prototype review + scope re-eval.** v1.6 UI
+  prototype committed as mock data. DECISIONS.md D6 (Activity tracing), D7 (persist
+  draft), D8 (dashboard scope + APIM timebox + drops) added; rated backlog +
+  revised 8-step sequence recorded.
+- **Session 3 cont. — A1 + tracing stage shipped.** `Diagnosis.DraftActionText`
+  (D7, `WorkOrderWriter` sets it on both routes, `AddDiagnosisDraftActionText`
+  migration). `Core/Observability/Telemetry` `ActivitySource`; `Pipeline` emits a
+  root + child span per step with tags; `Diagnosis.TraceId` = W3C trace id; all 3
+  Functions hosts register the source next to the scaffold's Azure Monitor exporter.
+  84 tests green (34 Core + 28 Data + 22 Agents). Next: Stage K.

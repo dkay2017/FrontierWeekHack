@@ -26,6 +26,10 @@ public sealed class WorkOrderWriter(IWorkOrderStore workOrders, IDiagnosisStore 
         if (draft.ReadingId != diagnosis.ReadingId)
             throw new ArgumentException("Work-order draft cites a different reading than the diagnosis.");
 
+        // Record the draft on the diagnosis regardless of route (D7) — the reviewer
+        // needs it on the Review path, and it is the audit trail on the Auto path.
+        diagnosis.DraftActionText = draft.ActionText;
+
         if (diagnosis.Route == GateRoute.Review)
         {
             diagnosis.Status = DiagnosisStatus.Pending;

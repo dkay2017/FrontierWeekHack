@@ -30,5 +30,9 @@ Building blocks:
   **[Stage I — done]**
 - `Pipeline/Pipeline` — `RunAsync(reading)` composes C→D→E→F→G→H→I under one trace
   id; non-anomalous readings stop after D. **[Stage J — done]**
+- `Observability/Telemetry` — `ActivitySource` `TireForge.Pipeline`; the pipeline
+  emits a root `pipeline.run` span + one child per step, `Diagnosis.TraceId` = the
+  W3C trace id. Hosts register with `.WithTracing(t => t.AddSource(Telemetry.SourceName))`.
+  **[Tracing stage — done, Challenge 2]**
 
 Covered by `tests/TireForge.Core.Tests` (the Stage A–L checks).

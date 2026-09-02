@@ -70,6 +70,9 @@ public class PipelineTests
 
         var pending = Assert.Single(await h.Diagnoses().PendingAsync());
         Assert.Equal(result.Diagnosis.Id, pending.Id);
+        // D7 — reviewer sees the prepared-but-unissued draft.
+        Assert.False(string.IsNullOrWhiteSpace(pending.DraftActionText));
+        Assert.Contains(result.ReadingId, pending.DraftActionText);
     }
 
     [Fact]
