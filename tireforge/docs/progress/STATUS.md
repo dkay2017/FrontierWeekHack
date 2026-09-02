@@ -46,6 +46,20 @@ APIM AI Gateway.
 - **D5** schema = 5 tables incl. `Diagnoses`.
 - Guiding principle: **one end-to-end run first, refine after.**
 
+## Open vs. resolved questions
+
+- **RESOLVED — data store (D4).** SQLite vs. another source is settled: EF Core +
+  repo interfaces, SQLite for local/tests/demo, Azure SQL serverless as the
+  provider-swap fallback if write contention appears, Cosmos rejected (relational
+  domain). SQLite's concurrent-write risk is mitigated because the Work Order
+  Adapter is the sole writer (invariant #1) — writes are serialized through one
+  path. No action needed to start Stage A.
+- **OPEN — APIM ↔ Foundry spike (D3).** Confirm APIM `azure-openai-*` policies can
+  proxy the Foundry model-deployment path before building the gateway. Deferred to
+  last (governance layer). Fallback: per-agent APIM products + feed the Cost tab
+  from App Insights GenAI trace token counts.
+- **OPEN — architecture SVG** not yet in `docs/design/` (user to add).
+
 ---
 
 ## Environment
