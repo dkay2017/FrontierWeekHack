@@ -26,7 +26,7 @@ APIM AI Gateway.
 | Build Plan (Stages A–M) | `tireforge/docs/design/TireForge-Anomaly-Fault-IQ-Build_Plan.html` |
 | Implementation deltas | `tireforge/docs/design/DECISIONS.md` |
 | Design→project map | `tireforge/docs/design/README.md` |
-| Architecture SVG | **MISSING** — user to drop exported `.svg` in `docs/design/` |
+| Architecture SVG | `tireforge/docs/design/TireForge-Anomaly-Fault-IQ-Architecture_Design.svg` |
 
 ## Key rules (from Build Plan §1 invariants)
 
@@ -58,7 +58,7 @@ APIM AI Gateway.
   proxy the Foundry model-deployment path before building the gateway. Deferred to
   last (governance layer). Fallback: per-agent APIM products + feed the Cost tab
   from App Insights GenAI trace token counts.
-- **OPEN — architecture SVG** not yet in `docs/design/` (user to add).
+- **RESOLVED — architecture SVG** added to `docs/design/`.
 
 ---
 

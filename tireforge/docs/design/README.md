@@ -7,7 +7,7 @@ submission for the MS Agent-a-Thon Factory scenario). These drive the `tireforge
 |---|---|
 | `TireForge-Anomaly-Fault-IQ-TDD.md` | Technical Design Document — problem, architecture, end-to-end flow, AI governance, scope decisions. Markdown transcription of the source PDF. |
 | `TireForge-Anomaly-Fault-IQ-Build_Plan.html` | Build Logic Plan — Stages A–M, baby-steps sequence (pure logic first, AI stubbed, Adapter-only-write from step 1), each step with a check. |
-| `TireForge-Anomaly-Fault-IQ-Architecture_Design.svg` | Component-level architecture diagram (**to be added** — drop the exported `.svg` here). Same diagram appears on p.5 of the TDD PDF. |
+| `TireForge-Anomaly-Fault-IQ-Architecture_Design.svg` | Component-level architecture diagram. Same diagram appears on p.5 of the TDD PDF. |
 
 ## How the design maps to the solution
 
