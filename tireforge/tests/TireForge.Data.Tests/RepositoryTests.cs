@@ -120,6 +120,40 @@ public class RepositoryTests
     }
 
     [Fact]
+    public async Task DiagnosisStore_round_trips_the_full_trace()
+    {
+        using var db = new TestDb();
+        await DbSeeder.SeedAsync(db.Context);
+        await new ReadingStore(db.NewContext()).AddAsync(new Reading
+        {
+            Id = "rdg-tr-1", MachineId = "CP-003", CapturedAt = DateTimeOffset.UtcNow,
+            Temperature = 198, Pressure = 18, Vibration = 7, Rpm = 0,
+        });
+
+        var dx = new Diagnosis
+        {
+            Id = "dx-tr-1", ReadingId = "rdg-tr-1", MachineId = "CP-003",
+            Fault = "platen bearing failure", Severity = Severity.Crit, Confidence = 0.55,
+            Route = GateRoute.Review, GateReason = "severity Crit — human review",
+            Status = DiagnosisStatus.Pending,
+            DetectText = "A1 rdg-tr-1 CP-003: 3 sensor(s) out of band",
+            MatchText = "T2 rdg-tr-1 CP-003: signature '…' — closest match [inc-005]",
+            DiagnoseText = "A2 rdg-tr-1 CP-003: compound failure",
+            IncidentCites = "inc-005,inc-006",
+            TraceId = "abc123", CreatedAt = DateTimeOffset.UtcNow,
+        };
+        await new DiagnosisStore(db.NewContext()).AddAsync(dx);
+
+        var back = await new DiagnosisStore(db.NewContext()).GetAsync("dx-tr-1");
+        Assert.NotNull(back);
+        Assert.Equal("A1 rdg-tr-1 CP-003: 3 sensor(s) out of band", back!.DetectText);
+        Assert.Contains("inc-005", back.MatchText);
+        Assert.Equal("inc-005,inc-006", back.IncidentCites);
+        Assert.Equal(GateRoute.Review, back.Route);
+        Assert.Equal("abc123", back.TraceId);
+    }
+
+    [Fact]
     public async Task DiagnosisStore_lists_pending_only()
     {
         using var db = new TestDb();

@@ -19,7 +19,9 @@ Building blocks:
 - `History/FaultSignature` + `History/HistoryMatch` (T2) — canonical
   `sensor-high/low` signature from T1, exact + token-overlap match against
   `IHistoryStore`, citing `T2 …` trace. **[Stage E — done]**
-- `Gate` — `confidence < 0.70` OR `severity == Crit` → review. *[Stage G]*
+- `Gating/Gate` — `Evaluate(severity, confidence)` → `GateDecision {Route, Reason}`
+  (`confidence < 0.70` OR `severity == Crit` → Review; exactly 0.70 → Auto);
+  `Apply(diagnosis)` records it on the row. **[Stage G — done]**
 - `Pipeline` — orchestrates C→D→E→F→G→H→I under one trace id. *[Stage J]*
 
 Covered by `tests/TireForge.Core.Tests` (the Stage A–L checks).

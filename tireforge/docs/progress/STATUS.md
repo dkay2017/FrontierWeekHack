@@ -133,8 +133,8 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 | C | ThresholdCheck (T1) pure — per-sensor status + severity + trace line | ☑ reproduces Ch1 (2 warn + 1 crit) |
 | D | Anomaly Detection (A1) stubbed — `IAgentClient`, early-exit on not-anomaly | ☑ `IAnomalyDetector` + `StubAnomalyDetector` |
 | E | HistoryMatch (T2) pure — fault signature + incident match | ☑ `FaultSignature` + `HistoryMatch` (exact + overlap) |
-| F | Fault Diagnosis (A2) stubbed — structured `{fault,severity,confidence,text,cites}` | ☐ |
-| G | The Gate — `gate(dx) → {route, reason}` | ☐ |
+| F | Fault Diagnosis (A2) stubbed — structured `{fault,severity,confidence,text,cites}` | ☑ `IFaultDiagnoser` + `StubFaultDiagnoser` + `DiagnosisMapper` |
+| G | The Gate — `gate(dx) → {route, reason}` | ☑ `Core/Gating/Gate` |
 | H | Work Order draft (A3) stubbed | ☐ |
 | I | Act — Adapter `write_work_order`, sole writer; auto vs review routes | ☐ |
 | J | Compose `run_pipeline(reading)` C→D→E→F→G→H→I, one trace_id | ☐ |
@@ -152,26 +152,25 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 
 ## Next actions
 
-**Stages A–E done.** 42 tests green (24 Core + 14 Data + 4 Agents).
-- A: model + ports + EF Core data layer.
-- B: `Sensing/ReadingFactory` + `Model/Ids`.
-- C: `Thresholds/ThresholdCheck` → `ThresholdReport` (per-sensor ok/low/high +
-  deviation%, worst-deviation Severity: no breach→Info, ≥50% or ≥3 breaches→Crit,
-  else Warn; `T1 …` trace). Reproduces Challenge 1's 2-warn/1-crit.
-- D: `Agents/Anomaly/IAnomalyDetector` + `StubAnomalyDetector` (anomaly iff
-  `t1.AnyBreach`; `AnomalyVerdict.ApplyTo(reading)` writes `IsAnomaly` back).
-- E: `Core/History/FaultSignature` (canonical `sensor-high/low` tokens, sorted) +
-  `Core/History/HistoryMatch.RunAsync` — exact signature match, else best
-  token-overlap; `T2 …` trace citing `inc-` ids. Seed `History` signatures use the
-  canonical form.
+**Stages A–G done.** 67 tests green (34 Core + 15 Data + 18 Agents).
+- A–E: model + data layer; `ReadingFactory`/`Ids`; `ThresholdCheck` (T1);
+  `StubAnomalyDetector` (A1); `FaultSignature`/`HistoryMatch` (T2).
+- F: `Agents/Diagnosis/IFaultDiagnoser` + `FaultVerdict` (`.Validate()`) +
+  `StubFaultDiagnoser` (fault = exact-history fault else Challenge 1 rubric;
+  confidence from history-match strength + breach count + deviation; escalates
+  severity to a matched Crit incident) + `DiagnosisMapper.ToEntity` (persistable
+  row with full trace). Verified spread: IS-005 ~0.85 Auto, MX-001 ~0.50 Review,
+  CP-003 ~0.55 Crit Review.
+- G: `Core/Gating/Gate.Evaluate(severity, confidence)` → `GateDecision{Route,Reason}`;
+  `Gate.Apply(diagnosis)` records it. Exactly 0.70 → Auto (boundary tested).
 
-1. **Stage F** — Fault Diagnosis (A2), stubbed. `Agents/Diagnosis/IFaultDiagnoser`
-   → structured `{Fault, Severity, Confidence 0–1, Text, Cites:[rdg,inc]}`. Stub
-   derives fault/severity/confidence from T1 deviation + T2 history (tune so some
-   land < 0.70 and some Crit). Persist a `Diagnosis` row with the full trace.
-2. **Stage G** — the Gate: `Core/Gate.Evaluate(dx) → {Route: Auto/Review, Reason}`
-   per invariant 1.3 (`confidence < 0.70` OR `severity == Crit` → Review; exactly
-   0.70 → Auto). Record the reason on the `Diagnosis` row.
+1. **Stage H** — Work Order draft (A3), stubbed. `Agents/WorkOrders/IWorkOrderDrafter`
+   → `{Machine, Fault, Severity, ReadingId, ActionText}`; stub templates the action
+   from the diagnosis and cites the reading.
+2. **Stage I** — Act / the only write path. `Core/Adapter` or wire
+   `IWorkOrderStore`: `auto` route → issue WO now, `Diagnoses.Status = AutoIssued`;
+   `review` route → `Diagnoses.Status = Pending`, no WO. Then **Stage J** —
+   compose `Core.Pipeline.Run(reading)` C→D→E→F→G→H→I under one trace id.
 
 ## `dotnet` / EF note (Codespace)
 
@@ -203,4 +202,8 @@ Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
   `check_thresholds`, reproduces its 2-warn/1-crit outcome). 33 tests total.
 - **Session 3 cont. — Stages D + E shipped.** `StubAnomalyDetector` (A1 stub,
   Stage D); `FaultSignature` + `HistoryMatch` (T2, Stage E, exact + overlap).
-  Seed history signatures canonicalised. 42 tests green. Next: Stage F + G.
+  Seed history signatures canonicalised. 42 tests green.
+- **Session 3 cont. — Stages F + G shipped.** `StubFaultDiagnoser` + `FaultVerdict`
+  + `DiagnosisMapper` (A2, Stage F); `Core/Gating/Gate` (Stage G). Confidence gate
+  now routes: some diagnoses Auto, some Review, Crit always Review. 67 tests green.
+  Next: Stage H + I + J (compose the pipeline).
