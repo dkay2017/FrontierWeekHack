@@ -150,7 +150,7 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 | A1 | Persist A3 draft on every route (`Diagnosis.DraftActionText`) — D7 | ☑ `WorkOrderWriter` sets it both routes + migration |
 | J.5 | Tracing — `Activity`-based correlation + host export (D6) = Challenge 2 | ☑ `Core/Observability/Telemetry`, root+child spans, hosts registered |
 | K | Reviewer decisions — approve / reject / close lifecycle | ☑ `Core/Reviewing/Reviewer` — 10 tests |
-| L | Report logic — `/status` `/queue` `/workorders` `/cost` + health metrics | ☐ |
+| L | Report logic — `/status` `/queue` `/workorders` `/cost` + health metrics | ◐ `Core/Reporting/Reports` + `IReportingQueries` done (14 tests); `TireForge.ApiProxy` HTTP endpoints pending |
 | M | Swap stubs for real Foundry agents, one at a time | ☐ |
 | — | Ingestion Function + Storage Queue wiring | ☐ |
 | — | Orchestrator Durable wiring around `run_pipeline` | ☐ |
@@ -267,4 +267,11 @@ Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
 - **Session 3 cont. — Stage K shipped.** `Core/Reviewing/Reviewer` — approve
   (issue drafted WO `by=reviewer`), reject (`Rejected` audit row + required note),
   close (only from `Issued`/`Approved`); all writes via the Adapter; review spans
-  traced. 94 tests green (34 Core + 38 Data + 22 Agents). Next: Stage L.
+  traced. 94 tests green.
+- **Session 3 cont. — Stage L read models shipped.** `Core/Reporting/Reports` +
+  `Contracts` (status/queue/workorders/health/cost response DTOs) over
+  `IReportingQueries` (`TireForge.Data/Reporting/ReportingQueries`).
+  `AddTireForgeData` DI helper. Cost = call counts only, token/spend null (D8).
+  102 tests green (34 Core + 46 Data + 22 Agents). Pending: `TireForge.ApiProxy`
+  HTTP endpoints. **Then read all challenge READMEs → surfaced the Foundry-agent-SDK
+  question (see below).**

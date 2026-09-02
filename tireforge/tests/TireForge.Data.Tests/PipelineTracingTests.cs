@@ -7,6 +7,9 @@ namespace TireForge.Data.Tests;
 /// <summary>
 /// Decision D6 / Challenge 2 — every hop for a reading shares one W3C trace,
 /// visible as nested spans and stored on <c>Diagnosis.TraceId</c>.
+///
+/// The <see cref="ActivityListener"/> is process-global, so assertions scope to
+/// the run's own trace id (other test classes emit pipeline spans in parallel).
 /// </summary>
 public class PipelineTracingTests : IDisposable
 {
@@ -19,12 +22,17 @@ public class PipelineTracingTests : IDisposable
         {
             ShouldListenTo = s => s.Name == Telemetry.SourceName,
             Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
-            ActivityStopped = a => _stopped.Add(a),
+            ActivityStopped = a => { lock (_stopped) _stopped.Add(a); },
         };
         ActivitySource.AddActivityListener(_listener);
     }
 
     public void Dispose() => _listener.Dispose();
+
+    private List<Activity> ForTrace(string traceId)
+    {
+        lock (_stopped) return _stopped.Where(a => a.TraceId.ToString() == traceId).ToList();
+    }
 
     private static Reading Reading(string machineId, double t, double p, double v, double r) => new()
     {
@@ -39,8 +47,9 @@ public class PipelineTracingTests : IDisposable
     {
         using var h = await PipelineHarness.CreateAsync();
         var result = await h.NewPipeline().RunAsync(Reading("CP-003", 198.5, 18.2, 7.3, 0));
+        var spans = ForTrace(result.TraceId);
 
-        var names = _stopped.Select(a => a.OperationName).ToList();
+        var names = spans.Select(a => a.OperationName).ToList();
         Assert.Contains(Telemetry.Spans.Run, names);
         foreach (var step in new[]
                  {
@@ -49,13 +58,10 @@ public class PipelineTracingTests : IDisposable
                  })
             Assert.Contains(step, names);
 
-        var traceIds = _stopped.Select(a => a.TraceId).Distinct().ToList();
-        Assert.Single(traceIds);
-
-        var root = _stopped.Single(a => a.OperationName == Telemetry.Spans.Run);
+        var root = spans.Single(a => a.OperationName == Telemetry.Spans.Run);
         Assert.Equal(root.TraceId.ToString(), result.TraceId);
         Assert.Equal(result.TraceId, result.Diagnosis!.TraceId);
-        Assert.All(_stopped.Where(a => a.OperationName != Telemetry.Spans.Run),
+        Assert.All(spans.Where(a => a.OperationName != Telemetry.Spans.Run),
             child => Assert.Equal(root.SpanId, child.ParentSpanId));
     }
 
@@ -63,9 +69,9 @@ public class PipelineTracingTests : IDisposable
     public async Task Non_anomalous_run_stops_after_detection_span()
     {
         using var h = await PipelineHarness.CreateAsync();
-        await h.NewPipeline().RunAsync(Reading("EX-002", 115, 12.5, 2.1, 30));
+        var result = await h.NewPipeline().RunAsync(Reading("EX-002", 115, 12.5, 2.1, 30));
 
-        var names = _stopped.Select(a => a.OperationName).ToList();
+        var names = ForTrace(result.TraceId).Select(a => a.OperationName).ToList();
         Assert.Contains(Telemetry.Spans.ThresholdCheck, names);
         Assert.Contains(Telemetry.Spans.Detect, names);
         Assert.DoesNotContain(Telemetry.Spans.Diagnose, names);
@@ -78,7 +84,7 @@ public class PipelineTracingTests : IDisposable
         using var h = await PipelineHarness.CreateAsync();
         var result = await h.NewPipeline().RunAsync(Reading("CP-003", 198.5, 18.2, 7.3, 0));
 
-        var root = _stopped.Single(a => a.OperationName == Telemetry.Spans.Run);
+        var root = ForTrace(result.TraceId).Single(a => a.OperationName == Telemetry.Spans.Run);
         Assert.Equal(result.ReadingId, root.GetTagItem(Telemetry.Tags.ReadingId));
         Assert.Equal("CP-003", root.GetTagItem(Telemetry.Tags.MachineId));
         Assert.Equal("Review", root.GetTagItem(Telemetry.Tags.GateRoute));

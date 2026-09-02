@@ -1,5 +1,7 @@
 using TireForge.Agents;
 using TireForge.Core.Pipeline;
+using TireForge.Core.Reporting;
+using TireForge.Data.Reporting;
 using TireForge.Data.Repositories;
 using TireForge.Data.Seed;
 
@@ -47,6 +49,15 @@ internal sealed class PipelineHarness : IDisposable
         var ctx = _db.NewContext();
         return new TireForge.Core.Reviewing.Reviewer(
             new DiagnosisStore(ctx), new WorkOrderStore(ctx), new FixedClock(Now));
+    }
+
+    /// <summary>A Reports service over one shared context, clocked at <see cref="Now"/> + <paramref name="offset"/>.</summary>
+    public Reports NewReports(TimeSpan offset = default)
+    {
+        var ctx = _db.NewContext();
+        return new Reports(
+            new MachineStore(ctx), new DiagnosisStore(ctx), new WorkOrderStore(ctx),
+            new ReportingQueries(ctx), new FixedClock(Now + offset));
     }
 
     public void Dispose() => _db.Dispose();

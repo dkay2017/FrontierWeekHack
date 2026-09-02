@@ -38,5 +38,10 @@ Building blocks:
   `Status=Approved`), `RejectAsync` (write a `Rejected` audit row + note, no active
   WO), `CloseAsync` (`Closed`, only from `Issued`/`Approved`). All writes via
   `IWorkOrderStore` (invariant 1.1). **[Stage K — done]**
+- `Reporting/Reports` — the dashboard read models: `StatusAsync` (machines + bands +
+  latest reading + severity + anomalies/24h), `QueueAsync` (pending diagnoses + full
+  trace), `WorkOrdersAsync` (lifecycle), `HealthAsync` (in-spec / open / closed /
+  resolution rate), `CostAsync` (call counts from our tables; token/spend null until
+  Stage M — D8). Over `IReportingQueries` (impl in Data). **[Stage L (read models) — done]**
 
 Covered by `tests/TireForge.Core.Tests` (the Stage A–L checks).
