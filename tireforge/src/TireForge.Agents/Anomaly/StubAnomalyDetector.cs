@@ -1,7 +1,8 @@
+using TireForge.Core.Agents;
 using TireForge.Core.Model;
 using TireForge.Core.Thresholds;
 
-namespace TireForge.Agents.Anomaly;
+namespace TireForge.Agents;
 
 /// <summary>
 /// Deterministic A1 stub (Build Plan Stage D step 2): a reading is anomalous iff

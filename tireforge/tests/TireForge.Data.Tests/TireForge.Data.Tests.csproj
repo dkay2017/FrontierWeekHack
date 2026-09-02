@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\TireForge.Data\TireForge.Data.csproj" />
+    <ProjectReference Include="..\..\src\TireForge.Agents\TireForge.Agents.csproj" />
   </ItemGroup>
 
 </Project>

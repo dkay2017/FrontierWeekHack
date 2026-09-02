@@ -1,4 +1,4 @@
-using TireForge.Agents.Diagnosis;
+using TireForge.Core.Agents;
 using TireForge.Core.Model;
 
 namespace TireForge.Agents.Tests;

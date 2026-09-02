@@ -1,18 +1,17 @@
-using TireForge.Agents.Anomaly;
 using TireForge.Core.History;
 using TireForge.Core.Model;
 using TireForge.Core.Thresholds;
 
-namespace TireForge.Agents.Diagnosis;
+namespace TireForge.Core.Agents;
 
 /// <summary>
-/// Assembles a persistable <see cref="Core.Model.Diagnosis"/> row from the pipeline
-/// outputs, carrying the full trace (detect / match / diagnose text) — Build Plan
-/// Stage F step 3. The Gate fills <c>Route</c> / <c>GateReason</c> afterwards.
+/// Assembles a persistable <see cref="Diagnosis"/> row from the pipeline outputs,
+/// carrying the full trace (detect / match / diagnose text) — Build Plan Stage F
+/// step 3. The Gate fills <c>Route</c> / <c>GateReason</c> afterwards.
 /// </summary>
 public static class DiagnosisMapper
 {
-    public static Core.Model.Diagnosis ToEntity(
+    public static Diagnosis ToEntity(
         Reading reading,
         ThresholdReport t1,
         HistoryReport t2,
@@ -23,7 +22,7 @@ public static class DiagnosisMapper
     {
         a2.Validate();
 
-        return new Core.Model.Diagnosis
+        return new Diagnosis
         {
             Id = Ids.Diagnosis(at),
             ReadingId = reading.Id,

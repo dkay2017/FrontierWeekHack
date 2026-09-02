@@ -1,4 +1,5 @@
-using TireForge.Agents.Anomaly;
+using TireForge.Agents;
+using TireForge.Core.Agents;
 using TireForge.Core.Model;
 using TireForge.Core.Thresholds;
 

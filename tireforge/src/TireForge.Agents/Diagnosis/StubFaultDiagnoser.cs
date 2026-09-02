@@ -1,10 +1,10 @@
 using System.Text;
-using TireForge.Agents.Anomaly;
+using TireForge.Core.Agents;
 using TireForge.Core.History;
 using TireForge.Core.Model;
 using TireForge.Core.Thresholds;
 
-namespace TireForge.Agents.Diagnosis;
+namespace TireForge.Agents;
 
 /// <summary>
 /// Deterministic A2 stub (Build Plan Stage F step 2). Names a probable fault from

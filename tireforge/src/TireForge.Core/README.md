@@ -22,6 +22,13 @@ Building blocks:
 - `Gating/Gate` — `Evaluate(severity, confidence)` → `GateDecision {Route, Reason}`
   (`confidence < 0.70` OR `severity == Crit` → Review; exactly 0.70 → Auto);
   `Apply(diagnosis)` records it on the row. **[Stage G — done]**
-- `Pipeline` — orchestrates C→D→E→F→G→H→I under one trace id. *[Stage J]*
+- `Agents/` — agent ports (`IAnomalyDetector` / `IFaultDiagnoser` / `IWorkOrderDrafter`)
+  + their output contracts (`AnomalyVerdict` / `FaultVerdict` / `WorkOrderDraft`) +
+  `DiagnosisMapper`. Stubs + real impls live in `TireForge.Agents`.
+- `Acting/WorkOrderWriter` — the Act step (Stage I): Auto → issue WO via
+  `IWorkOrderStore` + `Diagnosis.Status = AutoIssued`; Review → `Pending`, no WO.
+  **[Stage I — done]**
+- `Pipeline/Pipeline` — `RunAsync(reading)` composes C→D→E→F→G→H→I under one trace
+  id; non-anomalous readings stop after D. **[Stage J — done]**
 
 Covered by `tests/TireForge.Core.Tests` (the Stage A–L checks).

@@ -135,9 +135,9 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 | E | HistoryMatch (T2) pure — fault signature + incident match | ☑ `FaultSignature` + `HistoryMatch` (exact + overlap) |
 | F | Fault Diagnosis (A2) stubbed — structured `{fault,severity,confidence,text,cites}` | ☑ `IFaultDiagnoser` + `StubFaultDiagnoser` + `DiagnosisMapper` |
 | G | The Gate — `gate(dx) → {route, reason}` | ☑ `Core/Gating/Gate` |
-| H | Work Order draft (A3) stubbed | ☐ |
-| I | Act — Adapter `write_work_order`, sole writer; auto vs review routes | ☐ |
-| J | Compose `run_pipeline(reading)` C→D→E→F→G→H→I, one trace_id | ☐ |
+| H | Work Order draft (A3) stubbed | ☑ `IWorkOrderDrafter` + `StubWorkOrderDrafter` |
+| I | Act — Adapter `write_work_order`, sole writer; auto vs review routes | ☑ `Core/Acting/WorkOrderWriter` |
+| J | Compose `run_pipeline(reading)` C→D→E→F→G→H→I, one trace_id | ☑ `Core/Pipeline/Pipeline` — **first end-to-end run** |
 | K | Reviewer decisions — approve / reject / close lifecycle | ☐ |
 | L | Report logic — `/status` `/queue` `/workorders` `/cost` + health metrics | ☐ |
 | M | Swap stubs for real Foundry agents, one at a time | ☐ |
@@ -152,25 +152,32 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 
 ## Next actions
 
-**Stages A–G done.** 67 tests green (34 Core + 15 Data + 18 Agents).
-- A–E: model + data layer; `ReadingFactory`/`Ids`; `ThresholdCheck` (T1);
-  `StubAnomalyDetector` (A1); `FaultSignature`/`HistoryMatch` (T2).
-- F: `Agents/Diagnosis/IFaultDiagnoser` + `FaultVerdict` (`.Validate()`) +
-  `StubFaultDiagnoser` (fault = exact-history fault else Challenge 1 rubric;
-  confidence from history-match strength + breach count + deviation; escalates
-  severity to a matched Crit incident) + `DiagnosisMapper.ToEntity` (persistable
-  row with full trace). Verified spread: IS-005 ~0.85 Auto, MX-001 ~0.50 Review,
-  CP-003 ~0.55 Crit Review.
-- G: `Core/Gating/Gate.Evaluate(severity, confidence)` → `GateDecision{Route,Reason}`;
-  `Gate.Apply(diagnosis)` records it. Exactly 0.70 → Auto (boundary tested).
+**Stages A–J done — the pure logic pipeline runs end to end.** 80 tests green
+(34 Core + 24 Data + 22 Agents).
 
-1. **Stage H** — Work Order draft (A3), stubbed. `Agents/WorkOrders/IWorkOrderDrafter`
-   → `{Machine, Fault, Severity, ReadingId, ActionText}`; stub templates the action
-   from the diagnosis and cites the reading.
-2. **Stage I** — Act / the only write path. `Core/Adapter` or wire
-   `IWorkOrderStore`: `auto` route → issue WO now, `Diagnoses.Status = AutoIssued`;
-   `review` route → `Diagnoses.Status = Pending`, no WO. Then **Stage J** —
-   compose `Core.Pipeline.Run(reading)` C→D→E→F→G→H→I under one trace id.
+- **Agent contracts refactor:** ports (`IAnomalyDetector` / `IFaultDiagnoser` /
+  `IWorkOrderDrafter`) + outputs (`AnomalyVerdict` / `FaultVerdict` /
+  `WorkOrderDraft`) + `DiagnosisMapper` now live in `TireForge.Core/Agents`; stubs
+  stay in `TireForge.Agents` (flat namespace — a `Diagnosis` sub-namespace
+  collides with `Core.Model.Diagnosis`).
+- H: `StubWorkOrderDrafter` — action templated from the diagnosis, urgency by severity.
+- I: `Core/Acting/WorkOrderWriter.ActAsync` — Auto → issue WO via `IWorkOrderStore`
+  (sole write path) + `Diagnosis.Status = AutoIssued`; Review → `Pending`, no WO.
+- J: `Core/Pipeline/Pipeline.RunAsync(reading)` — C→D→E→F→G→H→I, one `Ids.Trace()`
+  id on every step; `PipelineResult { TraceId, IsAnomaly, ThresholdSeverity,
+  Diagnosis, Act, Trace[] }`. Verified: normal → stops at D (no rows); confident
+  Warn (IS-005) → auto WO, fault grounded in `inc-008`; Crit (CP-003) → Review,
+  pending, no WO; one trace id threads every line.
+
+**Next — pick up the "additional functionality" / deployment track:**
+1. **Stage K** — reviewer decisions: `approve(dx)` → Adapter writes WO `by=reviewer`,
+   `Status=Approved`; `reject(dx, note)` → WorkOrders audit row `Status=Rejected`;
+   `close(WO)` → `Closed` only from `Issued`/`Approved`.
+2. **Stage L** — read models for `/status` `/queue` `/workorders` `/cost` + health
+   metrics. Then wire `TireForge.Ingestion` (timer → queue) and
+   `TireForge.Orchestrator` (Durable → `Pipeline.RunAsync`) — Challenge 4 shape.
+3. **Stage M** — swap the three stubs for real `gpt-5.4` Foundry agents, one at a
+   time — Challenge 1 genuinely passed.
 
 ## `dotnet` / EF note (Codespace)
 
@@ -204,6 +211,9 @@ Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
   Stage D); `FaultSignature` + `HistoryMatch` (T2, Stage E, exact + overlap).
   Seed history signatures canonicalised. 42 tests green.
 - **Session 3 cont. — Stages F + G shipped.** `StubFaultDiagnoser` + `FaultVerdict`
-  + `DiagnosisMapper` (A2, Stage F); `Core/Gating/Gate` (Stage G). Confidence gate
-  now routes: some diagnoses Auto, some Review, Crit always Review. 67 tests green.
-  Next: Stage H + I + J (compose the pipeline).
+  + `DiagnosisMapper` (A2, Stage F); `Core/Gating/Gate` (Stage G). 67 tests green.
+- **Session 3 cont. — Stages H + I + J shipped — first end-to-end run.**
+  `StubWorkOrderDrafter` (A3); `Core/Acting/WorkOrderWriter` (Act); `Core/Pipeline`
+  composes C→D→E→F→G→H→I under one trace id. Agent ports+contracts moved to
+  `Core/Agents`. 80 tests green (incl. normal-stops / warn-auto / crit-pending /
+  one-trace-id). Next: Stage K (reviewer) + L (read models) + wiring.
