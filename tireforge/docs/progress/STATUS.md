@@ -28,6 +28,35 @@ APIM AI Gateway.
 | Design→project map | `tireforge/docs/design/README.md` |
 | Architecture SVG | `tireforge/docs/design/TireForge-Anomaly-Fault-IQ-Architecture_Design.svg` |
 
+## Working method (agreed session 3)
+
+The `factory/challenge-*/` folders are the **conceptual guide + acceptance bar**,
+not the implementation. We build the **C# equivalent** in `tireforge/`, using each
+challenge README as the requirements doc. The Python files (`agents.py` etc.) are
+reference only — never run for the submission. Challenge → stage map:
+
+| Challenge | Acceptance bar | tireforge work |
+|---|---|---|
+| 0 ✅ | Foundry infra | done (+ `infra/main.bicep`) |
+| 1 | Anomaly agent flags the 2 warning + 1 crit machine; Fault Diagnosis gives sane actions | Stages A–G, J stubbed → M1–M2 real (`gpt-5.4`) |
+| 2 | App Insights GenAI tracing, one trace per reading | trace_id in Stage J + OTel exporter in `TireForge.Agents` |
+| 3 | Evaluation harness | `eval/TireForge.Eval` — 4 scenarios, LLM-judge |
+| 4 | Multi-agent workflow deployed | `TireForge.Orchestrator` Durable + `TireForge.Ingestion` + Work Order agent (H–I) + Functions infra |
+| superset | APIM gateway · Dashboard · Reviewer gate · Work Order Adapter | after Ch4, in TDD §8 priority order |
+
+**Challenge 1 specifics (from its README + `agents.py` + `sensor_data.json`):**
+- Seed data = `factory/challenge-1-build/sensor_data.json` — 5 machines, each with
+  `machine_id`, `name`, `description`, `status`, `last_maintenance`, `readings`
+  (temp/pressure/vibration/rpm → value+unit), `thresholds` (min/max per sensor).
+  Expected: MX-001 mixer = warning, IS-005 inspection = warning, CP-003 curing_press = critical.
+- `check_thresholds` tool == our Stage C ThresholdCheck (T1): in-spec test +
+  deviation `% above max` / `% below min`. Port this logic near-verbatim.
+- Anomaly agent: has the threshold tool, emoji-tagged structured summary.
+- Fault Diagnosis agent: **no tools**, prompt-only fault rubric (temp+pressure→blockage,
+  vib-alone→bearing wear, temp+vib→bearing/lube, multi-crit→compound). Output:
+  `LIKELY CAUSE / MAINTENANCE ACTIONS / URGENCY`. Our design adds HistoryMatch +
+  confidence + citations on top (superset).
+
 ## Key rules (from Build Plan §1 invariants)
 
 - Work Order Adapter is the **only** write path.
@@ -109,10 +138,16 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 ## Next actions
 
 1. **Stage A** in `TireForge.Core` (domain model) + `TireForge.Data` (EF Core
-   DbContext, entities, migration, seed). Machines with `t/p/v/r [lo,hi]` bands +
-   units; `History` ~8 incidents; repo interfaces `IMachineStore` / `IReadingStore`
-   / `IHistoryStore` / `IDiagnosisStore` / `IWorkOrderStore`.
-2. Round-trip tests in `TireForge.Data.Tests` (in-memory SQLite).
+   DbContext, entities, migration, seed):
+   - `Machine` entity: id, name, description, status, lastMaintenance, per-sensor
+     bands (`temp/pressure/vibration/rpm` min+max) + units. Seed from
+     `factory/challenge-1-build/sensor_data.json` (5 machines).
+   - `Reading`, `History` (~8 incidents), `Diagnosis`, `WorkOrder` entities.
+   - Repo interfaces `IMachineStore` / `IReadingStore` / `IHistoryStore` /
+     `IDiagnosisStore` / `IWorkOrderStore`.
+   - EF migration = the Stage-A DDL. SQLite provider.
+2. Round-trip tests in `TireForge.Data.Tests` (in-memory SQLite) — incl. "seed
+   returns 5 machines", "History rows present".
 
 ---
 
@@ -125,4 +160,5 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
   Created this STATUS.md. Added architecture SVG. Ported `deploy.sh` to
   `infra/main.bicep` + `infra/modules/foundry.bicep` (+ params, README) so the
   Challenge-0 stack is reproducible in another environment — compiles clean,
-  not yet test-deployed. Next: Stage A.
+  not yet test-deployed. Agreed working method: challenge folders = guide only,
+  build C# equivalents. Read + mapped Challenge 1. Next: Stage A.
