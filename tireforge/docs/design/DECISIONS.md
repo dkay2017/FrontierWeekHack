@@ -48,6 +48,11 @@ APIM in front — config change to the agent client's base URL, plus the
 differently). If not, fall back to per-agent APIM products without the token-metric policy and
 feed the Cost tab from App Insights GenAI trace token counts instead.
 
+> **⚠️ Superseded for the real-agent path by [D9].** The "direct model call" here is fine for a
+> stub / spike, but Challenges 1–4 require **persistent Foundry agents** (portal-visible,
+> agent-keyed traces / evaluations / workflows). Stage M creates real agents via the .NET
+> Agents SDK; APIM (if kept) then sits in front of those agent calls.
+
 ## D4 — Data store: EF Core, SQLite now, swap provider if it bites
 
 The domain is relational — 5 tables with FKs, joins for health metrics and `/queue`, a WorkOrder
@@ -122,13 +127,61 @@ column + migration + one line.
 - Cost tab shows real numbers only once Stage M agents emit token spans; until then it
   is labelled illustrative (invariant 1.5 — never present mocked figures as real).
 
+## D9 — Real agents = persistent Foundry agents (not direct model calls)
+
+Read of all challenge READMEs (session 3): Challenges 1–4 are **agent-keyed**, not just
+"agent-shaped logic":
+
+- **Ch 1** — `agents.create_version("anomaly-detection-agent", …)` → agents are hosted
+  resources under **Build → Agents** in the portal.
+- **Ch 2** — the Traces / Monitor / **Agents (preview)** views group by agent name and are
+  populated by the Foundry service instrumenting **hosted-agent** calls (`gen_ai.*` spans,
+  per-agent token consumption). A raw model call produces none of this.
+- **Ch 3** — evaluation target is **"Agent"**; you pick `anomaly-detection-agent` from a
+  dropdown and run Coherence / Fluency over `challenge-3-evaluate/eval_portal.jsonl`. The
+  agent must exist as a Foundry resource. Portal-driven, not code.
+- **Ch 4** — "both agents visible as persistent assets" + wire them in the portal **workflow
+  designer**. (Azure Functions = production "Option 4" — our Durable orchestrator.)
+
+**Decision:** Stage M's real `IAnomalyDetector` / `IFaultDiagnoser` / `IWorkOrderDrafter`
+implementations **create persistent Foundry agents via the .NET Agents SDK** and invoke the
+*hosted* agent — matching `factory/challenge-1-build/agents.py`:
+
+| Agent name | Model | Tool | Source prompt |
+|---|---|---|---|
+| `anomaly-detection-agent` | `gpt-5.4` | `check_thresholds` function | agents.py system prompt |
+| `fault-diagnosis-agent` | `gpt-5.4` | (none — prompt rubric) | agents.py system prompt |
+| `work-order-agent` | `gpt-5.4` | (none) | our addition |
+
+The `Core.Agents` interfaces and the whole pipeline / gate / adapter / reviewer chain are
+**unchanged** — only the impls behind the interfaces change.
+
+**Open spike (do early — before wiring):** `agents.py` uses the *nextgen* API
+(`agents.create_version` + `PromptAgentDefinition` + Responses API with `agent_reference`).
+Confirm the .NET path — `Azure.AI.Agents.Persistent` (`PersistentAgentsClient.CreateAgent` +
+threads/runs, established GA) vs a newer `Azure.AI.Projects`. Both create portal-visible
+agents; pick the one that works against `factory-project`. Deliverable: one agent created,
+visible in Build → Agents, invoked once, trace lands in App Insights.
+
+**What this doesn't change:** Challenges 3 & 4 stay mostly **portal work** once the agents
+exist (upload the jsonl + click through Evaluations; build the workflow in the designer).
+`eval/TireForge.Eval` and the Durable orchestrator are the automated/production supersets
+(Ch 4 "Option 5"), not replacements for the portal steps.
+
 ## Revised build sequence (post-Stage J)
 
-1. **A1** — `Diagnosis.DraftActionText` (D7).
-2. **Tracing stage** — `Activity`-based correlation + host export (D6) = Challenge 2.
-3. **Stage K** — reviewer approve / reject / close.
-4. **Stage L** — read models `/status /queue /workorders /cost` + health metrics + `TireForge.ApiProxy`.
-5. **Dashboard port** — real `fetch`, `gpt-5.4` labels, mojibake fix, sim cut to normal/warn/crit.
-6. **Ingestion + Orchestrator wiring** — timer → queue → Durable → `Pipeline.RunAsync` = Challenge 4 shape.
-7. **Stage M** — real `gpt-5.4` agents, one at a time = Challenge 1 passed for real.
-8. **APIM** — only if the D3 spike passes and time remains.
+1. ✅ **A1** — `Diagnosis.DraftActionText` (D7).
+2. ✅ **Tracing stage** — `Activity`-based correlation + host export (D6) = Challenge 2 (our side).
+3. ✅ **Stage K** — reviewer approve / reject / close.
+4. **Stage L** — read models (✅ `Core/Reporting`) + `TireForge.ApiProxy` HTTP endpoints (pending).
+5. **Stage M spike (D9)** — brought forward: one real Foundry agent via the .NET SDK,
+   portal-visible, one invocation, trace in App Insights. De-risks everything below.
+6. **Stage M full** — all three agents created + wired behind the interfaces =
+   **Challenge 1 for real**; the `gen_ai.*` spans = **Challenge 2 for real**.
+7. **Dashboard port** — real `fetch`, `gpt-5.4` labels, mojibake fix, sim cut to normal/warn/crit.
+8. **Ingestion + Orchestrator wiring** — timer → queue → Durable → `Pipeline.RunAsync` +
+   `azd up` = **Challenge 4** (SDK/Functions path); then the portal workflow steps.
+9. **Challenge 3** — upload `eval_portal.jsonl`, run Coherence/Fluency in the portal;
+   `eval/TireForge.Eval` as the CI-gate superset.
+10. **APIM** — only if the D3 spike passes and time remains (now sits in front of the
+    hosted-agent calls, not raw model calls).

@@ -35,14 +35,18 @@ not the implementation. We build the **C# equivalent** in `tireforge/`, using ea
 challenge README as the requirements doc. The Python files (`agents.py` etc.) are
 reference only — never run for the submission. Challenge → stage map:
 
-| Challenge | Acceptance bar | tireforge work |
-|---|---|---|
-| 0 ✅ | Foundry infra | done (+ `infra/main.bicep`) |
-| 1 | Anomaly agent flags the 2 warning + 1 crit machine; Fault Diagnosis gives sane actions | Stages A–G, J stubbed → M1–M2 real (`gpt-5.4`) |
-| 2 | App Insights GenAI tracing, one trace per reading | `Core/Observability` `ActivitySource` + per-step spans (J.5); Azure Monitor exporter already in the Functions hosts |
-| 3 | Evaluation harness | `eval/TireForge.Eval` — 4 scenarios, LLM-judge |
-| 4 | Multi-agent workflow deployed | `TireForge.Orchestrator` Durable + `TireForge.Ingestion` + Work Order agent (H–I) + Functions infra |
-| superset | APIM gateway · Dashboard · Reviewer gate · Work Order Adapter | after Ch4, in TDD §8 priority order |
+**All challenges 1–4 are agent-keyed — they need real *persistent Foundry agents*
+(portal-visible, created via `agents.create_version` / the .NET Agents SDK), not
+just "agent-shaped logic". See DECISIONS.md D9.**
+
+| Challenge | Acceptance bar | tireforge work | State |
+|---|---|---|---|
+| 0 | Foundry infra + model playground works | deployed + `infra/main.bicep` | ✅ done |
+| 1 | `anomaly-detection-agent` + `fault-diagnosis-agent` created via SDK, flag 2 warn + 1 crit | logic A–J stubbed (✅, reproduces the outcome); real agents = **Stage M** | 🟡 logic done, real agents pending |
+| 2 | agent-keyed traces in portal Traces/Monitor/Agents(preview) | our pipeline `ActivitySource` spans ✅; the agent `gen_ai.*` spans come with Stage M | 🟡 our side done, agent side pending |
+| 3 | evaluate the `anomaly-detection-agent` target in the portal (Coherence/Fluency over `eval_portal.jsonl`) | needs the agent (Stage M); `eval/TireForge.Eval` = CI-gate superset | ⬜ not started |
+| 4 | agents visible as persistent assets + portal workflow designer | needs agents (Stage M) + `TireForge.Ingestion`/`Orchestrator` wiring (Functions = "Option 4") | ⬜ not started |
+| superset | APIM gateway · Dashboard · Reviewer gate · Work Order Adapter | Reviewer ✅, read models ✅; ApiProxy + dashboard port pending; APIM last | 🟡 partial |
 
 **Challenge 1 specifics (from its README + `agents.py` + `sensor_data.json`):**
 - Seed data = `factory/challenge-1-build/sensor_data.json` — 5 machines, each with
@@ -85,7 +89,12 @@ context" layer if time allows.
 
 - **D1** all 3 agents use `gpt-5.4` (only model on the Foundry account); APIM caps become per-agent.
 - **D2** v1 Durable orchestrator = ONE activity running `Core.Pipeline.Run` end-to-end.
-- **D3** APIM built LAST; until then agents call the model deployment directly.
+- **D3** APIM built LAST. *(For the real-agent path, superseded by D9 — agents are
+  hosted Foundry agents, not direct model calls; APIM would front those.)*
+- **D9** Stage M real agents = **persistent Foundry agents via the .NET Agents SDK**
+  (`anomaly-detection-agent` / `fault-diagnosis-agent` / `work-order-agent`,
+  portal-visible), because Challenges 1–4 are agent-keyed. Interfaces + pipeline
+  unchanged. Spike brought forward.
 - **D4** `TireForge.Data` = EF Core + repo interfaces; SQLite now, Azure SQL serverless as swap target.
 - **D5** schema = 5 tables incl. `Diagnoses`.
 - Guiding principle: **one end-to-end run first, refine after.**
@@ -151,7 +160,7 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 | J.5 | Tracing — `Activity`-based correlation + host export (D6) = Challenge 2 | ☑ `Core/Observability/Telemetry`, root+child spans, hosts registered |
 | K | Reviewer decisions — approve / reject / close lifecycle | ☑ `Core/Reviewing/Reviewer` — 10 tests |
 | L | Report logic — `/status` `/queue` `/workorders` `/cost` + health metrics | ◐ `Core/Reporting/Reports` + `IReportingQueries` done (14 tests); `TireForge.ApiProxy` HTTP endpoints pending |
-| M | Swap stubs for real Foundry agents, one at a time | ☐ |
+| M | Swap stubs for real **persistent Foundry agents** via the .NET Agents SDK (D9) — portal-visible `anomaly-detection-agent` / `fault-diagnosis-agent` / `work-order-agent`; = Challenge 1 & 2 for real | ☐ **spike brought forward (step 5)** |
 | — | Ingestion Function + Storage Queue wiring | ☐ |
 | — | Orchestrator Durable wiring around `run_pipeline` | ☐ |
 | — | Dashboard (port of v1.6) | ☐ |
@@ -191,12 +200,14 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 3. ✅ **Stage K** — `Core/Reviewing/Reviewer`: `ApproveAsync` / `RejectAsync` (note
    required, `Rejected` audit row) / `CloseAsync` (only from `Issued`/`Approved`).
    All writes via `IWorkOrderStore`. 10 tests.
-4. **Stage L** — read models `/status /queue /workorders /cost` + health metrics + `TireForge.ApiProxy`. ← **next**
-5. **Dashboard port** — `TireForge.Dashboard`: real `fetch`, `gpt-5.4` labels, mojibake
-   fix, sim cut to normal/warn/crit.
-6. **Ingestion + Orchestrator wiring** — timer → queue → Durable → `Pipeline.RunAsync` = Challenge 4 shape.
-7. **Stage M** — real `gpt-5.4` agents, one at a time = Challenge 1 passed for real.
-8. **APIM** — only if the D3/D8 spike passes and time remains.
+4. **Stage L** — ✅ `Core/Reporting/Reports` (14 tests); ⬜ `TireForge.ApiProxy` HTTP endpoints. ← **next**
+5. **Stage M spike (D9)** — one real Foundry agent via the .NET Agents SDK, portal-visible,
+   one invocation, trace in App Insights. Brought forward to de-risk the .NET↔Foundry story.
+6. **Stage M full** — 3 agents behind the interfaces = **Challenge 1 real**; `gen_ai.*` spans = **Challenge 2 real**.
+7. **Dashboard port** — real `fetch`, `gpt-5.4` labels, mojibake fix, sim → normal/warn/crit.
+8. **Ingestion + Orchestrator + `azd up`** = **Challenge 4** (Functions path) → then portal workflow steps.
+9. **Challenge 3** — portal Evaluations over `eval_portal.jsonl`; `eval/TireForge.Eval` = CI-gate superset.
+10. **APIM** — only if the D3 spike passes (now in front of hosted-agent calls).
 
 ### Rated change backlog (from the dashboard-prototype review)
 
@@ -208,10 +219,13 @@ session-3 analysis; drops recorded in DECISIONS.md D8.
 | A1 persist draft | 8 | 2 | ✅ done |
 | Activity tracing + export | 9 | 4 | ✅ done (host export untested live) |
 | Stage K reviewer | 7 | 3 | ✅ done |
-| Stage L read models + ApiProxy | 8 | 4 | queued |
+| Stage L — Core read models | 8 | 4 | ✅ done |
+| Stage L — `TireForge.ApiProxy` endpoints | 7 | 3 | next |
+| **Stage M spike — real Foundry agent, .NET SDK (D9)** | 10 | 5 | brought forward |
+| Stage M full — 3 hosted agents behind the interfaces | 9 | 5 | queued |
 | Dashboard port (fetch, gpt-5.4 labels, mojibake, sim trim) | 7 | 3 | queued |
-| Ingestion + Orchestrator wiring | 7 | 4 | queued |
-| Stage M real agents | 9 | 5 | queued |
+| Ingestion + Orchestrator wiring + `azd up` | 7 | 5 | queued |
+| Challenge 3 portal evaluation + `eval/TireForge.Eval` | 6 | 3 | queued |
 | Cost tab real numbers | 5 | 5 | deferred → needs Stage M token spans |
 | APIM gateway + policies | 6 | 8 | deferred → 1 h spike, else roadmap |
 | Shorter display IDs | 4 | 2 | deferred (cosmetic) |
@@ -273,5 +287,11 @@ Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
   `IReportingQueries` (`TireForge.Data/Reporting/ReportingQueries`).
   `AddTireForgeData` DI helper. Cost = call counts only, token/spend null (D8).
   102 tests green (34 Core + 46 Data + 22 Agents). Pending: `TireForge.ApiProxy`
-  HTTP endpoints. **Then read all challenge READMEs → surfaced the Foundry-agent-SDK
-  question (see below).**
+  HTTP endpoints.
+- **Session 3 cont. — read all challenge READMEs → D9.** Challenges 1–4 are
+  agent-keyed: they need real **persistent Foundry agents** (portal-visible, via
+  `agents.create_version` / .NET Agents SDK), not just agent-shaped logic. D3's
+  "direct model call" is superseded for the real path. Stage M creates the three
+  named agents behind the existing `Core.Agents` interfaces; a **Stage M spike is
+  brought forward** (step 5) to de-risk the .NET↔Foundry SDK before wiring.
+  Ch 3 & 4 stay mostly portal work once the agents exist.
