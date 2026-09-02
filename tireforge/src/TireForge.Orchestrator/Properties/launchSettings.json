@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "TireForge.Orchestrator": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7198",
+      "launchBrowser": false
+    }
+  }
+}

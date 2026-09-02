@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+name: tireforge
+metadata:
+  template: tireforge@0.1.0
+
+services:
+  ingestion:
+    project: src/TireForge.Ingestion
+    language: dotnet
+    host: function
+  orchestrator:
+    project: src/TireForge.Orchestrator
+    language: dotnet
+    host: function
+  apiproxy:
+    project: src/TireForge.ApiProxy
+    language: dotnet
+    host: function
+  dashboard:
+    project: src/TireForge.Dashboard
+    language: js
+    host: staticwebapp
