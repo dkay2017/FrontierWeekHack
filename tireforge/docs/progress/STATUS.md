@@ -128,7 +128,7 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 |---|---|---|
 | — | C# solution scaffold (10 projects, per-project READMEs) | ☑ commit `5a07367` |
 | — | Design docs + DECISIONS.md in repo | ☑ commit `dc8ca68` |
-| A | Data model — 5-table schema, seed 5 machines + bands, ~8 history incidents, data-access | ☐ |
+| A | Data model — 5-table schema, seed 5 machines + bands, ~8 history incidents, data-access | ☑ `InitialCreate` migration + 14 tests green |
 | B | `make_reading(machine, mode)` normal/warn/crit + `reading_id()` | ☐ |
 | C | ThresholdCheck (T1) pure — per-sensor status + severity + trace line | ☐ |
 | D | Anomaly Detection (A1) stubbed — `IAgentClient`, early-exit on not-anomaly | ☐ |
@@ -152,17 +152,26 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 
 ## Next actions
 
-1. **Stage A** in `TireForge.Core` (domain model) + `TireForge.Data` (EF Core
-   DbContext, entities, migration, seed):
-   - `Machine` entity: id, name, description, status, lastMaintenance, per-sensor
-     bands (`temp/pressure/vibration/rpm` min+max) + units. Seed from
-     `factory/challenge-1-build/sensor_data.json` (5 machines).
-   - `Reading`, `History` (~8 incidents), `Diagnosis`, `WorkOrder` entities.
-   - Repo interfaces `IMachineStore` / `IReadingStore` / `IHistoryStore` /
-     `IDiagnosisStore` / `IWorkOrderStore`.
-   - EF migration = the Stage-A DDL. SQLite provider.
-2. Round-trip tests in `TireForge.Data.Tests` (in-memory SQLite) — incl. "seed
-   returns 5 machines", "History rows present".
+**Stage A is done** — entities + enums in `TireForge.Core/Model`, ports in
+`TireForge.Core/Abstractions`, `TireForgeDbContext` + stores + seeder +
+`InitialCreate` migration in `TireForge.Data`, 14 tests green.
+
+1. **Stage B** — `ReadingFactory.Make(machine, mode)` (normal/warn/crit) +
+   `ReadingId.New()` → `rdg-<ticks>-<rand>`, in `TireForge.Core`. Tests: normal
+   in-band, crit out of band, ids unique + sortable.
+2. **Stage C** — `ThresholdCheck` (T1): per-sensor `{value, band, status:
+   ok/low/high, deviation%}` + worst-deviation severity + a trace line citing the
+   `rdg-id` and offending sensor. This is the C# port of Challenge 1's
+   `check_thresholds`. Table-driven tests against the 5 seeded machines.
+
+## `dotnet` / EF note (Codespace)
+
+`dotnet` SDK is at `~/.dotnet`; `dotnet-ef` at `~/.dotnet/tools`. Both need:
+```bash
+export PATH="$HOME/.dotnet:$HOME/.dotnet/tools:$PATH"
+export DOTNET_ROOT="$HOME/.dotnet"
+```
+Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
 
 ---
 
@@ -176,4 +185,8 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
   `infra/main.bicep` + `infra/modules/foundry.bicep` (+ params, README) so the
   Challenge-0 stack is reproducible in another environment — compiles clean,
   not yet test-deployed. Agreed working method: challenge folders = guide only,
-  build C# equivalents. Read + mapped Challenge 1. Next: Stage A.
+  build C# equivalents. Read + mapped Challenge 1.
+- **Session 3 cont. — Stage A shipped.** `TireForge.Core` model + ports,
+  `TireForge.Data` DbContext + 5 stores + JSON-backed seeder (5 machines, snapshot
+  readings, 8 history incidents) + `InitialCreate` migration. 14 xUnit tests green,
+  full solution builds. Next: Stage B + C.
