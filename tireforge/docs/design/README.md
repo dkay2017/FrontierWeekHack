@@ -8,6 +8,7 @@ submission for the MS Agent-a-Thon Factory scenario). These drive the `tireforge
 | `TireForge-Anomaly-Fault-IQ-TDD.md` | Technical Design Document — problem, architecture, end-to-end flow, AI governance, scope decisions. Markdown transcription of the source PDF. |
 | `TireForge-Anomaly-Fault-IQ-Build_Plan.html` | Build Logic Plan — Stages A–M, baby-steps sequence (pure logic first, AI stubbed, Adapter-only-write from step 1), each step with a check. |
 | `TireForge-Anomaly-Fault-IQ-Architecture_Design.svg` | Component-level architecture diagram. Same diagram appears on p.5 of the TDD PDF. |
+| `TireForge-Anomaly-Fault-IQ-Dashboard_Prototype.html` | Reviewer-console UI prototype (v1.6, standalone, **mock data**). Five tabs: Pending Review · Work Orders · Health Report · Cost & Governance · Pipeline Simulator. Drives the layout for `src/TireForge.Dashboard`; the mock `api` object is the seam to swap for `src/TireForge.ApiProxy`. Machine list / numbers in it are illustrative only — the real dashboard binds to the seeded Challenge data. |
 
 ## How the design maps to the solution
 
