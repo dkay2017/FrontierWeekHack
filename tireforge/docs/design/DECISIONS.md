@@ -349,6 +349,37 @@ table** in `TireForge.Data` via an `IAgentCallRecorder` port
 **This is the metering path §7 referred to** ("reconciled against the metering
 table") — it just doesn't run through APIM.
 
+## D14 — Portal workflow = 2 agents; the 3rd + the gate live in the orchestrator
+
+The Foundry portal workflow designer (Challenge 4 Part 2) builds a **linear,
+unconditional** agent chain. Our `factory-health-workflow-portal` is therefore
+**`anomaly-detection-agent → fault-diagnosis-agent → End`** — two agents, matching
+Challenge 4's own reference flow (anomaly scan → fault diagnosis → report).
+
+**`work-order-agent` is deliberately not a node in the portal workflow.** Reasons:
+
+1. **Semantics.** A linear 3rd node would draft a work order for *every* machine,
+   including healthy ones — contradicting invariant 1.3 (work orders exist only
+   *after* the Gate: `confidence ≥ 0.70 AND severity ≠ Crit` → auto, else review).
+   The portal designer cannot express that condition.
+2. **The 3rd agent's value is its *conditional* invocation.** Showing it ungated
+   in the portal removes the one thing that makes it a superset delta.
+3. **No added value.** A 3-node portal chain demonstrates nothing the 2-node chain
+   + the code orchestrator doesn't already, and introduces an inconsistency a
+   reviewer would (rightly) question.
+
+**Where the rest lives:** `Core.Pipeline` + `Core/Gating/Gate` + `WorkOrderWriter`
+(sole-writer Adapter) + `Core/Reviewing/Reviewer`, run by the Durable Functions
+orchestrator (`TireForge.Orchestrator`). The orchestrator calls `work-order-agent`
+**only on the route the Gate permits**. The portal workflow captures ~30 % of the
+design (the agent handoff); the gate / adapter / reviewer / idempotency / tracing
+are inherently code.
+
+**Submission framing:** *"Portal workflow = the visual 2-agent demo. The Durable
+orchestrator = the production system — it adds the confidence gate, the sole-writer
+adapter, the human review loop, and invokes the 3rd agent only when a work order
+is warranted."*
+
 ## Revised build sequence (post-Stage J)
 
 1. ✅ **A1** — `Diagnosis.DraftActionText` (D7).
