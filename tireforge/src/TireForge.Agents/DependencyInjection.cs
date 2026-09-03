@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using TireForge.Agents.Foundry;
 using TireForge.Core.Agents;
 
@@ -38,9 +39,15 @@ public static class DependencyInjection
         services.AddSingleton(options);
         services.AddSingleton(sp => new FoundryAgentClient(sp.GetRequiredService<FoundryAgentOptions>()));
         services.AddSingleton<FoundryAgentProvisioner>();
-        services.AddSingleton<IAnomalyDetector, FoundryAnomalyDetector>();
-        services.AddSingleton<IFaultDiagnoser, FoundryFaultDiagnoser>();
-        services.AddSingleton<IWorkOrderDrafter, FoundryWorkOrderDrafter>();
+
+        // Cost metering (D13). AddTireForgeData registers the real recorder; this
+        // no-op keeps the agents resolvable when no data layer is wired (tests).
+        services.TryAddScoped<IAgentCallRecorder, NullAgentCallRecorder>();
+
+        // Scoped — they take the scoped IAgentCallRecorder (and share the pipeline's scope).
+        services.AddScoped<IAnomalyDetector, FoundryAnomalyDetector>();
+        services.AddScoped<IFaultDiagnoser, FoundryFaultDiagnoser>();
+        services.AddScoped<IWorkOrderDrafter, FoundryWorkOrderDrafter>();
         return services;
     }
 

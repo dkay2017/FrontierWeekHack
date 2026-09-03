@@ -19,6 +19,9 @@ public static class Ids
     /// <summary><c>WO-&lt;ticks&gt;-&lt;rand&gt;</c></summary>
     public static string WorkOrder(DateTimeOffset ts) => $"WO-{Stamp(ts)}-{Rand()}";
 
+    /// <summary><c>call-&lt;ticks&gt;-&lt;rand&gt;</c> — one agent invocation in the cost metering table.</summary>
+    public static string AgentCall(DateTimeOffset ts) => $"call-{Stamp(ts)}-{Rand()}";
+
     /// <summary>Correlated trace id shared across every hop for one reading.</summary>
     public static string Trace() => Guid.NewGuid().ToString("n");
 }

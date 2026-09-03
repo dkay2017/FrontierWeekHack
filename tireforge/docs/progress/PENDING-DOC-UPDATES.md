@@ -80,3 +80,44 @@ locally" split.
 - **`docs/design/README.md`** — add the `eval/` + CI entries.
 - **`eval/TireForge.Eval/README.md`** — written now, keep in the reconciliation
   sweep for consistency of terminology.
+
+---
+
+## 3. APIM descoped (D3) + cost metering added (D13)
+
+**DECISIONS D3 + D13 + TDD §7 — already updated** (commit `031c248`). The rest:
+
+**Code (this session):**
+- `Core.Model.AgentCall` + `Core.Agents.IAgentCallRecorder` / `AgentCallUsage` /
+  `NullAgentCallRecorder`.
+- `TireForge.Data` — `AgentCalls` DbSet + config + `AddAgentCalls` migration +
+  `Repositories/AgentCallRecorder`. `IReportingQueries.AgentCallTotalsAsync` +
+  `AgentCallTotals` record.
+- `FoundryAgentClient.InvokeAsync` — sums tokens across the tool-loop.
+- `Foundry{AnomalyDetector,FaultDiagnoser,WorkOrderDrafter}` — now take
+  `IAgentCallRecorder`, record a row per invocation; **registered `AddScoped`**
+  (was `AddSingleton`) so they share the pipeline's scope.
+- `AddTireForgeAgents` — `TryAddScoped<IAgentCallRecorder, NullAgentCallRecorder>`;
+  `AddTireForgeData` — `RemoveAll` + `AddScoped<AgentCallRecorder>` (real one wins).
+- `Reports.CostAsync` — if any `AgentCalls` row has tokens → real per-agent tokens
+  + estimated spend (`$2.50/1M in + $10/1M out` for gpt-5.4, `TokenMetricsAvailable=true`);
+  else the old call-count placeholder. Dashboard needs no change.
+
+**Doc/design updates still owed:**
+- **STATUS.md** — Challenge-4/superset "APIM" row → descoped; add `AgentCall` to the
+  schema (D5 says 5 tables — now 6); Cost tab note ("call counts, token/spend
+  pending" → "real when foundry"); session log; resume point.
+- **DECISIONS D5** — "5 tables" → 6 (`AgentCalls`).
+- **infra** — `data.bicep` / `apps.bicep` are unaffected (APIM was never in bicep);
+  the `infra/README.md` "Still not in Bicep — APIM" line can note "descoped, not
+  roadmapped for the submission".
+- **TDD §4/§8** — the "SQLite" line in §8 (still there) + any APIM-as-planned prose
+  in §2/§3/§5.
+- **Architecture SVG** — if it draws an APIM box in the main flow, mark it
+  roadmap / dashed.
+
+**Verification owed:** new metering path is compile-verified + 62 non-DB tests
+green in the Codespace; the `AgentCalls` migration + recorder + `CostAsync` need a
+Docker run (CI) and, ideally, one live `AgentTool run` to confirm real token rows
+land. **No new unit tests written yet** for `AgentCallRecorder` / the real-numbers
+`CostAsync` branch — add in the test pass.

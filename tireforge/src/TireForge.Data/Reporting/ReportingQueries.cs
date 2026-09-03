@@ -30,4 +30,18 @@ public sealed class ReportingQueries(TireForgeDbContext db) : IReportingQueries
 
     public Task<int> DiagnosisCountAsync(CancellationToken ct = default) =>
         db.Diagnoses.AsNoTracking().CountAsync(ct);
+
+    public async Task<IReadOnlyList<AgentCallTotals>> AgentCallTotalsAsync(CancellationToken ct = default)
+    {
+        var rows = await db.AgentCalls.AsNoTracking()
+            .GroupBy(a => new { a.AgentName, a.Model })
+            .Select(g => new AgentCallTotals(
+                g.Key.AgentName,
+                g.Key.Model,
+                g.Count(),
+                g.Sum(a => (long)a.PromptTokens),
+                g.Sum(a => (long)a.CompletionTokens)))
+            .ToListAsync(ct);
+        return rows;
+    }
 }

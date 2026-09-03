@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using TireForge.Core.Abstractions;
+using TireForge.Core.Agents;
 using TireForge.Core.Reporting;
 using TireForge.Core.Reviewing;
 using TireForge.Data.Reporting;
@@ -26,6 +28,10 @@ public static class DependencyInjection
         services.AddScoped<IDiagnosisStore, DiagnosisStore>();
         services.AddScoped<IWorkOrderStore, WorkOrderStore>();
         services.AddScoped<IReportingQueries, ReportingQueries>();
+
+        // Cost metering (D13) — overrides the no-op recorder from AddTireForgeAgents.
+        services.RemoveAll<IAgentCallRecorder>();
+        services.AddScoped<IAgentCallRecorder, AgentCallRecorder>();
 
         services.AddScoped<Reports>();
         services.AddScoped<Reviewer>();

@@ -15,6 +15,7 @@ public class TireForgeDbContext(DbContextOptions<TireForgeDbContext> options) : 
     public DbSet<HistoryIncident> History => Set<HistoryIncident>();
     public DbSet<Diagnosis> Diagnoses => Set<Diagnosis>();
     public DbSet<WorkOrder> WorkOrders => Set<WorkOrder>();
+    public DbSet<AgentCall> AgentCalls => Set<AgentCall>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -91,6 +92,18 @@ public class TireForgeDbContext(DbContextOptions<TireForgeDbContext> options) : 
             e.HasOne(w => w.Diagnosis).WithOne(d => d.WorkOrder)
                 .HasForeignKey<WorkOrder>(w => w.DiagnosisId).OnDelete(DeleteBehavior.Cascade);
             e.HasIndex(w => w.Status);
+        });
+
+        b.Entity<AgentCall>(e =>
+        {
+            e.HasKey(a => a.Id);
+            e.Property(a => a.Id).HasMaxLength(48);
+            e.Property(a => a.AgentName).HasMaxLength(48);
+            e.Property(a => a.Model).HasMaxLength(32);
+            e.Property(a => a.TraceId).HasMaxLength(64);
+            e.Property(a => a.ReadingId).HasMaxLength(48);
+            e.Ignore(a => a.TotalTokens);
+            e.HasIndex(a => a.AgentName);
         });
     }
 }

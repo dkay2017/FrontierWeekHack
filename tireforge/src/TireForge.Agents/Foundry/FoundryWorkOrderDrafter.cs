@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using TireForge.Core.Agents;
 using TireForge.Core.Model;
 
@@ -8,7 +9,8 @@ namespace TireForge.Agents.Foundry;
 /// The agent writes the crew instruction; every structured field is copied from
 /// the <see cref="Diagnosis"/> (Decision D12). The reading citation is enforced.
 /// </summary>
-public sealed class FoundryWorkOrderDrafter(FoundryAgentClient client, FoundryAgentOptions options) : IWorkOrderDrafter
+public sealed class FoundryWorkOrderDrafter(
+    FoundryAgentClient client, FoundryAgentOptions options, IAgentCallRecorder recorder) : IWorkOrderDrafter
 {
     public async Task<WorkOrderDraft> DraftAsync(Diagnosis diagnosis, Machine machine, CancellationToken ct = default)
     {
@@ -19,6 +21,10 @@ public sealed class FoundryWorkOrderDrafter(FoundryAgentClient client, FoundryAg
             "Write the work-order instruction.";
 
         var inv = await client.InvokeAsync(options.WorkOrderAgentName, prompt, toolHandler: null, ct);
+
+        await recorder.RecordAsync(new AgentCallUsage(
+            options.WorkOrderAgentName, options.Model, inv.InputTokens, inv.OutputTokens,
+            inv.ToolCalls, diagnosis.ReadingId, diagnosis.TraceId ?? Activity.Current?.TraceId.ToString()), ct);
 
         var action = inv.Text.Trim();
         if (action.Length == 0)

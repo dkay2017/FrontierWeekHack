@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using TireForge.Core.Agents;
 using TireForge.Core.History;
@@ -11,7 +12,8 @@ namespace TireForge.Agents.Foundry;
 /// The agent names the cause and writes the LIKELY CAUSE / ACTIONS / URGENCY prose;
 /// severity, confidence and citations stay deterministic (Decision D12).
 /// </summary>
-public sealed class FoundryFaultDiagnoser(FoundryAgentClient client, FoundryAgentOptions options) : IFaultDiagnoser
+public sealed class FoundryFaultDiagnoser(
+    FoundryAgentClient client, FoundryAgentOptions options, IAgentCallRecorder recorder) : IFaultDiagnoser
 {
     public async Task<FaultVerdict> DiagnoseAsync(
         Reading reading, ThresholdReport t1, HistoryReport t2, AnomalyVerdict a1, CancellationToken ct = default)
@@ -25,6 +27,10 @@ public sealed class FoundryFaultDiagnoser(FoundryAgentClient client, FoundryAgen
         cites.AddRange(t2.Cites);
 
         var inv = await client.InvokeAsync(options.FaultAgentName, BuildPrompt(reading, t1, t2), toolHandler: null, ct);
+
+        await recorder.RecordAsync(new AgentCallUsage(
+            options.FaultAgentName, options.Model, inv.InputTokens, inv.OutputTokens,
+            inv.ToolCalls, reading.Id, Activity.Current?.TraceId.ToString()), ct);
 
         var fault = ExtractLikelyCause(inv.Text)
                     ?? (t1.Breaches.Count > 0

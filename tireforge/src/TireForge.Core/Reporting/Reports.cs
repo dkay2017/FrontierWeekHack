@@ -88,21 +88,53 @@ public sealed class Reports(
             open, closed, resolution, now);
     }
 
+    // gpt-5.4 pricing estimate (USD per 1M tokens) — spend is real tokens × this.
+    private const decimal PriceInPer1M = 2.50m;
+    private const decimal PriceOutPer1M = 10.00m;
+
+    private static readonly Dictionary<string, string> AgentDisplayNames = new()
+    {
+        ["anomaly-detection-agent"] = "Anomaly Detection",
+        ["fault-diagnosis-agent"] = "Fault Diagnosis",
+        ["work-order-agent"] = "Work Order",
+    };
+
     public async Task<CostResponse> CostAsync(CancellationToken ct = default)
     {
+        var metered = await queries.AgentCallTotalsAsync(ct);
+
+        if (metered.Any(m => m.TotalTokens > 0))
+        {
+            var agents = metered
+                .OrderBy(m => m.AgentName)
+                .Select(m =>
+                {
+                    var spend = m.PromptTokens / 1_000_000m * PriceInPer1M
+                              + m.CompletionTokens / 1_000_000m * PriceOutPer1M;
+                    return new AgentCostView(
+                        AgentDisplayNames.GetValueOrDefault(m.AgentName, m.AgentName),
+                        m.Model, m.Calls, m.TotalTokens, Math.Round(spend, 4));
+                })
+                .ToList();
+
+            return new CostResponse(agents, TokenMetricsAvailable: true,
+                Note: $"Tokens are real (from each agent response). Spend is estimated at " +
+                      $"${PriceInPer1M}/1M input + ${PriceOutPer1M}/1M output for gpt-5.4.",
+                GeneratedAt: _clock.GetUtcNow());
+        }
+
+        // No metered calls yet (running with stubs, or no anomalous readings).
         var readingCalls = await queries.ReadingCountAsync(ct);
         var diagnosisCalls = await queries.DiagnosisCountAsync(ct);
-
-        var agents = new List<AgentCostView>
+        var placeholder = new List<AgentCostView>
         {
             new("Anomaly Detection", "gpt-5.4", readingCalls, null, null),
             new("Fault Diagnosis", "gpt-5.4", diagnosisCalls, null, null),
             new("Work Order", "gpt-5.4", diagnosisCalls, null, null),
         };
-
-        return new CostResponse(agents, TokenMetricsAvailable: false,
+        return new CostResponse(placeholder, TokenMetricsAvailable: false,
             Note: "Call counts are from the pipeline's own records. Token and spend figures " +
-                  "populate once the real Foundry agents run and emit gen_ai.* spans (Stage M).",
+                  "populate once the real Foundry agents run (TIREFORGE_AGENTS=foundry).",
             GeneratedAt: _clock.GetUtcNow());
     }
 

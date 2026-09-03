@@ -4,13 +4,20 @@
 Keep this file current at every checkpoint and **commit + push it** — a Codespace
 rebuild loses anything uncommitted (see the `codespace-data-loss` memory).
 
-_Last updated: 2026-09-03 (session 4). Resume point: **the EF SqlServer swap**
-(provider + SqlServer migrations + `azd postprovision`) — the one code task before
-a live `azd up` persists; then **step 9 — Challenge 3** (portal Evaluations over
-`eval_portal.jsonl`). **Stages A–M + dashboard + Ingestion/Orchestrator + the
-Challenge-4 infra all done.** 124 tests green (34 Core + 46 Data + 28 Agents +
-12 ApiProxy + 4 Orchestrator). Pending: EF SqlServer swap, live `azd up`, portal
-workflow designer, live multi-host `func` run._
+_Last updated: 2026-09-03 (session 4). Resume point: **verify + test-pass** — CI
+(`.github/workflows/tireforge-ci.yml`) is the first real run of the SQLite→SqlServer
+swap + the D13 cost metering (Testcontainers needs Docker, not in this Codespace).
+Watch the CI result, fix anything red, add the missing unit tests. Then: manual
+portal steps (Challenge 3 eval, Challenge 4 workflow) + live `azd up` +
+**the consolidated doc-reconciliation pass** (`PENDING-DOC-UPDATES.md`)._
+
+_**Done:** Stages A–M · dashboard · Ingestion/Orchestrator · Challenge-4 infra ·
+SQLite→**Azure SQL** (SqlServer EF provider, Testcontainers tests) · **APIM
+descoped** (D3) · **cost metering** (D13 — `AgentCalls` table, real tokens+spend on
+the Cost tab) · `eval/TireForge.Eval` CI gate (10/10) · CI workflow._
+
+_Codespace: 62 non-DB tests green; ~62 DB tests + eval gate run in CI. All work
+committed + pushed._
 
 ---
 
@@ -488,3 +495,30 @@ Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
   compute outputs. `azure.yaml` dashboard gets `dist: .`. `az bicep build` clean.
   **Remaining for Challenge 4:** the EF SqlServer swap (provider + migrations +
   `azd postprovision`), then live `azd up` + the portal workflow designer.
+- **Session 4 cont. — Challenge 3: `eval/TireForge.Eval` + CI.** CI-gate harness —
+  replays the 10-case `evaluation_dataset.json` through `ThresholdCheck` (T1), gates
+  on classification accuracy (`--min-accuracy` default 1.0). Baseline **10/10** class
+  + urgency + anomaly count. `.github/workflows/tireforge-ci.yml` (new) —
+  build → test → eval gate on push/PR; `ubuntu-latest` has Docker so the
+  Testcontainers SQL Server tests run in CI. `docs/runbooks/challenge-3-portal-evaluation.md`
+  = the manual portal Coherence/Fluency steps.
+- **Session 4 cont. — SQLite → Azure SQL (SqlServer EF provider), everywhere.**
+  `TireForge.Data` → `EntityFrameworkCore.SqlServer`; `UseSqlServer`; dropped the
+  `DateTimeOffsetToBinaryConverter`; migrations regenerated for SqlServer. Hosts +
+  `AgentTool` + samples: `TIREFORGE_DB` = a SQL Server string. New
+  `tests/TireForge.TestSupport` — a shared **Testcontainers MsSql** helper (one
+  container/process, fresh DB per `TestDb`), mirrors the old surface so the ~90
+  data tests need no changes; `Microsoft.Data.Sqlite` removed from 3 test projects.
+  Solution builds; 62 non-DB tests pass here; DB tests need Docker → CI.
+- **Session 4 cont. — APIM descoped (D3) + cost metering (D13).** APIM AI Gateway
+  **deliberately not built** — the `azure-openai-*` policies don't fit the
+  hosted-agent Responses path and the visibility it feeds is available directly;
+  governance = documented roadmap (DECISIONS D3, TDD §7). **Cost metering built
+  instead:** `Core.Model.AgentCall` + `IAgentCallRecorder` (`Core.Agents`) →
+  `AgentCalls` table (`AddAgentCalls` migration) + `Data/Repositories/AgentCallRecorder`.
+  `FoundryAgentClient` sums tokens across the tool-loop; the 3 `Foundry*` impls
+  (now **scoped**) record a row per invocation. `IReportingQueries.AgentCallTotalsAsync`;
+  `Reports.CostAsync` returns real per-agent tokens + estimated spend
+  ($2.50/1M in + $10/1M out for gpt-5.4) when any row has tokens, else the old
+  placeholder. Dashboard Cost tab unchanged (already handles both). Builds; unit
+  tests for the recorder / real-numbers branch **not yet written** (test pass).

@@ -17,4 +17,13 @@ public interface IReportingQueries
     Task<int> ReadingCountAsync(CancellationToken ct = default);
 
     Task<int> DiagnosisCountAsync(CancellationToken ct = default);
+
+    /// <summary>Per-agent call count + token totals from the <c>AgentCalls</c> metering table (D13).</summary>
+    Task<IReadOnlyList<AgentCallTotals>> AgentCallTotalsAsync(CancellationToken ct = default);
+}
+
+/// <summary>Aggregated cost metering for one agent.</summary>
+public sealed record AgentCallTotals(string AgentName, string Model, int Calls, long PromptTokens, long CompletionTokens)
+{
+    public long TotalTokens => PromptTokens + CompletionTokens;
 }

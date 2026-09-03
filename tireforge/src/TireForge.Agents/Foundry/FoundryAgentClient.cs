@@ -87,7 +87,11 @@ public sealed class FoundryAgentClient
             defaultConversationId: null, options: null);
 
         var toolCalls = 0;
+        var inTokens = 0;
+        var outTokens = 0;
+
         ResponseResult result = (await responses.CreateResponseAsync(userText, null, ct)).Value;
+        Accumulate(result.Usage);
 
         while (toolHandler is not null)
         {
@@ -105,14 +109,16 @@ public sealed class FoundryAgentClient
             }
 
             result = (await responses.CreateResponseAsync(outputs, result.Id, ct)).Value;
+            Accumulate(result.Usage);
         }
 
-        var usage = result.Usage;
-        return new AgentInvocation(
-            result.GetOutputText() ?? "",
-            toolCalls,
-            usage?.InputTokenCount ?? 0,
-            usage?.OutputTokenCount ?? 0);
+        return new AgentInvocation(result.GetOutputText() ?? "", toolCalls, inTokens, outTokens);
+
+        void Accumulate(ResponseTokenUsage? u)
+        {
+            inTokens += u?.InputTokenCount ?? 0;
+            outTokens += u?.OutputTokenCount ?? 0;
+        }
     }
 }
 

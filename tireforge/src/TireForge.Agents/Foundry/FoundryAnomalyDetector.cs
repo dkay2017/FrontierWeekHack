@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using TireForge.Core.Agents;
 using TireForge.Core.Model;
 using TireForge.Core.Thresholds;
@@ -9,7 +10,8 @@ namespace TireForge.Agents.Foundry;
 /// The agent calls <c>check_thresholds</c> and writes the grounded narrative;
 /// <c>IsAnomaly</c> stays deterministic on T1 (Decision D12).
 /// </summary>
-public sealed class FoundryAnomalyDetector(FoundryAgentClient client, FoundryAgentOptions options) : IAnomalyDetector
+public sealed class FoundryAnomalyDetector(
+    FoundryAgentClient client, FoundryAgentOptions options, IAgentCallRecorder recorder) : IAnomalyDetector
 {
     public async Task<AnomalyVerdict> DetectAsync(
         Reading reading, ThresholdReport t1, IReadOnlyList<Reading> recent, CancellationToken ct = default)
@@ -31,6 +33,10 @@ public sealed class FoundryAnomalyDetector(FoundryAgentClient client, FoundryAge
                 ? toolResult
                 : $$"""{"error":"unknown tool '{{name}}'"}""",
             ct);
+
+        await recorder.RecordAsync(new AgentCallUsage(
+            options.AnomalyAgentName, options.Model, inv.InputTokens, inv.OutputTokens,
+            inv.ToolCalls, reading.Id, Activity.Current?.TraceId.ToString()), ct);
 
         var text = $"A1 {reading.Id} {reading.MachineId}: {inv.Text.Trim()}";
         return new AnomalyVerdict(isAnomaly, text, new[] { reading.Id });
