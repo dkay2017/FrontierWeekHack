@@ -21,3 +21,14 @@ services:
     language: js
     host: staticwebapp
     dist: .
+
+hooks:
+  # After provision (DB + apps + identities exist), before deploy: migrate + grant
+  # the Function App identities + seed. See tools/TireForge.DbDeploy.
+  postprovision:
+    shell: sh
+    continueOnError: false
+    run: >
+      dotnet run --project tools/TireForge.DbDeploy --
+      --db "$TIREFORGE_DB"
+      --apps "$INGESTION_APP_NAME,$ORCHESTRATOR_APP_NAME,$APIPROXY_APP_NAME"

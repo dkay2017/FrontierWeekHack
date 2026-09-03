@@ -4,18 +4,21 @@
 Keep this file current at every checkpoint and **commit + push it** — a Codespace
 rebuild loses anything uncommitted (see the `codespace-data-loss` memory).
 
-_Last updated: 2026-09-03 (session 4). Resume point: **add the D13 unit tests**
-(`AgentCallRecorder`, `Reports.CostAsync` real-numbers branch), then manual portal
-steps (Challenge 3 eval, Challenge 4 workflow) + live `azd up` +
-**the consolidated doc-reconciliation pass** (`PENDING-DOC-UPDATES.md`)._
+_Last updated: 2026-09-03 (session 4). Resume point: **live `azd up`** — infra +
+4 services to Azure; then the consolidated doc-reconciliation pass
+(`PENDING-DOC-UPDATES.md`)._
 
-_**Done:** Stages A–M · dashboard · Ingestion/Orchestrator · Challenge-4 infra ·
-runtime **SQLite→Azure SQL** (SqlServer EF provider; tests = in-memory SQLite
-double, `AddTireForgeData(Action<…>)` overload) · **APIM descoped** (D3) · **cost
-metering** (D13 — `AgentCalls` table, real tokens+spend on the Cost tab) ·
-`eval/TireForge.Eval` CI gate (10/10) · CI workflow._
+_**Challenges 0–4 all complete:** 0 infra ✅ · 1 agents (Stage M) ✅ · 2 App
+Insights agent traces ✅ · 3 portal eval **100/100** ✅ · 4 portal workflow
+`factory-health-workflow-portal` (2 agents, D14) + Durable orchestrator ✅._
 
-_**124 tests green in the Codespace** (~5 s, no Docker). All committed + pushed._
+_**Code done:** Stages A–M · dashboard · Ingestion/Orchestrator · Challenge-4 infra
+(bicep) · runtime **SQLite→Azure SQL** (tests = in-memory SQLite double) · **APIM
+descoped** (D3) · **cost metering** (D13) · `eval/TireForge.Eval` CI gate (10/10) ·
+CI workflow · **`tools/TireForge.DbDeploy`** (azd postprovision — migrate + grant
+Function App identities + seed) + `azure.yaml` `hooks.postprovision`._
+
+_**127 tests green** (~5 s, no Docker). All committed + pushed._
 
 ---
 
