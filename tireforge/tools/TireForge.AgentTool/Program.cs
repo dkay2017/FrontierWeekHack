@@ -42,8 +42,11 @@ using var tracer = string.IsNullOrWhiteSpace(appInsights) ? null : Sdk.CreateTra
     .AddAzureMonitorTraceExporter(o => o.ConnectionString = appInsights)
     .Build();
 
+// Share the DB the ApiProxy / dashboard read, so a `run` shows up there.
+var dbPath = Environment.GetEnvironmentVariable("TIREFORGE_DB")
+             ?? $"Data Source={Path.Combine(repoRoot, "tireforge", "tireforge.db")}";
 var services = new ServiceCollection();
-services.AddTireForgeData($"Data Source={Path.Combine(Path.GetTempPath(), "tireforge-agenttool.db")}");
+services.AddTireForgeData(dbPath);
 services.AddTireForgeAgents();
 await using var sp = services.BuildServiceProvider();
 

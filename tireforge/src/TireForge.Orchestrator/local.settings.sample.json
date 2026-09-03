@@ -7,10 +7,10 @@
     "TIREFORGE_DB": "Data Source=../../tireforge.db",
     "TIREFORGE_SKIP_DB_INIT": "false",
 
+    "TIREFORGE_AGENTS": "stub",
+    "PROJECT_CONNECTION_STRING": "",
+    "MODEL_DEPLOYMENT_NAME": "gpt-5.4",
+
     "APPLICATIONINSIGHTS_CONNECTION_STRING": ""
-  },
-  "Host": {
-    "CORS": "*",
-    "CORSCredentials": false
   }
 }

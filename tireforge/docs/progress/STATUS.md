@@ -4,11 +4,12 @@
 Keep this file current at every checkpoint and **commit + push it** — a Codespace
 rebuild loses anything uncommitted (see the `codespace-data-loss` memory).
 
-_Last updated: 2026-09-03 (session 4). Resume point: **step 8 — Ingestion +
-Orchestrator wiring** (timer/queue → Durable → `Pipeline.RunAsync`; = Challenge 4
-SDK/Functions path), then the portal workflow designer steps. **Stages A–M +
-dashboard port all done.** 120 tests green (34 Core + 46 Data + 28 Agents +
-12 ApiProxy). Pending: live `func` host smoke test (no core-tools in this Codespace)._
+_Last updated: 2026-09-03 (session 4). Resume point: **finish Challenge 4** —
+Function App bicep in `infra/` + a live `azd up`, then the portal
+workflow-designer steps; then **step 9 — Challenge 3** (portal Evaluations over
+`eval_portal.jsonl`). **Stages A–M + dashboard + Ingestion/Orchestrator code all
+done.** 124 tests green (34 Core + 46 Data + 28 Agents + 12 ApiProxy + 4
+Orchestrator). Pending: live multi-host `func` run (no core-tools in this Codespace)._
 
 ---
 
@@ -49,7 +50,7 @@ just "agent-shaped logic". See DECISIONS.md D9.**
 | 1 | `anomaly-detection-agent` + `fault-diagnosis-agent` created via SDK, flag 2 warn + 1 crit | **all 3 agents live** (`anomaly-detection-agent` + `check_thresholds` tool, `fault-diagnosis-agent`, `work-order-agent`), pure C#, wired behind `Core.Agents` interfaces, full pipeline pass verified | ✅ done (Stage M full) |
 | 2 | agent-keyed traces in portal Traces/Monitor/Agents(preview) | one `pipeline.run` trace in App Insights with `invoke_agent <name>:<ver>` + `chat gpt-5.4-2026-03-05` spans nested per step; tool loop visible | ✅ done (Stage M full) |
 | 3 | evaluate the `anomaly-detection-agent` target in the portal (Coherence/Fluency over `eval_portal.jsonl`) | agent now exists — portal Evaluations run + `eval/TireForge.Eval` CI-gate superset outstanding | ⬜ unblocked, not started |
-| 4 | agents visible as persistent assets + portal workflow designer | 3 agents live ✅; `TireForge.Ingestion`/`Orchestrator` wiring + portal workflow designer outstanding | 🟡 agents done, wiring pending |
+| 4 | agents visible as persistent assets + portal workflow designer | 3 agents live ✅; `TireForge.Ingestion`/`Orchestrator` Durable wiring done ✅ (code); Function App bicep + `azd up` + portal workflow designer outstanding | 🟡 code done, deploy + portal pending |
 | superset | APIM gateway · Dashboard · Reviewer gate · Work Order Adapter | Reviewer ✅, read models ✅, ApiProxy ✅, dashboard port ✅; APIM last (D3 spike gated) | 🟡 APIM only |
 
 **Challenge 1 specifics (from its README + `agents.py` + `sensor_data.json`):**
@@ -93,6 +94,8 @@ context" layer if time allows.
 
 - **D1** all 3 agents use `gpt-5.4` (only model on the Foundry account); APIM caps become per-agent.
 - **D2** v1 Durable orchestrator = ONE activity running `Core.Pipeline.Run` end-to-end.
+  ✅ implemented — `TireForge.Orchestrator/PipelineFunctions.cs` (queue → starter →
+  orchestrator → `RunPipeline` activity), `TireForge.Ingestion` publishes the queue.
 - **D3** APIM built LAST. *(For the real-agent path, superseded by D9 — agents are
   hosted Foundry agents, not direct model calls; APIM would front those.)*
 - **D9** Stage M real agents = **persistent Foundry agents**
@@ -182,8 +185,8 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 | K | Reviewer decisions — approve / reject / close lifecycle | ☑ `Core/Reviewing/Reviewer` — 10 tests |
 | L | Report logic — `/status` `/queue` `/workorders` `/cost` + health metrics | ☑ `Core/Reporting/Reports` (14 tests) + `TireForge.ApiProxy` HTTP endpoints (5 read + 3 reviewer-write, anonymous auth per D10, 12 tests) |
 | M | Real **persistent Foundry agents** (D9/D11 nextgen `Azure.AI.Projects` 2.x, D12 hybrid) — `anomaly-detection-agent` (+ `check_thresholds`) / `fault-diagnosis-agent` / `work-order-agent`, wired behind `Core.Agents`; `TIREFORGE_AGENTS=stub\|foundry` | ☑ `src/TireForge.Agents/Foundry/` + `tools/TireForge.AgentTool`; full pipeline pass verified, spans in App Insights |
-| — | Ingestion Function + Storage Queue wiring | ☐ |
-| — | Orchestrator Durable wiring around `run_pipeline` | ☐ |
+| — | Ingestion Function + Storage Queue wiring | ☑ `TireForge.Ingestion` — `SensorSimulator` (timer, per-machine) + `EmitReading` (HTTP `/api/emit/{machine}/{mode}`) → `readings` queue |
+| — | Orchestrator Durable wiring around `run_pipeline` | ☑ `TireForge.Orchestrator` — queue → `PipelineStarter` (dedup on reading id) → `PipelineOrchestrator` → `RunPipeline` activity = one `Core.Pipeline.RunAsync` (D2). 4 tests. |
 | — | Dashboard (port of v1.6) | ☑ `src/TireForge.Dashboard/index.html` — mock `api` → live `fetch` at ApiProxy, reviewer POSTs, `gpt-5.4`, mojibake fixed, sim → illustrative; jsdom smoke test green |
 | — | APIM AI Gateway + token policies | ☐ |
 | — | Eval harness (4 scenarios) + Health Workbook | ☐ |
@@ -193,8 +196,9 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 
 ## Next actions
 
-**Stages A–M + dashboard port all done.** 120 tests green (34 Core + 46 Data +
-28 Agents + 12 ApiProxy). **Next: step 8 — Ingestion + Orchestrator wiring.**
+**Stages A–M + dashboard + Ingestion/Orchestrator code all done.** 124 tests green
+(34 Core + 46 Data + 28 Agents + 12 ApiProxy + 4 Orchestrator). **Next: finish
+Challenge 4** (Function App bicep + `azd up` + portal workflow), then Challenge 3.
 
 **Stage M full — shipped (session 4):**
 - `src/TireForge.Agents/Foundry/` — `FoundryAgentClient` (ensure + invoke w/ tool
@@ -224,16 +228,27 @@ illustrative (no client-side QUEUE/WORKORDERS mutation); Cost shows call counts 
 `—` for token/spend (pending the gateway). `?api=` override, `API_BASE` defaults to
 same-origin `/api`, red banner on connection failure. jsdom render smoke test green.
 
-**Step 8 — Ingestion + Orchestrator (the plan):**
-1. `TireForge.Ingestion` — timer trigger (per-shift) or Storage Queue trigger; a
-   `SensorSimulator` wrapping `Core.Sensing.ReadingFactory` enqueues readings.
-2. `TireForge.Orchestrator` — Durable: queue-triggered client → orchestrator → **one
-   activity** running `Core.Pipeline.RunAsync` end-to-end (Decision D2). Register
-   `AddTireForgeData` + `AddTireForgeAgents` in both hosts.
-3. `azd up` / `azure.yaml` service wiring = **Challenge 4** (SDK/Functions path);
-   then the portal workflow-designer steps.
-4. Fold in the deferred **`func` host smoke test** for ApiProxy + Dashboard — needs
-   `azure-functions-core-tools` (`npm i -g azure-functions-core-tools@4`).
+**Step 8 — Ingestion + Orchestrator — shipped (session 4):**
+- `TireForge.Ingestion` — `SensorSimulator` (timer, 5 min; one weighted
+  `ReadingFactory` reading per seeded machine) + `EmitReading`
+  (`POST /api/emit/{machineId}/{mode?}`) → `readings` queue. Refs `Core` + `Data`
+  (machine roster from the store).
+- `TireForge.Orchestrator` — `PipelineStarter` (`[QueueTrigger("readings")]`,
+  `InstanceId = reading.Id` → redelivery is a no-op) → `PipelineOrchestrator`
+  (deterministic) → `RunPipeline` (`[ActivityTrigger]`, injected `Pipeline`,
+  returns `PipelineRunSummary`). `Program.cs` = `AddTireForgeData` +
+  `AddTireForgeAgents` + `AddScoped<Pipeline>()` + migrate/seed.
+- `local.settings.sample.json` for both (+ ApiProxy) point `TIREFORGE_DB` at
+  `../../tireforge.db` so all local hosts share one SQLite file; `AgentTool` too.
+- 4 `TireForge.Orchestrator.Tests` — DI wiring + the activity end to end
+  (crit → review, normal → stop, confident warn → auto WO).
+
+**Remaining for Challenge 4:**
+1. Function App bicep in `infra/` (Flex Consumption × ingestion/orchestrator/apiproxy,
+   Storage, Durable hub, managed identity + RBAC) + a live `azd up`.
+2. Portal workflow-designer steps (Challenge 4 Part 2) once agents + `azd up` land.
+3. Live multi-host `func start` smoke test (ApiProxy + Ingestion + Orchestrator +
+   Azurite + dashboard) — needs `azure-functions-core-tools` (not in this Codespace).
 
 - **Agent contracts refactor:** ports (`IAnomalyDetector` / `IFaultDiagnoser` /
   `IWorkOrderDrafter`) + outputs (`AnomalyVerdict` / `FaultVerdict` /
@@ -273,7 +288,7 @@ same-origin `/api`, red banner on connection failure. jsdom render smoke test gr
    behind the `Core.Agents` interfaces (+ `TIREFORGE_AGENTS` switch, D12).
    3 agents live = **Challenge 1 real**; nested agent spans = **Challenge 2 real**.
 7. ✅ **Dashboard port** — `src/TireForge.Dashboard/index.html`: mock `api` → live `fetch` at ApiProxy, reviewer POSTs, `gpt-5.4`, mojibake fixed, sim illustrative.
-8. **Ingestion + Orchestrator + `azd up`** = **Challenge 4** (Functions path) → then portal workflow steps.
+8. ◐ **Ingestion + Orchestrator** code done (Durable pipeline, `readings` queue, 4 tests); Function App bicep + `azd up` + portal workflow = Challenge 4 finish.
 9. **Challenge 3** — portal Evaluations over `eval_portal.jsonl`; `eval/TireForge.Eval` = CI-gate superset.
 10. **APIM** — only if the D3 spike passes (now in front of hosted-agent calls).
 
@@ -292,7 +307,7 @@ session-3 analysis; drops recorded in DECISIONS.md D8.
 | **Stage M spike — real Foundry agent, .NET SDK (D9)** | 10 | 5 | ✅ done (`spikes/FoundryAgentSpike`) |
 | Stage M full — 3 hosted agents behind the interfaces | 9 | 5 | ✅ done (`Foundry/` + `AgentTool`) |
 | Dashboard port (fetch, gpt-5.4 labels, mojibake, sim trim) | 7 | 3 | ✅ done |
-| Ingestion + Orchestrator wiring + `azd up` | 7 | 5 | queued |
+| Ingestion + Orchestrator wiring | 7 | 5 | ✅ code done (`azd up` + Function App bicep remain) |
 | Challenge 3 portal evaluation + `eval/TireForge.Eval` | 6 | 3 | queued |
 | Cost tab real numbers | 5 | 5 | deferred → needs Stage M token spans |
 | APIM gateway + policies | 6 | 8 | deferred → 1 h spike, else roadmap |
@@ -316,7 +331,7 @@ az bicep install
 az login          # subscription DkaySubscription
 bash tireforge/scripts/restore-env.sh
 
-# 5. sanity check — expect 120 green (34 Core + 46 Data + 28 Agents + 12 ApiProxy):
+# 5. sanity check — expect 124 green (34 Core + 46 Data + 28 Agents + 12 ApiProxy + 4 Orchestrator):
 cd tireforge && dotnet build TireForge.sln && dotnet test TireForge.sln
 ```
 
@@ -434,3 +449,17 @@ Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
   `?api=` override, same-origin `/api` default, red banner on failure.
   `local.settings.sample.json` (CORS) added. jsdom render smoke test (16 checks)
   green. Live `func` smoke test still pending (no core-tools here).
+- **Session 4 cont. — step 8: Ingestion + Orchestrator (Durable pipeline).**
+  `TireForge.Ingestion` — `SensorSimulator` (timer 5 min, one weighted
+  `ReadingFactory` reading per seeded machine) + `EmitReading`
+  (`POST /api/emit/{machineId}/{mode?}`) → `readings` queue; refs `Core` + `Data`.
+  `TireForge.Orchestrator` — `PipelineStarter` (`[QueueTrigger("readings")]`,
+  `InstanceId = reading.Id` so redelivery is a no-op) → `PipelineOrchestrator`
+  (deterministic) → `RunPipeline` (`[ActivityTrigger]`, injected `Pipeline`) =
+  one `Core.Pipeline.RunAsync` (D2), returns `PipelineRunSummary`. Both `Program.cs`
+  = `AddTireForgeData` + `AddTireForgeAgents` (+ `AddScoped<Pipeline>()`) + migrate/
+  seed. `local.settings.sample.json` for all three hosts point `TIREFORGE_DB` at a
+  shared `../../tireforge.db`; `AgentTool` uses the repo-root path too. New
+  `tests/TireForge.Orchestrator.Tests` (4): DI wiring + activity end-to-end
+  (crit→review, normal→stop, confident-warn→auto WO). 124 green. **Remaining for
+  Challenge 4:** Function App bicep + `azd up`, then the portal workflow designer.

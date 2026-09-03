@@ -8,9 +8,5 @@
     "TIREFORGE_SKIP_DB_INIT": "false",
 
     "APPLICATIONINSIGHTS_CONNECTION_STRING": ""
-  },
-  "Host": {
-    "CORS": "*",
-    "CORSCredentials": false
   }
 }

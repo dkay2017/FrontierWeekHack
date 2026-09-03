@@ -32,6 +32,13 @@ correct, gets us to end-to-end fastest.
 this is the "hub & spokes" of the diagram and gives per-step retry + durability. `Core` logic is
 identical either way; only the `TireForge.Orchestrator` wiring changes.
 
+**✅ Implemented (session 4).** `TireForge.Orchestrator/PipelineFunctions.cs` —
+`PipelineStarter` (queue trigger on `readings`, `InstanceId = reading.Id` so a
+redelivered message is a no-op) → `PipelineOrchestrator` (deterministic, schedules
+one activity) → `RunPipeline` (`[ActivityTrigger]`, injects `Pipeline`, returns
+`PipelineRunSummary`). `TireForge.Ingestion` publishes the queue. See revised
+sequence step 8.
+
 ## D3 — APIM AI Gateway: built last
 
 APIM is the AI Governance gate and sits in front of every model call (TDD §7). It is **priority 3**
@@ -321,8 +328,14 @@ for real**; the three agents are portal-visible = **Challenge 1 for real**.
    token/spend until the gateway (D8). `?api=` override; CORS via
    `func start --cors "*"` (`local.settings.sample.json`). jsdom render smoke test
    green. Live `func` host smoke test still pending (no core-tools in this Codespace).
-8. **Ingestion + Orchestrator wiring** — timer → queue → Durable → `Pipeline.RunAsync` +
-   `azd up` = **Challenge 4** (SDK/Functions path); then the portal workflow steps.
+8. ◐ **Ingestion + Orchestrator wiring** (session 4) — **code done**:
+   `TireForge.Ingestion` (`SensorSimulator` timer + `EmitReading` HTTP → `readings`
+   queue) + `TireForge.Orchestrator` (`PipelineStarter` queue trigger →
+   `PipelineOrchestrator` → `RunPipeline` activity = one `Core.Pipeline.RunAsync`,
+   D2; instance id = reading id for idempotency). Both hosts wire
+   `AddTireForgeData` + `AddTireForgeAgents`. 4 `TireForge.Orchestrator.Tests`
+   (DI + activity end-to-end). **Remaining:** Function App bicep in `infra/` + a
+   live `azd up`, then the portal workflow-designer steps = **Challenge 4** finish.
 9. **Challenge 3** — upload `eval_portal.jsonl`, run Coherence/Fluency in the portal;
    `eval/TireForge.Eval` as the CI-gate superset.
 10. **APIM** — only if the D3 spike passes and time remains (now sits in front of the
