@@ -7,8 +7,9 @@ rebuild loses anything uncommitted (see the `codespace-data-loss` memory).
 _Last updated: 2026-09-03 (session 4). Resume point: **Stage M spike (D9)** — one
 real persistent Foundry agent, portal-visible, one invocation, trace in App
 Insights. Run at **rung 0** of the D11 ladder (pure C#, `Azure.AI.Agents.Persistent`);
-fall back rung 0 → 2 (Python deploy script) → 1 (C# invoke). Stage L is **done**
-(ApiProxy endpoints shipped). 114 tests green (34 Core + 46 Data + 22 Agents + 12 ApiProxy)._
+fall back to `0 → 2 + 1` — a one-shot Python provisioning script + all-C# invocation,
+fully scripted, no manual portal setup. Stage L is **done** (ApiProxy endpoints
+shipped). 114 tests green (34 Core + 46 Data + 22 Agents + 12 ApiProxy)._
 
 ---
 
@@ -103,11 +104,11 @@ context" layer if time allows.
   (keyless dashboard SPA; gateway or Function key before any non-local deploy).
 - **D11** Agent SDK fallback ladder: provisioning and invocation are separable
   (an agent is a service-side resource; the invoke API is OpenAI-compatible).
-  Preference order — **rung 0** pure C# (`Azure.AI.Agents.Persistent`, GA) →
-  **rung 2** one-shot Python `provision_agents.py` (the Challenge-0 `deploy.sh`
-  pattern, not in the request path) → **rung 1** C# invocation over the Responses
-  endpoint on top. Rung 3 (Python sidecar) = last resort only. Stage M spike runs
-  at rung 0.
+  **Rung 0** = pure C# (`Azure.AI.Agents.Persistent`, GA), try first. **Fallback
+  = `0 → 2 + 1`, fully scripted, no manual portal steps**: one-shot Python
+  `provision_agents.py` (Challenge-0 `deploy.sh` pattern, creates all 3 agents in
+  code) + **all invocation in C#** over the Responses endpoint. Portal used only
+  for viewing, never setup. Rung 3 (Python sidecar) = last resort only.
 - **D4** `TireForge.Data` = EF Core + repo interfaces; SQLite now, Azure SQL serverless as swap target.
 - **D5** schema = 5 tables incl. `Diagnoses`.
 - Guiding principle: **one end-to-end run first, refine after.**
@@ -222,7 +223,8 @@ detail for stages already shipped; kept for reference.
    12 ApiProxy tests. **Pending:** live `func` host smoke test (no core-tools in this
    Codespace) — folded into the dashboard-port step.
 5. **Stage M spike (D9)** — one real Foundry agent, portal-visible, one invocation, trace in
-   App Insights. Rung 0 of the D11 ladder (pure C#); fall back 0 → 2 → 1. ← **next**
+   App Insights. Rung 0 of the D11 ladder (pure C#); fall back to `0 → 2 + 1`
+   (scripted Python provision + all-C# invoke, no manual portal steps). ← **next**
 6. **Stage M full** — 3 agents behind the interfaces = **Challenge 1 real**; `gen_ai.*` spans = **Challenge 2 real**.
 7. **Dashboard port** — real `fetch`, `gpt-5.4` labels, mojibake fix, sim → normal/warn/crit.
 8. **Ingestion + Orchestrator + `azd up`** = **Challenge 4** (Functions path) → then portal workflow steps.

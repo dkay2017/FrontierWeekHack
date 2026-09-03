@@ -209,18 +209,32 @@ The only variable is how much Python we tolerate.
 
 **Preference order (agreed session 4):**
 
-| Rung | Provision | Invoke | Python | Notes |
-|---|---|---|---|---|
-| **0 — try first** | `Azure.AI.Agents.Persistent` (GA) `CreateAgent` | same SDK, threads/runs | none | Different API *shape* from `agents.py`, same outcome: portal-visible agents, traces via the Azure Monitor exporter. Most likely to just work. |
-| **2 — first fallback** | one-shot **Python deploy script** (`provision_agents.py`, run once — exactly the `challenge-0` `deploy.sh` pattern; not in the request path) | C# (rung 1) | one-time, offline | Keeps the C# **runtime** 100% C#. Python is infra tooling, like Bicep. |
-| **1 — layered on rung 2** | (done by rung 2's script, or the portal) | C# via the OpenAI-compatible Responses endpoint (`HttpClient` / `Azure.AI.OpenAI`, `agent_reference` in the body) | none | The C# invocation path that the pipeline's real `IAnomalyDetector` etc. call. |
-| **3 — last resort** | Python sidecar (FastAPI) owns create + invoke | C# `HttpAnomalyDetector : IAnomalyDetector` POSTs to it | always-on service | Only rung that dilutes "everything C#" and adds a service to deploy. Design already supports it. |
+- **Rung 0 — try first.** Pure C#: `Azure.AI.Agents.Persistent` (GA) `CreateAgent`
+  for provisioning, the same SDK (threads/runs) for invocation. No Python.
+  Different API *shape* from `agents.py`, same outcome — portal-visible agents,
+  traces via the Azure Monitor exporter. Most likely to just work.
 
-**Net:** the Stage M spike runs at **rung 0**. If `CreateAgent` / invocation
-won't cooperate against `factory-project`, provision with a small **Python script**
-(rung 2, familiar from Challenge 0) and do **all invocation in C#** (rung 1).
-Sidecar (rung 3) stays documented but unused unless C# genuinely cannot invoke a
-hosted agent at all.
+- **Fallback — `0 → 2 + 1`, fully scripted, no manual portal steps.** If rung 0's
+  `CreateAgent` / invocation won't cooperate against `factory-project`:
+  - **Rung 2** — a one-shot **Python deploy script** (`provision_agents.py`) using
+    the same nextgen API as `agents.py`, run once like the Challenge-0 `deploy.sh`.
+    It creates all three agents **end to end in code** — no clicking through the
+    portal designer, no manual field config. Not in the request path; Python is
+    infra tooling, like Bicep.
+  - **Rung 1** — **all invocation in C#**, over the OpenAI-compatible Responses
+    endpoint (`HttpClient` / `Azure.AI.OpenAI`, `agent_reference` in the body).
+    This is what the pipeline's real `IAnomalyDetector` / `IFaultDiagnoser` /
+    `IWorkOrderDrafter` call.
+  - Net: C# **runtime** stays 100% C#; the only Python is a checked-in provisioning
+    script that runs once per environment. **Zero manual configuration** — the
+    portal is used for *viewing* (Traces / Monitor / Evaluations / Workflows), not
+    for *setup*.
+
+- **Rung 3 — last resort only.** Python **sidecar** (FastAPI) owns create + invoke;
+  C# `HttpAnomalyDetector : IAnomalyDetector` POSTs to it. The only rung that
+  dilutes "everything C#" and adds an always-on service to deploy. Design already
+  supports it; stays documented but unused unless C# genuinely cannot invoke a
+  hosted agent at all.
 
 ## Revised build sequence (post-Stage J)
 
@@ -233,7 +247,7 @@ hosted agent at all.
    in this Codespace) — deferred to the dashboard-port step.
 5. **Stage M spike (D9)** — brought forward: one real Foundry agent, portal-visible,
    one invocation, trace in App Insights. De-risks everything below. Run at **rung 0**
-   of the D11 ladder (pure C#, `Azure.AI.Agents.Persistent`); fall back rung 0 → 2 → 1.
+   of the D11 ladder (pure C#, `Azure.AI.Agents.Persistent`); fall back to `0 → 2 + 1` (scripted, no manual portal steps).
 6. **Stage M full** — all three agents created + wired behind the interfaces =
    **Challenge 1 for real**; the `gen_ai.*` spans = **Challenge 2 for real**.
 7. **Dashboard port** — real `fetch`, `gpt-5.4` labels, mojibake fix, sim cut to normal/warn/crit.
