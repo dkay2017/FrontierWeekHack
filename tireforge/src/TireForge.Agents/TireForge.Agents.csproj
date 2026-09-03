@@ -4,10 +4,22 @@
     <ProjectReference Include="..\TireForge.Core\TireForge.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Stage M — real Foundry agents (nextgen projects 2.x API, see the spike's FINDINGS.md) -->
+    <PackageReference Include="Azure.AI.Projects" Version="2.0.1" />
+    <PackageReference Include="Azure.AI.Projects.Agents" Version="2.0.0" />
+    <PackageReference Include="Azure.AI.Extensions.OpenAI" Version="2.0.0" />
+    <PackageReference Include="Azure.Identity" Version="1.21.0" />
+    <!-- Microsoft.Extensions.{Configuration,DependencyInjection}.Abstractions come transitively
+         via Azure.Core 1.53 (10.0.x); an explicit lower pin would be a downgrade. -->
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- OpenAI Responses API + the Foundry projects agent surface are still preview -->
+    <NoWarn>$(NoWarn);OPENAI001</NoWarn>
   </PropertyGroup>
 
 </Project>

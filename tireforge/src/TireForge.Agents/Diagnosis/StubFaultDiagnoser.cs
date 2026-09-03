@@ -22,8 +22,8 @@ public sealed class StubFaultDiagnoser : IFaultDiagnoser
 
         var breaches = t1.Breaches;
         var fault = NameFault(breaches, t2);
-        var severity = Escalate(t1.Severity, t2);
-        var confidence = Score(t1, t2);
+        var severity = FaultHeuristics.Escalate(t1.Severity, t2);
+        var confidence = FaultHeuristics.Score(t1, t2);
 
         var cites = new List<string> { reading.Id };
         cites.AddRange(t2.Cites);
@@ -68,32 +68,6 @@ public sealed class StubFaultDiagnoser : IFaultDiagnoser
         return breaches.Count > 0
             ? $"{breaches[0].Sensor.Slug()} out of spec — cause undetermined"
             : "no fault indicated";
-    }
-
-    private static Severity Escalate(Severity t1Severity, HistoryReport t2)
-    {
-        if (t2.Exact && t2.Incidents.Count > 0 && t2.Incidents[0].Severity > t1Severity)
-            return t2.Incidents[0].Severity;
-        return t1Severity;
-    }
-
-    // --- Confidence ----------------------------------------------------------
-    private static double Score(ThresholdReport t1, HistoryReport t2)
-    {
-        var score = 0.50;
-
-        if (t2.Exact) score += 0.25;
-        else if (t2.AnyMatch) score += 0.10;
-
-        var breachCount = t1.Breaches.Count;
-        if (breachCount == 1) score += 0.10;          // one clear signal
-        else if (breachCount >= 3) score -= 0.15;     // compound — harder to pin one cause
-
-        var worst = t1.Breaches.Count > 0 ? t1.Breaches.Max(b => b.DeviationPct) : 0;
-        if (worst >= 40) score += 0.10;               // unambiguously out of band
-        else if (worst < 8) score -= 0.10;            // marginal
-
-        return Math.Round(Math.Clamp(score, 0.05, 0.98), 2);
     }
 
     private static string BuildText(

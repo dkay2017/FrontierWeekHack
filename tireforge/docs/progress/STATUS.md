@@ -4,13 +4,12 @@
 Keep this file current at every checkpoint and **commit + push it** — a Codespace
 rebuild loses anything uncommitted (see the `codespace-data-loss` memory).
 
-_Last updated: 2026-09-03 (session 4). Resume point: **Stage M full** — provision
-the 3 Foundry agents (`anomaly-detection-agent` + `check_thresholds` tool,
-`fault-diagnosis-agent`, `work-order-agent`) and wire real impls behind the
-`Core.Agents` interfaces. **The spike is done** — `tireforge/spikes/FoundryAgentSpike`
-proved pure C# (nextgen `Azure.AI.Projects` 2.x) creates + invokes a portal-visible
-agent, trace in App Insights; rung 0 of the D11 ladder confirmed, fallback not needed.
-Stage L done. 114 tests green (34 Core + 46 Data + 22 Agents + 12 ApiProxy)._
+_Last updated: 2026-09-03 (session 4). Resume point: **step 7 — dashboard port**
+(`TireForge.Dashboard`: real `fetch` against `ApiProxy`, `gpt-5.4` labels, mojibake
+fix, sim → normal/warn/crit; also the deferred `func` host smoke test).
+**Stages A–L + Stage M (spike + full) all done.** Real Foundry agents live and
+verified end-to-end — see the session log + DECISIONS.md D12. 120 tests green
+(34 Core + 46 Data + 28 Agents + 12 ApiProxy)._
 
 ---
 
@@ -48,10 +47,10 @@ just "agent-shaped logic". See DECISIONS.md D9.**
 | Challenge | Acceptance bar | tireforge work | State |
 |---|---|---|---|
 | 0 | Foundry infra + model playground works | deployed + `infra/main.bicep` | ✅ done |
-| 1 | `anomaly-detection-agent` + `fault-diagnosis-agent` created via SDK, flag 2 warn + 1 crit | logic A–J stubbed ✅; **`anomaly-detection-agent` v1 now live** (spike, pure C#, flags 2 warn + 1 crit); `fault-diagnosis` + tool + wiring = Stage M full | 🟡 1 of 2 agents live |
-| 2 | agent-keyed traces in portal Traces/Monitor/Agents(preview) | our pipeline `ActivitySource` spans ✅; **agent span `invoke_agent anomaly-detection-agent:1` confirmed in App Insights** (spike); full nesting under the pipeline trace = Stage M full | 🟡 proven, needs full wiring |
-| 3 | evaluate the `anomaly-detection-agent` target in the portal (Coherence/Fluency over `eval_portal.jsonl`) | needs the agent (Stage M); `eval/TireForge.Eval` = CI-gate superset | ⬜ not started |
-| 4 | agents visible as persistent assets + portal workflow designer | needs agents (Stage M) + `TireForge.Ingestion`/`Orchestrator` wiring (Functions = "Option 4") | ⬜ not started |
+| 1 | `anomaly-detection-agent` + `fault-diagnosis-agent` created via SDK, flag 2 warn + 1 crit | **all 3 agents live** (`anomaly-detection-agent` + `check_thresholds` tool, `fault-diagnosis-agent`, `work-order-agent`), pure C#, wired behind `Core.Agents` interfaces, full pipeline pass verified | ✅ done (Stage M full) |
+| 2 | agent-keyed traces in portal Traces/Monitor/Agents(preview) | one `pipeline.run` trace in App Insights with `invoke_agent <name>:<ver>` + `chat gpt-5.4-2026-03-05` spans nested per step; tool loop visible | ✅ done (Stage M full) |
+| 3 | evaluate the `anomaly-detection-agent` target in the portal (Coherence/Fluency over `eval_portal.jsonl`) | agent now exists — portal Evaluations run + `eval/TireForge.Eval` CI-gate superset outstanding | ⬜ unblocked, not started |
+| 4 | agents visible as persistent assets + portal workflow designer | 3 agents live ✅; `TireForge.Ingestion`/`Orchestrator` wiring + portal workflow designer outstanding | 🟡 agents done, wiring pending |
 | superset | APIM gateway · Dashboard · Reviewer gate · Work Order Adapter | Reviewer ✅, read models ✅; ApiProxy + dashboard port pending; APIM last | 🟡 partial |
 
 **Challenge 1 specifics (from its README + `agents.py` + `sensor_data.json`):**
@@ -103,6 +102,13 @@ context" layer if time allows.
   unchanged. Spike brought forward.
 - **D10** `TireForge.ApiProxy` endpoints — `AuthorizationLevel.Anonymous` for now
   (keyless dashboard SPA; gateway or Function key before any non-local deploy).
+- **D12** Real agents = **hybrid** (session 4): the agent writes the prose
+  (`AnomalyVerdict.Text`, `FaultVerdict.Fault`+`Text`, `WorkOrderDraft.ActionText`);
+  deterministic Core owns everything that drives the Gate / write path
+  (`IsAnomaly` = `t1.AnyBreach`, `Severity`/`Confidence` = `FaultHeuristics`,
+  `Cites` = reading + T2 ids). Stub and Foundry route identically; they differ in
+  prose. DI switch `TIREFORGE_AGENTS=stub|foundry`. Impls in
+  `src/TireForge.Agents/Foundry/`, driven by `tools/TireForge.AgentTool`.
 - **D11** Agent SDK fallback ladder. **Rung 0 (pure C#) — ✅ CONFIRMED (session 4).**
   Nextgen **Foundry projects 2.x API**: `Azure.AI.Projects` 2.0.1 +
   `Azure.AI.Projects.Agents` 2.0.0 + `Azure.AI.Extensions.OpenAI` 2.0.0.
@@ -176,7 +182,7 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 | J.5 | Tracing — `Activity`-based correlation + host export (D6) = Challenge 2 | ☑ `Core/Observability/Telemetry`, root+child spans, hosts registered |
 | K | Reviewer decisions — approve / reject / close lifecycle | ☑ `Core/Reviewing/Reviewer` — 10 tests |
 | L | Report logic — `/status` `/queue` `/workorders` `/cost` + health metrics | ☑ `Core/Reporting/Reports` (14 tests) + `TireForge.ApiProxy` HTTP endpoints (5 read + 3 reviewer-write, anonymous auth per D10, 12 tests) |
-| M | Swap stubs for real **persistent Foundry agents** (D9, nextgen `Azure.AI.Projects` 2.x per D11) — portal-visible `anomaly-detection-agent` / `fault-diagnosis-agent` / `work-order-agent`; = Challenge 1 & 2 for real | ◐ **spike done** (`spikes/FoundryAgentSpike`, agent v1 live); full wiring next |
+| M | Real **persistent Foundry agents** (D9/D11 nextgen `Azure.AI.Projects` 2.x, D12 hybrid) — `anomaly-detection-agent` (+ `check_thresholds`) / `fault-diagnosis-agent` / `work-order-agent`, wired behind `Core.Agents`; `TIREFORGE_AGENTS=stub\|foundry` | ☑ `src/TireForge.Agents/Foundry/` + `tools/TireForge.AgentTool`; full pipeline pass verified, spans in App Insights |
 | — | Ingestion Function + Storage Queue wiring | ☐ |
 | — | Orchestrator Durable wiring around `run_pipeline` | ☐ |
 | — | Dashboard (port of v1.6) | ☐ |
@@ -188,25 +194,33 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 
 ## Next actions
 
-**Stages A–L done + Stage M spike done.** 114 tests green (34 Core + 46 Data +
-22 Agents + 12 ApiProxy). **Next: Stage M full** — see "Revised build sequence"
-step 6 below. The notes under this line are session-3 detail for shipped stages;
-kept for reference.
+**Stages A–L + Stage M (spike + full) all done.** 120 tests green (34 Core +
+46 Data + 28 Agents + 12 ApiProxy). **Next: step 7 — dashboard port.**
 
-**Stage M full — the plan (from the spike's FINDINGS.md):**
-1. **Provisioner** — pure C#, creates all 3 agent versions via
-   `AgentAdministrationClient.CreateAgentVersion` (idempotent by version). Either a
-   `dotnet run` tool under `spikes/`→`tools/`, or a hosted-startup path. Prompts
-   come verbatim from `factory/challenge-1-build/agents.py`.
-2. **`check_thresholds` tool** on `anomaly-detection-agent` — a `ResponseTool`
-   function tool whose body calls `Core` `ThresholdCheck` (one impl, shared with T1).
-3. **Real impls** in `TireForge.Agents` behind `IAnomalyDetector` / `IFaultDiagnoser`
-   / `IWorkOrderDrafter` — construct `ProjectResponsesClient`, `CreateResponse`,
-   map the output text → `AnomalyVerdict` / `FaultVerdict` / `WorkOrderDraft`. The
-   anomaly impl runs the tool-call loop (iterate `r.OutputItems` for `function_call`).
-4. Keep the stubs — DI switch (`TIREFORGE_AGENTS=stub|foundry`) so tests stay offline.
-5. Verify: agent spans in App Insights nest under the pipeline trace = **Challenge 2
-   real**; the 3 agents visible in Build → Agents = **Challenge 1 real**.
+**Stage M full — shipped (session 4):**
+- `src/TireForge.Agents/Foundry/` — `FoundryAgentClient` (ensure + invoke w/ tool
+  loop), `ThresholdsTool` (`check_thresholds` → `Core.ThresholdCheck`), `AgentPrompts`
+  (anomaly/fault verbatim from `agents.py`, work-order = ours), `Foundry{Anomaly
+  Detector,FaultDiagnoser,WorkOrderDrafter}` (hybrid per D12), `FoundryAgentProvisioner`.
+- `DependencyInjection.AddTireForgeAgents` — `TIREFORGE_AGENTS=stub` (default) |
+  `foundry`. `FaultHeuristics` (Escalate/Score) lifted from the stub into `Core/Agents`,
+  shared by both.
+- `tools/TireForge.AgentTool` — `provision` (version all 3) / `run` (provision + one
+  full pipeline pass on CP-003 crit, tracing on).
+- **Live-verified:** CP-003 crit → A1 grounded (tool called ×2), A2 LIKELY CAUSE /
+  ACTIONS / URGENCY citing inc-005/006, A3 IMMEDIATE citing the reading, Gate → Review.
+  App Insights: one `pipeline.run` trace, `invoke_agent anomaly-detection-agent:2` /
+  `fault-diagnosis-agent:1` / `work-order-agent:1` + `chat gpt-5.4-2026-03-05` spans
+  nested per step.
+
+**Dashboard port — the plan (step 7):**
+1. `TireForge.Dashboard` = the v1.6 prototype HTML, `api` object → real `fetch` at
+   `TireForge.ApiProxy` (`/api/status` `/queue` `/workorders` `/health` `/cost`).
+2. Reconcile machine roster / numbers to the seeded Challenge data; `gpt-5.4` labels;
+   fix the mojibake; sim → `normal / warn / crit` only (D8 drops).
+3. Serve it (static files off the ApiProxy Functions host, or a tiny separate host).
+4. Fold in the deferred **`func` host smoke test** — needs `azure-functions-core-tools`
+   (not in this Codespace; `npm i -g azure-functions-core-tools@4` or the devcontainer feature).
 
 - **Agent contracts refactor:** ports (`IAnomalyDetector` / `IFaultDiagnoser` /
   `IWorkOrderDrafter`) + outputs (`AnomalyVerdict` / `FaultVerdict` /
@@ -242,10 +256,10 @@ kept for reference.
 5. ✅ **Stage M spike (D9)** — done. `spikes/FoundryAgentSpike` created + invoked
    `anomaly-detection-agent` v1 in pure C# (nextgen `Azure.AI.Projects` 2.x),
    portal-visible, trace in App Insights. Rung 0 confirmed; fallback not needed.
-6. **Stage M full** — provisioner + `check_thresholds` tool + real impls behind the
-   `Core.Agents` interfaces (+ `TIREFORGE_AGENTS=stub|foundry` DI switch). ← **next**
-6. **Stage M full** — 3 agents behind the interfaces = **Challenge 1 real**; `gen_ai.*` spans = **Challenge 2 real**.
-7. **Dashboard port** — real `fetch`, `gpt-5.4` labels, mojibake fix, sim → normal/warn/crit.
+6. ✅ **Stage M full** — provisioner + `check_thresholds` tool + hybrid real impls
+   behind the `Core.Agents` interfaces (+ `TIREFORGE_AGENTS` switch, D12).
+   3 agents live = **Challenge 1 real**; nested agent spans = **Challenge 2 real**.
+7. **Dashboard port** — real `fetch`, `gpt-5.4` labels, mojibake fix, sim → normal/warn/crit. ← **next**
 8. **Ingestion + Orchestrator + `azd up`** = **Challenge 4** (Functions path) → then portal workflow steps.
 9. **Challenge 3** — portal Evaluations over `eval_portal.jsonl`; `eval/TireForge.Eval` = CI-gate superset.
 10. **APIM** — only if the D3 spike passes (now in front of hosted-agent calls).
@@ -263,7 +277,7 @@ session-3 analysis; drops recorded in DECISIONS.md D8.
 | Stage L — Core read models | 8 | 4 | ✅ done |
 | Stage L — `TireForge.ApiProxy` endpoints | 7 | 3 | ✅ done |
 | **Stage M spike — real Foundry agent, .NET SDK (D9)** | 10 | 5 | ✅ done (`spikes/FoundryAgentSpike`) |
-| Stage M full — 3 hosted agents behind the interfaces | 9 | 5 | queued |
+| Stage M full — 3 hosted agents behind the interfaces | 9 | 5 | ✅ done (`Foundry/` + `AgentTool`) |
 | Dashboard port (fetch, gpt-5.4 labels, mojibake, sim trim) | 7 | 3 | queued |
 | Ingestion + Orchestrator wiring + `azd up` | 7 | 5 | queued |
 | Challenge 3 portal evaluation + `eval/TireForge.Eval` | 6 | 3 | queued |
@@ -289,7 +303,7 @@ az bicep install
 az login          # subscription DkaySubscription
 bash tireforge/scripts/restore-env.sh
 
-# 5. sanity check — expect 114 green (34 Core + 46 Data + 22 Agents + 12 ApiProxy):
+# 5. sanity check — expect 120 green (34 Core + 46 Data + 28 Agents + 12 ApiProxy):
 cd tireforge && dotnet build TireForge.sln && dotnet test TireForge.sln
 ```
 
@@ -381,3 +395,17 @@ Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
   `DefaultAzureCredential` works straight in (Azure.Core 1.53 =
   `AuthenticationTokenProvider`). No Python, no portal clicks — D11 fallback rungs
   not needed. Full API notes + Stage-M-full plan in the spike's `FINDINGS.md`.
+- **Session 4 cont. — Stage M full shipped. Real Foundry agents, end-to-end.**
+  `src/TireForge.Agents/Foundry/`: `FoundryAgentClient` (ensure-agent + invoke with
+  the function-tool loop), `ThresholdsTool` (`check_thresholds`, body →
+  `Core.ThresholdCheck`), `AgentPrompts`, `Foundry{AnomalyDetector,FaultDiagnoser,
+  WorkOrderDrafter}` (**hybrid — D12**: agent writes prose, deterministic Core owns
+  the gate-driving numbers), `FoundryAgentProvisioner`. `FaultHeuristics`
+  (Escalate/Score) lifted from the stub into `Core/Agents`. `AddTireForgeAgents` +
+  `TIREFORGE_AGENTS=stub|foundry`. New `tools/TireForge.AgentTool` (`provision` /
+  `run`) — added to the sln. **Live full-pipeline pass** (CP-003 crit): A1 grounded
+  + tool called ×2, A2 LIKELY CAUSE citing inc-005/006, A3 IMMEDIATE citing the
+  reading, Gate → Review. App Insights: one `pipeline.run` trace with
+  `invoke_agent <name>:<ver>` + `chat gpt-5.4-2026-03-05` spans nested per step =
+  Challenges 1 & 2 real. 6 new Agents tests (DI switch, `check_thresholds` payload).
+  120 green (34 Core + 46 Data + 28 Agents + 12 ApiProxy).
