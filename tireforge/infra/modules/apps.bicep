@@ -10,6 +10,9 @@
 @description('Location for all resources.')
 param location string
 
+@description('Static Web App location — the service is not in every region (not swedencentral). Nearest to Sweden Central is West Europe.')
+param staticWebAppLocation string = 'westeurope'
+
 @description('Resource tags.')
 param tags object = {}
 
@@ -179,7 +182,7 @@ resource foundryRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-
 // --- Static Web App — the dashboard (Experience layer) ----------------------
 resource dashboard 'Microsoft.Web/staticSites@2024-04-01' = {
   name: 'tireforge-dashboard-${environmentName}'
-  location: location
+  location: staticWebAppLocation
   tags: union(tags, { 'azd-service-name': 'dashboard' })
   sku: { name: 'Free', tier: 'Free' }
   properties: {
