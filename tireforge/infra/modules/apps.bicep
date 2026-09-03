@@ -1,7 +1,7 @@
 // TireForge compute — the event-driven Functions architecture (Challenge 4,
-// "Option 4"). Three Flex Consumption Function Apps on one plan, one storage
-// account (Functions host + Durable Task hub + the `readings` queue), all
-// identity-based (no connection-string secrets).
+// "Option 4"). Three Consumption (Y1) Function Apps on one plan, one storage
+// account (Functions host + content share + Durable Task hub + the `readings`
+// queue).
 //
 //   TireForge.Ingestion    — timer / HTTP → readings queue
 //   TireForge.Orchestrator — queue → Durable → Core.Pipeline
@@ -23,7 +23,7 @@ param planName string = 'tireforge-plan-${environmentName}'
 @description('App Insights connection string (from the foundry module).')
 param appInsightsConnectionString string
 
-@description('Foundry account name — the Function identities get Cognitive Services User on it.')
+@description('Foundry account name — the Orchestrator identity gets Cognitive Services User on it.')
 param foundryAccountName string
 
 @description('EF connection string for TireForge.Data (Azure SQL, managed-identity auth).')
@@ -38,9 +38,7 @@ param modelDeploymentName string = 'gpt-5.4'
 @description('Foundry project endpoint (PROJECT_CONNECTION_STRING) for the real agents.')
 param projectConnectionString string
 
-var deploymentContainerName = 'app-package'
-
-// --- Storage (Functions host + Durable + queue) ------------------------------
+// --- Storage (Functions host + content share + Durable + queue) --------------
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
   location: location
@@ -50,19 +48,8 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   properties: {
     minimumTlsVersion: 'TLS1_2'
     allowBlobPublicAccess: false
-    allowSharedKeyAccess: false   // identity-only
+    allowSharedKeyAccess: true   // Linux Consumption needs the connection string
   }
-}
-
-resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' = {
-  parent: storage
-  name: 'default'
-}
-
-resource deploymentContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
-  parent: blobService
-  name: deploymentContainerName
-  properties: { publicAccess: 'None' }
 }
 
 resource queueService 'Microsoft.Storage/storageAccounts/queueServices@2023-05-01' = {
@@ -75,14 +62,16 @@ resource readingsQueue 'Microsoft.Storage/storageAccounts/queueServices/queues@2
   name: 'readings'
 }
 
-// --- Flex Consumption plan --------------------------------------------------
+var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
+
+// --- Consumption (Y1) plan, Linux ------------------------------------------
 resource plan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: planName
   location: location
   tags: tags
   kind: 'functionapp'
-  sku: { name: 'FC1', tier: 'FlexConsumption' }
-  properties: { reserved: true }
+  sku: { name: 'Y1', tier: 'Dynamic' }
+  properties: { reserved: true }   // Linux
 }
 
 // --- The three Function Apps ----------------------------------------------
@@ -122,49 +111,26 @@ resource functionApps 'Microsoft.Web/sites@2024-04-01' = [for app in apps: {
   properties: {
     serverFarmId: plan.id
     httpsOnly: true
-    functionAppConfig: {
-      deployment: {
-        storage: {
-          type: 'blobContainer'
-          value: '${storage.properties.primaryEndpoints.blob}${deploymentContainerName}'
-          authentication: { type: 'SystemAssignedIdentity' }
-        }
-      }
-      scaleAndConcurrency: {
-        maximumInstanceCount: 40
-        instanceMemoryMB: 2048
-      }
-      runtime: { name: 'dotnet-isolated', version: '8.0' }
-    }
     siteConfig: {
-      appSettings: concat([
-        { name: 'AzureWebJobsStorage__accountName', value: storage.name }
-        { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsightsConnectionString }
-        { name: 'TIREFORGE_SKIP_DB_INIT', value: 'true' }   // migrate/seed is a deploy step, not per-cold-start
-      ], app.settings)
+      linuxFxVersion: 'DOTNET-ISOLATED|8.0'
+      ftpsState: 'Disabled'
+      minTlsVersion: '1.2'
       cors: app.key == 'apiproxy' ? { allowedOrigins: [ '*' ] } : null
+      appSettings: concat([
+        { name: 'AzureWebJobsStorage', value: storageConnectionString }
+        { name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING', value: storageConnectionString }
+        { name: 'WEBSITE_CONTENTSHARE', value: toLower(app.name) }
+        { name: 'FUNCTIONS_EXTENSION_VERSION', value: '~4' }
+        { name: 'FUNCTIONS_WORKER_RUNTIME', value: 'dotnet-isolated' }
+        { name: 'WEBSITE_RUN_FROM_PACKAGE', value: '1' }
+        { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsightsConnectionString }
+        { name: 'TIREFORGE_SKIP_DB_INIT', value: 'true' }   // migrate/seed is a deploy step
+      ], app.settings)
     }
   }
 }]
 
-// --- Role assignments — storage (identity-based host + Durable + queue) -------
-var storageRoles = [
-  'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'   // Storage Blob Data Owner
-  '974c5e8b-45b9-4653-ba55-5f855dd0fb88'   // Storage Queue Data Contributor
-  '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3'   // Storage Table Data Contributor
-]
-
-resource storageRoleAssignments 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for pair in flatten(map(range(0, length(apps)), i => map(storageRoles, r => { app: i, role: r }))): {
-  name: guid(storage.id, functionApps[pair.app].id, pair.role)
-  scope: storage
-  properties: {
-    principalId: functionApps[pair.app].identity.principalId
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', pair.role)
-    principalType: 'ServicePrincipal'
-  }
-}]
-
-// --- Role assignments — Foundry data plane (Orchestrator only needs it) -------
+// --- Role assignment — Foundry data plane (Orchestrator invokes the agents) ---
 resource foundryAccount 'Microsoft.CognitiveServices/accounts@2025-06-01' existing = {
   name: foundryAccountName
 }
@@ -186,7 +152,6 @@ resource dashboard 'Microsoft.Web/staticSites@2024-04-01' = {
   tags: union(tags, { 'azd-service-name': 'dashboard' })
   sku: { name: 'Free', tier: 'Free' }
   properties: {
-    // Content is pushed by `azd deploy`; no repo build.
     buildProperties: { skipGithubActionWorkflowGeneration: true }
   }
 }
