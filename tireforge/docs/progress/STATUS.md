@@ -4,14 +4,33 @@
 Keep this file current at every checkpoint and **commit + push it** — a Codespace
 rebuild loses anything uncommitted (see the `codespace-data-loss` memory).
 
-_Last updated: 2026-09-03 (session 4, end). Resume point: **apply D15** (SWA Free →
-Standard + linked backend, bicep + re-provision), then the consolidated
-doc-reconciliation pass (`PENDING-DOC-UPDATES.md`). The live deploy is **done and
-verified end-to-end** (see below)._
+_Last updated: 2026-09-03 (session 4, end). The live deploy is **done and verified
+end-to-end** (see below). Session 5 = the punch list below._
 
-_**⚠ Before demoing next session:** re-enable the sensor timer —
-`az functionapp config appsettings delete -n tireforge-ingestion-tf1-v2 -g foundry-hackathon-rg-3e97ae19 --setting-names AzureWebJobs.SensorSimulator.Disabled`
-(disabled at stop time so it doesn't burn Foundry tokens overnight)._
+### Session 5 — do these in order
+
+1. **Re-enable the sensor timer** (disabled at stop so it didn't burn Foundry
+   tokens overnight):
+   `az functionapp config appsettings delete -n tireforge-ingestion-tf1-v2 -g foundry-hackathon-rg-3e97ae19 --setting-names AzureWebJobs.SensorSimulator.Disabled`
+2. **Apply D15 — dashboard host → SWA Standard + linked backend.** `apps.bicep`
+   `sku` Free → Standard + a `Microsoft.Web/staticSites/linkedBackends` → the
+   apiproxy; `azd provision`; redeploy the dashboard. Then confirm the **bare**
+   dashboard URL (no `?api=`) loads data and the machine dropdown fills.
+   _(Today's "Can't reach the API / empty dropdown" screenshot = the bare URL
+   hitting same-origin `/api` which SWA Free can't route — one cause, expected,
+   this is the fix. Detail lower in this file + DECISIONS D15.)_
+3. **Orchestrator App Insights telemetry is empty on Y1** — OTel exporter quirk
+   (`APPLICATIONINSIGHTS_CONNECTION_STRING` is set, host runs, functions execute,
+   but no traces/requests land). Non-blocking for function, but Challenge 2's
+   agent traces won't show for the deployed path until it's fixed. Compare with
+   ingestion/apiproxy (which do report) — likely a missing
+   `Microsoft.ApplicationInsights.WorkerService` / `ConfigureFunctionsApplicationInsights()`
+   wire-up in `TireForge.Orchestrator/Program.cs`, or the Durable extension
+   swallowing the logger config.
+4. **Consolidated doc-reconciliation pass** — `PENDING-DOC-UPDATES.md` §1–§5
+   (SQLite→Azure SQL, Challenge 3 eval + CI, APIM descoped + cost metering,
+   Flex→Y1 + suffix + SWA Standard, Challenges 3 & 4 portal done). Design docs /
+   TDD / README / architecture SVG all in one sweep.
 
 _**Challenges 0–4 all complete:** 0 infra ✅ · 1 agents (Stage M) ✅ · 2 App
 Insights agent traces ✅ · 3 portal eval **100/100** ✅ · 4 portal workflow
