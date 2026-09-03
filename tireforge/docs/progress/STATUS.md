@@ -4,20 +4,18 @@
 Keep this file current at every checkpoint and **commit + push it** — a Codespace
 rebuild loses anything uncommitted (see the `codespace-data-loss` memory).
 
-_Last updated: 2026-09-03 (session 4). Resume point: **verify + test-pass** — CI
-(`.github/workflows/tireforge-ci.yml`) is the first real run of the SQLite→SqlServer
-swap + the D13 cost metering (Testcontainers needs Docker, not in this Codespace).
-Watch the CI result, fix anything red, add the missing unit tests. Then: manual
-portal steps (Challenge 3 eval, Challenge 4 workflow) + live `azd up` +
+_Last updated: 2026-09-03 (session 4). Resume point: **add the D13 unit tests**
+(`AgentCallRecorder`, `Reports.CostAsync` real-numbers branch), then manual portal
+steps (Challenge 3 eval, Challenge 4 workflow) + live `azd up` +
 **the consolidated doc-reconciliation pass** (`PENDING-DOC-UPDATES.md`)._
 
 _**Done:** Stages A–M · dashboard · Ingestion/Orchestrator · Challenge-4 infra ·
-SQLite→**Azure SQL** (SqlServer EF provider, Testcontainers tests) · **APIM
-descoped** (D3) · **cost metering** (D13 — `AgentCalls` table, real tokens+spend on
-the Cost tab) · `eval/TireForge.Eval` CI gate (10/10) · CI workflow._
+runtime **SQLite→Azure SQL** (SqlServer EF provider; tests = in-memory SQLite
+double, `AddTireForgeData(Action<…>)` overload) · **APIM descoped** (D3) · **cost
+metering** (D13 — `AgentCalls` table, real tokens+spend on the Cost tab) ·
+`eval/TireForge.Eval` CI gate (10/10) · CI workflow._
 
-_Codespace: 62 non-DB tests green; ~62 DB tests + eval gate run in CI. All work
-committed + pushed._
+_**124 tests green in the Codespace** (~5 s, no Docker). All committed + pushed._
 
 ---
 
@@ -522,3 +520,14 @@ Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
   ($2.50/1M in + $10/1M out for gpt-5.4) when any row has tokens, else the old
   placeholder. Dashboard Cost tab unchanged (already handles both). Builds; unit
   tests for the recorder / real-numbers branch **not yet written** (test pass).
+- **Session 4 cont. — test DB: Testcontainers → in-memory SQLite (reverted).**
+  The Testcontainers `MsSql` container startup **deadlocked the CI test host**
+  (sync-over-async during assembly load; 3 CI runs hung 25 min). Reverted: the
+  **runtime is still 100% SqlServer**; tests use **in-memory SQLite as the
+  relational test double** (`tests/TireForge.TestSupport/TestDb.cs`).
+  `AddTireForgeData` gained an `Action<DbContextOptionsBuilder>` overload → the
+  Data project stays SqlServer-only, the test project injects `UseSqlite`.
+  `ConfigureConventions` applies `DateTimeOffsetToBinaryConverter` **only on
+  SQLite**; `InitializeTireForgeDataAsync` → `EnsureCreated` on SQLite / `Migrate`
+  on SqlServer. **All 124 tests green in the Codespace, ~5 s, no Docker.** CI
+  workflow: dropped the Ryuk env, `timeout-minutes: 15`.

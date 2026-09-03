@@ -11,16 +11,17 @@ namespace TireForge.Orchestrator.Tests;
 /// <summary>
 /// The durable activity path — the same DI wiring `Program.cs` builds
 /// (<c>AddTireForgeData</c> + <c>AddTireForgeAgents</c> + <c>Pipeline</c>), driven
-/// end to end over a seeded SQL Server DB (Testcontainers) with the agent stubs.
+/// end to end over a seeded in-memory DB with the agent stubs.
 /// </summary>
 public sealed class PipelineActivityTests : IAsyncLifetime, IDisposable
 {
+    private readonly TestDb _db = new();
     private ServiceProvider _sp = null!;
 
     public async Task InitializeAsync()
     {
         var services = new ServiceCollection();
-        services.AddTireForgeData(await SqlServer.NewConnectionStringAsync());
+        services.AddTireForgeData(_db.Configure);
         services.AddTireForgeAgents();            // TIREFORGE_AGENTS unset -> stubs
         services.AddScoped<Pipeline>();
         services.AddScoped<PipelineFunctions>();
@@ -29,7 +30,7 @@ public sealed class PipelineActivityTests : IAsyncLifetime, IDisposable
     }
 
     public Task DisposeAsync() => Task.CompletedTask;
-    public void Dispose() => _sp?.Dispose();
+    public void Dispose() { _sp?.Dispose(); _db.Dispose(); }
 
     private static Reading Reading(string machineId, double t, double p, double v, double r) => new()
     {

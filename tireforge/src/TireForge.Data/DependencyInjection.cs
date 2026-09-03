@@ -13,13 +13,22 @@ namespace TireForge.Data;
 public static class DependencyInjection
 {
     /// <summary>
-    /// Registers the EF Core context (SQLite), the write-path stores, the reporting
-    /// queries, and the <see cref="Reports"/> / <see cref="Reviewer"/> services.
-    /// Hosts add the agent implementations and <c>Pipeline</c> themselves.
+    /// Registers the EF Core context (Azure SQL / SqlServer), the write-path stores,
+    /// the reporting queries, and the <see cref="Reports"/> / <see cref="Reviewer"/>
+    /// services. Hosts add the agent implementations and <c>Pipeline</c> themselves.
     /// </summary>
     public static IServiceCollection AddTireForgeData(this IServiceCollection services, string connectionString)
+        => services.AddTireForgeData(o => o.UseSqlServer(connectionString));
+
+    /// <summary>
+    /// As <see cref="AddTireForgeData(IServiceCollection, string)"/> but with an
+    /// explicit provider configuration — tests inject an in-memory SQLite context
+    /// this way (the relational test double; production is Azure SQL, Decision D4).
+    /// </summary>
+    public static IServiceCollection AddTireForgeData(
+        this IServiceCollection services, Action<DbContextOptionsBuilder> configure)
     {
-        services.AddDbContext<TireForgeDbContext>(o => o.UseSqlServer(connectionString));
+        services.AddDbContext<TireForgeDbContext>(configure);
         services.AddSingleton(TimeProvider.System);
 
         services.AddScoped<IMachineStore, MachineStore>();
@@ -39,12 +48,20 @@ public static class DependencyInjection
         return services;
     }
 
-    /// <summary>Apply migrations and seed on startup (local / demo).</summary>
+    /// <summary>
+    /// Create the schema and seed it (local / demo / tests). SqlServer applies
+    /// migrations; SQLite (tests, no migration history) uses <c>EnsureCreated</c>.
+    /// </summary>
     public static async Task InitializeTireForgeDataAsync(this IServiceProvider services, CancellationToken ct = default)
     {
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<TireForgeDbContext>();
-        await db.Database.MigrateAsync(ct);
+
+        if (db.Database.ProviderName?.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) == true)
+            await db.Database.EnsureCreatedAsync(ct);
+        else
+            await db.Database.MigrateAsync(ct);
+
         await Seed.DbSeeder.SeedAsync(db, ct);
     }
 }

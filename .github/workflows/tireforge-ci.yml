@@ -13,10 +13,7 @@ permissions:
 jobs:
   build-test-eval:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-    env:
-      # ephemeral runner — no need for the Testcontainers resource reaper
-      TESTCONTAINERS_RYUK_DISABLED: "true"
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: tireforge
@@ -33,7 +30,6 @@ jobs:
       - name: Build
         run: dotnet build TireForge.sln --no-restore -c Release
 
-      # ubuntu-latest ships Docker, so the Testcontainers SQL Server tests run here.
       - name: Test
         run: dotnet test TireForge.sln --no-build -c Release --logger "trx;LogFileName=test.trx"
 

@@ -9,18 +9,18 @@ using TireForge.TestSupport;
 namespace TireForge.ApiProxy.Tests;
 
 /// <summary>
-/// Drives the function classes over a real seeded SQL Server DB (Testcontainers)
-/// and the same DI container <c>Program.cs</c> builds — the HTTP wiring without a
-/// Functions host.
+/// Drives the function classes over a seeded in-memory DB and the same DI
+/// container <c>Program.cs</c> builds — the HTTP wiring without a Functions host.
 /// </summary>
 public sealed class EndpointIntegrationTests : IAsyncLifetime, IDisposable
 {
+    private readonly TestDb _db = new();
     private ServiceProvider _sp = null!;
 
     public async Task InitializeAsync()
     {
         var services = new ServiceCollection();
-        services.AddTireForgeData(await SqlServer.NewConnectionStringAsync());
+        services.AddTireForgeData(_db.Configure);
         services.AddScoped<ReportsFunctions>();
         services.AddScoped<ReviewFunctions>();
         _sp = services.BuildServiceProvider();
@@ -28,7 +28,7 @@ public sealed class EndpointIntegrationTests : IAsyncLifetime, IDisposable
     }
 
     public Task DisposeAsync() => Task.CompletedTask;
-    public void Dispose() => _sp?.Dispose();
+    public void Dispose() { _sp?.Dispose(); _db.Dispose(); }
 
     private static HttpRequest Req() => new DefaultHttpContext().Request;
 
