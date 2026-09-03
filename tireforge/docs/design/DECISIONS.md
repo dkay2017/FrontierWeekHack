@@ -39,21 +39,35 @@ one activity) → `RunPipeline` (`[ActivityTrigger]`, injects `Pipeline`, return
 `PipelineRunSummary`). `TireForge.Ingestion` publishes the queue. See revised
 sequence step 8.
 
-## D3 — APIM AI Gateway: built last
+## D3 — AI Governance / APIM AI Gateway: deliberately out of scope for the submission
 
-APIM is the AI Governance gate and sits in front of every model call (TDD §7). It is **priority 3**
-in the TDD's own build order.
+**Decision (session 4):** the **APIM AI Gateway is not built.** It stays in the
+design as the reference production control (TDD §7) — recognised as essential, not
+overlooked — and moves to the roadmap.
 
-**Decision:** agents call the model deployment directly
-(`https://foundry-hack-3e97ae19.cognitiveservices.azure.com/openai/deployments/gpt-5.4/...`,
-verified working with Entra ID auth) until the core pipeline + dashboard are done. Then insert
-APIM in front — config change to the agent client's base URL, plus the
-`azure-openai-token-limit` and `azure-openai-emit-token-metric` policies.
+**Why it's descoped:**
+1. **The policies don't fit the hosted-agent path.** Since [D9] the agents are
+   *hosted Foundry agents* invoked via the Responses API, not direct
+   model-deployment calls. `azure-openai-token-limit` / `azure-openai-emit-token-metric`
+   are written for the Chat Completions request/response shape, and the agent's
+   real model calls happen **server-side** (the nested `chat gpt-5.4` spans APIM
+   never sees). APIM in front of the agent endpoint can rate-limit by request
+   count but cannot do the per-model **token** metering that is §7's whole point —
+   without bespoke policy work.
+2. **The visibility it would feed is available directly.** Per-agent token usage
+   comes back in every agent response (`ResponseResult.Usage`) and in the App
+   Insights `gen_ai` spans. Cost reporting does **not** depend on APIM — see [D13].
+3. **Solo build inside the competition window.** The TDD's own build-priority list
+   puts APIM at #3, below the working pipeline + reviewer loop + dashboard.
 
-**Open spike before D3:** confirm APIM can proxy the Foundry model-deployment path with the
-`azure-openai-*` policies (they target the AOAI data plane; Foundry Agent Service may route
-differently). If not, fall back to per-agent APIM products without the token-metric policy and
-feed the Cost tab from App Insights GenAI trace token counts instead.
+**What "governance" would add if scoped:** *enforcement* — a 429 when an agent
+exceeds its token-per-minute budget — plus differentiated caps per agent. That is
+the only capability lost by descoping; *cost visibility* is kept (D13).
+
+**Roadmap shape (unchanged from TDD §7):** APIM Consumption, `azure-openai-token-limit`
++ `azure-openai-emit-token-metric` policies, differentiated caps, fronting either
+the model deployment (for non-agent calls) or a custom policy that parses the
+Responses `usage` shape.
 
 > **⚠️ Superseded for the real-agent path by [D9].** The "direct model call" here is fine for a
 > stub / spike, but Challenges 1–4 require **persistent Foundry agents** (portal-visible,
@@ -306,6 +320,35 @@ one `pipeline.run` trace with `invoke_agent anomaly-detection-agent:2` / `fault-
 for real**; the three agents are portal-visible = **Challenge 1 for real**.
 120 tests green.
 
+## D13 — Agent cost metering: from the agent responses, not APIM
+
+Cost **visibility** and AI **governance** ([D3]) are separate concerns. Descoping
+APIM removes *enforcement* (429 on quota); it does **not** remove cost reporting.
+
+**Decision (session 4):** every agent invocation's token usage
+(`ResponseResult.Usage` — input / output / total, already captured in
+`FoundryAgentClient.AgentInvocation`) is persisted to an **`AgentCalls` metering
+table** in `TireForge.Data` via an `IAgentCallRecorder` port
+(`Core.Agents` interface, `Data` impl):
+
+| Column | |
+|---|---|
+| `Id` / `At` / `TraceId` / `ReadingId` | correlation |
+| `AgentName` / `Model` | `anomaly-detection-agent` … / `gpt-5.4` |
+| `PromptTokens` / `CompletionTokens` | summed across a tool-loop invocation |
+
+- The three `Foundry*` impls record a row per `InvokeAsync`. **Stub agents record
+  nothing** → the table is empty under `TIREFORGE_AGENTS=stub`, and the Cost tab
+  shows "—" (honest — matches D8's "never present mocked figures as real").
+- `Reports.CostAsync` aggregates `AgentCalls` by agent, applies a static `gpt-5.4`
+  price table ($/1M in, $/1M out), and returns real `tokens` + `spend`.
+  `TokenMetricsAvailable` flips true once any row has tokens.
+- The dashboard Cost tab already renders real numbers when `TokenMetricsAvailable`
+  is true (no UI change).
+
+**This is the metering path §7 referred to** ("reconciled against the metering
+table") — it just doesn't run through APIM.
+
 ## Revised build sequence (post-Stage J)
 
 1. ✅ **A1** — `Diagnosis.DraftActionText` (D7).
@@ -347,7 +390,9 @@ for real**; the three agents are portal-visible = **Challenge 1 for real**.
    - ⬜ **remaining for Challenge 4:** (a) EF `SqlServer` provider + a SqlServer
      migrations set + `azd postprovision` to migrate/seed (see `infra/README.md`);
      (b) live `azd up`; (c) the portal workflow-designer steps.
-9. **Challenge 3** — upload `eval_portal.jsonl`, run Coherence/Fluency in the portal;
-   `eval/TireForge.Eval` as the CI-gate superset.
-10. **APIM** — only if the D3 spike passes and time remains (now sits in front of the
-    hosted-agent calls, not raw model calls).
+9. ◐ **Challenge 3** — ✅ `eval/TireForge.Eval` (CI-gate, 10/10 classification) +
+   `.github/workflows/tireforge-ci.yml` + `docs/runbooks/challenge-3-portal-evaluation.md`;
+   ⬜ the manual portal Coherence/Fluency run.
+10. **Agent cost metering (D13)** — `AgentCalls` table + `IAgentCallRecorder`;
+    `Reports.CostAsync` → real tokens + spend. Replaces the old "APIM step":
+    **APIM itself is descoped (D3)** — governance = documented roadmap.

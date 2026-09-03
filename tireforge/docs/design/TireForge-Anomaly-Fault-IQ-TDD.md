@@ -136,16 +136,29 @@ Workbook (Azure Resource Graph).
 
 Governance is the concern the design leads with, not an afterthought.
 
+> **Scope note (session 4 — see DECISIONS D3 / D13).** An APIM AI Gateway that
+> *enforces* a per-agent token budget is a **production-essential control** and is
+> retained here as the reference design. It was **deliberately not built** for this
+> submission because: (1) since the agents became *hosted Foundry agents* invoked
+> via the Responses API (DECISIONS D9), the `azure-openai-*` policies — written for
+> the Chat Completions shape, and blind to the agent's server-side model calls —
+> cannot do per-model token metering without bespoke policy work; (2) the **cost
+> visibility** the gateway would feed is obtained directly from each agent
+> response (`ResponseResult.Usage`) and persisted to an `AgentCalls` metering table
+> (DECISIONS D13) — the Dashboard Cost tab shows real tokens + spend without APIM;
+> (3) solo build inside the competition window (APIM is priority 3 in §8's own
+> ordering). What is lost by descoping is *enforcement* (a 429 on quota), not
+> reporting. The rest of this section is the roadmap shape.
+
 - **Tier: APIM Consumption** — true pay-per-call, near-zero cost at hackathon traffic,
   ~5–10 min to provision (vs. 30–45 on Developer).
 - **`azure-openai-token-limit` policy** — token-per-minute quota per model, counted from actual
   prompt + completion tokens (not request count). Returns 429 once a model's budget is exceeded.
-- **Differentiated caps** — tighter ceiling on `gpt-4.1` (expensive, diagnosis only), looser on
-  the two `gpt-4.1-mini` agents. Governance that reflects real cost profile, not a flat limit.
+- **Differentiated caps** — tighter ceiling on the diagnosis agent, looser on the
+  detection / work-order agents. Governance that reflects real cost profile, not a flat limit.
 - **`azure-openai-emit-token-metric` policy** — emits real per-model token usage to App Insights;
-  this feeds the Dashboard's Cost tab with actual spend, not a mocked number.
-- **Why it matters for the submission** — demonstrates AI Governance as an enforced control:
-  a judge can see it capped, priced, and reported.
+  a second feed for the same metering the `AgentCalls` table now provides.
+- **Why it matters** — AI Governance as an *enforced* control, capped, priced, and reported.
 
 ## 8. Deployment & Scope Decisions
 
