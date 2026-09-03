@@ -1,0 +1,9 @@
+{
+  "name": "tireforge-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TireForge reviewer console — a single static index.html, no build.",
+  "scripts": {
+    "build": "echo \"no build — static index.html\""
+  }
+}
