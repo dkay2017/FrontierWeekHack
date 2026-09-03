@@ -4,9 +4,11 @@
 Keep this file current at every checkpoint and **commit + push it** — a Codespace
 rebuild loses anything uncommitted (see the `codespace-data-loss` memory).
 
-_Last updated: 2026-09-03 (session 4). Resume point: **live `azd up`** — infra +
-4 services to Azure; then the consolidated doc-reconciliation pass
-(`PENDING-DOC-UPDATES.md`)._
+_Last updated: 2026-09-03 (session 4, end). Resume point: **finish the live deploy**
+— compute stack is provisioned + live on Azure (Y1); `azd deploy ingestion` done,
+`orchestrator` + `apiproxy` deploying; then verify end-to-end, then apply **D15**
+(SWA Free → Standard + linked backend), then the consolidated doc-reconciliation
+pass (`PENDING-DOC-UPDATES.md`)._
 
 _**Challenges 0–4 all complete:** 0 infra ✅ · 1 agents (Stage M) ✅ · 2 App
 Insights agent traces ✅ · 3 portal eval **100/100** ✅ · 4 portal workflow
@@ -18,7 +20,22 @@ descoped** (D3) · **cost metering** (D13) · `eval/TireForge.Eval` CI gate (10/
 CI workflow · **`tools/TireForge.DbDeploy`** (azd postprovision — migrate + grant
 Function App identities + seed) + `azure.yaml` `hooks.postprovision`._
 
-_**127 tests green** (~5 s, no Docker). All committed + pushed._
+_**Live deploy (session 4 end):** infra provisioned to RG `foundry-hackathon-rg-3e97ae19`
+on **classic Consumption (Y1) Linux** — Flex Consumption was abandoned (worker
+wouldn't stay up), see PENDING-DOC-UPDATES §4. Function Apps carry a `-v2` suffix
+(`FUNCTION_APP_SUFFIX` param) because the `tf1` names got soft-deleted. Azure SQL
+serverless migrated + seeded; 3 MI identities granted `db_datareader/writer`.
+Dashboard SWA live. `azd deploy ingestion` ✅; `orchestrator` + `apiproxy` in
+progress._
+
+_**Live URLs:**_
+- _Dashboard: `https://jolly-glacier-02859e803.3.azurestaticapps.net`_
+- _ApiProxy: `https://tireforge-apiproxy-tf1-v2.azurewebsites.net/api`_
+- _Ingestion: `https://tireforge-ingestion-tf1-v2.azurewebsites.net`_
+- _Dashboard wired to the API (until D15 lands): append
+  `?api=https://tireforge-apiproxy-tf1-v2.azurewebsites.net/api`_
+
+_**127 tests green** (~5 s, no Docker). CI green. All committed + pushed._
 
 ---
 
@@ -534,3 +551,29 @@ Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
   SQLite**; `InitializeTireForgeDataAsync` → `EnsureCreated` on SQLite / `Migrate`
   on SqlServer. **All 124 tests green in the Codespace, ~5 s, no Docker.** CI
   workflow: dropped the Ryuk env, `timeout-minutes: 15`.
+- **Session 4 cont. — cost-metering tests + Challenges 3 & 4 portal.**
+  `tests/TireForge.Data.Tests/AgentCostTests.cs` (3 tests) → **127 green**.
+  **Challenge 3:** portal Evaluation on `anomaly-detection-agent`
+  (Coherence + Fluency) → **100/100** (done by DK in the portal).
+  **Challenge 4:** portal workflow `factory-health-workflow-portal` built +
+  preview-tested — 2 agents (`anomaly-detection-agent → fault-diagnosis-agent`),
+  the 3rd agent + Gate stay in the Durable orchestrator (**D14**).
+- **Session 4 cont. — live deploy.** `azd env` `tf1` reuses the existing Foundry
+  stack (`DEPLOY_FOUNDRY=false`, `EXISTING_*` connection strings). Infra
+  provisioned. **Flex Consumption abandoned** — the 3 Flex apps 404'd on every
+  route with zero telemetry (dotnet-isolated + identity-based storage worker
+  wouldn't stay up); `apps.bicep` rewritten to **classic Consumption (Y1) Linux**
+  (storage connection string, `WEBSITE_RUN_FROM_PACKAGE`). The `tf1` Function App
+  names were soft-deleted by the rebuild and App Service has no purge API → new
+  `functionAppSuffix` param (`FUNCTION_APP_SUFFIX=-v2`), live apps are
+  `tireforge-*-tf1-v2`. `tools/TireForge.DbDeploy` run against Azure SQL:
+  migrations applied, seeded (5 machines / 8 history), the 3 `-v2` managed
+  identities granted `db_datareader`+`db_datawriter`. `azd deploy ingestion` ✅;
+  `orchestrator` + `apiproxy` deploying at stop time. Codespace SQL firewall rule
+  `codespace-deploy` re-added for egress `20.61.127.49` (changes on restart).
+- **Session 4 cont. — D15: dashboard host → SWA Standard.** Decided (not yet
+  applied). SWA **Free** has no *linked backend* → the dashboard reaches the API
+  cross-origin via `?api=` + CORS `*`. Storage `$web` static hosting has the same
+  gap (rejected). SWA **Standard** (~$9/mo) + a `linkedBackends` resource → API at
+  same-origin `/api`, no CORS, no querystring. Bicep change + re-provision is the
+  first task next session. See DECISIONS **D15**, PENDING-DOC-UPDATES §4.

@@ -120,8 +120,61 @@ target (was already D4's fallback — now promoted to the only store).
 - **Architecture SVG** — if it draws an APIM box in the main flow, mark it
   roadmap / dashed.
 
-**Verification owed:** new metering path is compile-verified + 62 non-DB tests
-green in the Codespace; the `AgentCalls` migration + recorder + `CostAsync` need a
-Docker run (CI) and, ideally, one live `AgentTool run` to confirm real token rows
-land. **No new unit tests written yet** for `AgentCallRecorder` / the real-numbers
-`CostAsync` branch — add in the test pass.
+**Verification:** ✅ `tests/TireForge.Data.Tests/AgentCostTests.cs` added (3 tests —
+recorder writes a row per invocation, `CostAsync` pending with no metered calls,
+`CostAsync` aggregates tokens + prices spend per agent). **127 tests green.**
+Still owed: one live `AgentTool run` against Azure to confirm real token rows land
+end-to-end via the deployed orchestrator.
+
+---
+
+## 4. Compute host: Flex Consumption → classic Consumption (Y1) + SWA Standard (D15)
+
+**Made:** end of session 4 (2026-09-03), during the live `azd up`.
+
+**Flex Consumption → Y1.** `infra/modules/apps.bicep` was rewritten from Flex
+Consumption (`FC1`, identity-based storage, `functionAppConfig`) to **classic
+Consumption (`Y1`/Dynamic) Linux** (`DOTNET-ISOLATED|8.0`, storage **connection
+string** — `allowSharedKeyAccess: true`, `WEBSITE_RUN_FROM_PACKAGE`, `WEBSITE_CONTENTSHARE`).
+Reason: the Flex + dotnet-isolated + identity-based-storage combination would not
+keep the worker running (404 on all routes, zero App Insights telemetry). Y1 is
+the mature azd path. Storage RBAC role assignments for the app identities were
+dropped (Y1 uses the key); the **Cognitive Services User** grant on Foundry for
+the orchestrator stays.
+
+**`functionAppSuffix` param.** New `main.bicep` / `apps.bicep` param (azd binding
+`FUNCTION_APP_SUFFIX`), set to `-v2` for env `tf1` — the original
+`tireforge-*-tf1` Function App names were **soft-deleted** (Flex→Y1 rebuild) and
+App Service has no purge API, so the live apps are `tireforge-{ingestion,
+orchestrator,apiproxy}-tf1-v2`. A clean future environment leaves the suffix empty.
+
+**SWA Free → Standard (D15).** See DECISIONS **D15**. `sku` Free → Standard,
+add a `Microsoft.Web/staticSites/linkedBackends` → `tireforge-apiproxy`, dashboard
+`API_BASE` defaults to same-origin `/api`, drop the `?api=` + CORS `*` workaround.
+**Bicep change + re-provision still pending** (stopped right after the Y1 compute
+stack went live).
+
+**Doc/design updates still owed:**
+- **STATUS.md** — the "Flex Consumption ×3" phrasing everywhere (stage table,
+  session log, infra bullet, D8/rated-backlog); resume point; the live URLs;
+  `-v2` app names.
+- **DECISIONS D8** — "Flex Consumption `FC1`" → "classic Consumption `Y1`".
+- **`infra/README.md`** — Flex → Y1; the `functionAppSuffix` escape hatch; SWA
+  Standard + linked backend.
+- **Architecture SVG / TDD** — any "Flex Consumption" label.
+- **`docs/design/README.md`** — infra module description.
+
+---
+
+## 5. Challenges 3 & 4 — portal work completed
+
+**Done (session 4):**
+- **Challenge 3** — portal Evaluation run on `anomaly-detection-agent` (Coherence +
+  Fluency over the eval set): **100 / 100**. Runbook
+  `docs/runbooks/challenge-3-portal-evaluation.md` reflects the actual steps taken.
+- **Challenge 4** — portal workflow `factory-health-workflow-portal` built +
+  preview-tested (2 agents, D14).
+
+**Doc/design updates still owed:**
+- **STATUS.md** — Challenge 3 row → ✅ (portal 100/100); Challenge 4 row → ✅
+  (portal workflow built); the "⬜ unblocked / 🟡 pending" states; session log.

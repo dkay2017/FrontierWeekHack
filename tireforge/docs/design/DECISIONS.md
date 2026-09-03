@@ -380,6 +380,36 @@ orchestrator = the production system — it adds the confidence gate, the sole-w
 adapter, the human review loop, and invokes the 3rd agent only when a work order
 is warranted."*
 
+## D15 — Dashboard host = Static Web App **Standard** (linked backend), not Free
+
+**Context.** The dashboard (`src/TireForge.Dashboard/index.html`) is a static page;
+the data comes from `TireForge.ApiProxy`, a separate Function App on its own
+`*.azurewebsites.net` origin. On **SWA Free** the two cannot be joined: Free tier
+has no *linked backend*, so the page reaches the API **cross-origin** — the API
+URL is passed in as a `?api=…` querystring and `TireForge.ApiProxy` runs CORS `*`.
+It works, but it's a bolt-on: the URL carries deployment detail, and the API is
+open to any origin.
+
+**Considered and rejected — storage `$web` static website.** Storage static-site
+hosting *also* has no backend-linking; we'd keep the identical `?api=` + CORS `*`
+setup, just served from `*.web.core.windows.net`, and would need a bespoke
+`az storage blob upload-batch` deploy step (azd has no host type for it). No gain.
+
+**Decision.** Move the SWA to **Standard** (`sku: { name: 'Standard' }`, ~$9/mo)
+and add a **`Microsoft.Web/staticSites/linkedBackends`** resource pointing at
+`tireforge-apiproxy`. The SWA then serves the API at **`/api/*` on its own
+origin** — same-origin calls, no CORS, no querystring. The dashboard's
+`API_BASE` becomes the default same-origin `/api`; `?api=` stays as a
+local-dev override only. `TireForge.ApiProxy` CORS can be dropped (or left as a
+harmless fallback).
+
+**Why pay.** The Free tier's one hard limitation was exactly this seam; $9/mo
+removes it cleanly rather than shipping the querystring/CORS workaround in the
+submission. Everything else in the stack is already consumption-billed.
+
+**Status:** decided end of session 4 (2026-09-03); bicep change + re-provision
+pending (the compute stack had just gone live on Y1 when we stopped).
+
 ## Revised build sequence (post-Stage J)
 
 1. ✅ **A1** — `Diagnosis.DraftActionText` (D7).
