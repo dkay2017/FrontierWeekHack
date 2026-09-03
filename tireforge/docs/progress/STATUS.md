@@ -44,6 +44,13 @@ _**Live URLs:**_
 - _Ingestion: `https://tireforge-ingestion-tf1-v2.azurewebsites.net`_
 - _Dashboard wired to the API (until D15 lands): append
   `?api=https://tireforge-apiproxy-tf1-v2.azurewebsites.net/api`_
+- _**Not a bug:** opening the **bare** dashboard URL shows "Can't reach the API …/api
+  HTTP 404" + an empty machine dropdown. Same single cause — `API_BASE`
+  ([index.html:643](../../src/TireForge.Dashboard/index.html#L643)) defaults to
+  same-origin `/api`, which SWA Free can't route (no linked backend); the dropdown
+  ([:1387](../../src/TireForge.Dashboard/index.html#L1387)) is filled from
+  `/status`. Works with `?api=…`; **D15 fixes it for the bare URL.** API + CORS
+  (`Access-Control-Allow-Origin: *` for the SWA origin) both verified live._
 
 _**127 tests green** (~5 s, no Docker). CI green. All committed + pushed._
 
