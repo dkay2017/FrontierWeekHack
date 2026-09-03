@@ -6,11 +6,24 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OpenTelemetry;
 using OpenTelemetry.Trace;
+using TireForge.ApiProxy;
 using TireForge.Core.Observability;
+using TireForge.Data;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
 builder.ConfigureFunctionsWebApplication();
+
+// Read models (Reports) + the reviewer write path (Reviewer) over EF Core / SQLite.
+// TIREFORGE_DB matches TireForgeDbContextFactory; defaults to a local file for the demo.
+var connectionString = Environment.GetEnvironmentVariable("TIREFORGE_DB")
+                       ?? "Data Source=tireforge.db";
+builder.Services.AddTireForgeData(connectionString);
+
+// IActionResult payloads serialize through ASP.NET Core's JSON formatter — align it
+// with the dashboard contract (camelCase, enums as camelCase strings).
+builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(o =>
+    ApiJson.Configure(o.JsonSerializerOptions));
 
 if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING")))
 {
@@ -20,4 +33,12 @@ if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPLICATIONINSIGHT
         .UseAzureMonitorExporter();
 }
 
-builder.Build().Run();
+var app = builder.Build();
+
+// Local / demo convenience: migrate + seed on startup. Harmless if already applied.
+if (Environment.GetEnvironmentVariable("TIREFORGE_SKIP_DB_INIT") != "true")
+{
+    await app.Services.InitializeTireForgeDataAsync();
+}
+
+app.Run();

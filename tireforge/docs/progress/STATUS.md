@@ -4,10 +4,10 @@
 Keep this file current at every checkpoint and **commit + push it** — a Codespace
 rebuild loses anything uncommitted (see the `codespace-data-loss` memory).
 
-_Last updated: 2026-09-02 (end of session 3). Resume point: **Stage L — write the
-`TireForge.ApiProxy` HTTP endpoints** over the finished `Core/Reporting/Reports`
-service; then the **Stage M spike** (D9). All work committed + pushed through
-`c833ff6`. 102 tests green._
+_Last updated: 2026-09-03 (session 4). Resume point: **Stage M spike (D9)** — one
+real persistent Foundry agent via the .NET Agents SDK, portal-visible, one
+invocation, trace in App Insights. Stage L is **done** (ApiProxy endpoints
+shipped). 114 tests green (34 Core + 46 Data + 22 Agents + 12 ApiProxy)._
 
 ---
 
@@ -162,7 +162,7 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 | A1 | Persist A3 draft on every route (`Diagnosis.DraftActionText`) — D7 | ☑ `WorkOrderWriter` sets it both routes + migration |
 | J.5 | Tracing — `Activity`-based correlation + host export (D6) = Challenge 2 | ☑ `Core/Observability/Telemetry`, root+child spans, hosts registered |
 | K | Reviewer decisions — approve / reject / close lifecycle | ☑ `Core/Reviewing/Reviewer` — 10 tests |
-| L | Report logic — `/status` `/queue` `/workorders` `/cost` + health metrics | ◐ `Core/Reporting/Reports` + `IReportingQueries` done (14 tests); `TireForge.ApiProxy` HTTP endpoints pending |
+| L | Report logic — `/status` `/queue` `/workorders` `/cost` + health metrics | ☑ `Core/Reporting/Reports` (14 tests) + `TireForge.ApiProxy` HTTP endpoints (5 read + 3 reviewer-write, anonymous auth per D10, 12 tests) |
 | M | Swap stubs for real **persistent Foundry agents** via the .NET Agents SDK (D9) — portal-visible `anomaly-detection-agent` / `fault-diagnosis-agent` / `work-order-agent`; = Challenge 1 & 2 for real | ☐ **spike brought forward (step 5)** |
 | — | Ingestion Function + Storage Queue wiring | ☐ |
 | — | Orchestrator Durable wiring around `run_pipeline` | ☐ |
@@ -175,8 +175,10 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 
 ## Next actions
 
-**Stages A–J done — the pure logic pipeline runs end to end.** 80 tests green
-(34 Core + 24 Data + 22 Agents).
+**Stages A–L done — pipeline + reviewer + read models + HTTP API.** 114 tests green
+(34 Core + 46 Data + 22 Agents + 12 ApiProxy). **Next: Stage M spike (D9)** — see
+the "Revised build sequence" step 5 below. The notes under it are the session-3
+detail for stages already shipped; kept for reference.
 
 - **Agent contracts refactor:** ports (`IAnomalyDetector` / `IFaultDiagnoser` /
   `IWorkOrderDrafter`) + outputs (`AnomalyVerdict` / `FaultVerdict` /
@@ -203,9 +205,14 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 3. ✅ **Stage K** — `Core/Reviewing/Reviewer`: `ApproveAsync` / `RejectAsync` (note
    required, `Rejected` audit row) / `CloseAsync` (only from `Issued`/`Approved`).
    All writes via `IWorkOrderStore`. 10 tests.
-4. **Stage L** — ✅ `Core/Reporting/Reports` (14 tests); ⬜ `TireForge.ApiProxy` HTTP endpoints. ← **next**
+4. ✅ **Stage L** — `Core/Reporting/Reports` (14 tests) + `TireForge.ApiProxy` HTTP endpoints:
+   5 read (`/status` `/queue` `/workorders` `/health` `/cost`) + 3 reviewer-write
+   (`/review/approve` `/review/reject` `/workorders/{id}/close`), anonymous auth (D10),
+   `ApiJson` camelCase+enum-string wire shape, `HttpProblem` exception→status mapping.
+   12 ApiProxy tests. **Pending:** live `func` host smoke test (no core-tools in this
+   Codespace) — folded into the dashboard-port step.
 5. **Stage M spike (D9)** — one real Foundry agent via the .NET Agents SDK, portal-visible,
-   one invocation, trace in App Insights. Brought forward to de-risk the .NET↔Foundry story.
+   one invocation, trace in App Insights. Brought forward to de-risk the .NET↔Foundry story. ← **next**
 6. **Stage M full** — 3 agents behind the interfaces = **Challenge 1 real**; `gen_ai.*` spans = **Challenge 2 real**.
 7. **Dashboard port** — real `fetch`, `gpt-5.4` labels, mojibake fix, sim → normal/warn/crit.
 8. **Ingestion + Orchestrator + `azd up`** = **Challenge 4** (Functions path) → then portal workflow steps.
@@ -223,7 +230,7 @@ session-3 analysis; drops recorded in DECISIONS.md D8.
 | Activity tracing + export | 9 | 4 | ✅ done (host export untested live) |
 | Stage K reviewer | 7 | 3 | ✅ done |
 | Stage L — Core read models | 8 | 4 | ✅ done |
-| Stage L — `TireForge.ApiProxy` endpoints | 7 | 3 | next |
+| Stage L — `TireForge.ApiProxy` endpoints | 7 | 3 | ✅ done |
 | **Stage M spike — real Foundry agent, .NET SDK (D9)** | 10 | 5 | brought forward |
 | Stage M full — 3 hosted agents behind the interfaces | 9 | 5 | queued |
 | Dashboard port (fetch, gpt-5.4 labels, mojibake, sim trim) | 7 | 3 | queued |
@@ -251,7 +258,7 @@ az bicep install
 az login          # subscription DkaySubscription
 bash tireforge/scripts/restore-env.sh
 
-# 5. sanity check — expect 102 green (34 Core + 46 Data + 22 Agents):
+# 5. sanity check — expect 114 green (34 Core + 46 Data + 22 Agents + 12 ApiProxy):
 cd tireforge && dotnet build TireForge.sln && dotnet test TireForge.sln
 ```
 
@@ -316,3 +323,17 @@ Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
   named agents behind the existing `Core.Agents` interfaces; a **Stage M spike is
   brought forward** (step 5) to de-risk the .NET↔Foundry SDK before wiring.
   Ch 3 & 4 stay mostly portal work once the agents exist.
+- **Session 4 (2026-09-03) — Stage L finished: `TireForge.ApiProxy` endpoints.**
+  Re-read all challenge READMEs (0–4; there is no challenge-5) — mapping in the
+  table above still holds. `Program.cs` wires `AddTireForgeData` + migrate/seed on
+  startup + `ApiJson` (camelCase, enums as camelCase strings). `ReportsFunctions`
+  = 5 GET delegates to `Reports` (`/status` `/queue` `/workorders` `/health`
+  `/cost`). `ReviewFunctions` = 3 POST over the Stage-K `Reviewer`
+  (`/review/approve` `/review/reject` `/workorders/{id}/close`), domain exceptions
+  → problem responses via `HttpProblem` (400 / 404 / 409). **All anonymous — new
+  Decision D10** (dashboard is a keyless SPA; gateway or Function key goes in front
+  before any non-local deploy). New `tests/TireForge.ApiProxy.Tests` (added to
+  sln): `HttpProblem` mapping, `ApiJson` wire shape, endpoint integration over a
+  seeded in-memory DB. 114 tests green. **Pending:** live `func` host smoke test —
+  no `azure-functions-core-tools` in this Codespace; folded into the dashboard-port
+  step (7).

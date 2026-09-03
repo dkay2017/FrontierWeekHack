@@ -168,12 +168,36 @@ exist (upload the jsonl + click through Evaluations; build the workflow in the d
 `eval/TireForge.Eval` and the Durable orchestrator are the automated/production supersets
 (Ch 4 "Option 5"), not replacements for the portal steps.
 
+## D10 — `TireForge.ApiProxy` HTTP endpoints: anonymous auth for now
+
+Stage L exposes the pure read models (`/status` `/queue` `/workorders` `/health`
+`/cost`) plus the reviewer write path (`/review/approve` `/review/reject`
+`/workorders/{id}/close`, over the Stage-K `Reviewer`) as HTTP-triggered Azure
+Functions (isolated worker, ASP.NET Core integration).
+
+**Decision:** every function uses `AuthorizationLevel.Anonymous` for now. The
+dashboard (a static SPA port, D8) calls these directly with no key handling, and
+the demo runs locally / in a Codespace with no gateway in front. Route prefix
+stays the Functions default (`/api/...`).
+
+**Why this is safe to defer:** the endpoints are read-only except the reviewer
+decisions, which are already audited (`Rejected` rows, `by=reviewer`, invariant
+1.1 — the Adapter is the sole writer). No secrets, no equipment control, no PII.
+
+**When it changes:** if APIM goes in front (D3 spike passes), auth + rate limiting
+move to the gateway and the Functions stay anonymous behind it (standard APIM ↔
+Functions pattern). If APIM is dropped, add `AuthorizationLevel.Function` + a key
+for any non-localhost deployment before `azd up`. Tracked in the roadmap, not v1.
+
 ## Revised build sequence (post-Stage J)
 
 1. ✅ **A1** — `Diagnosis.DraftActionText` (D7).
 2. ✅ **Tracing stage** — `Activity`-based correlation + host export (D6) = Challenge 2 (our side).
 3. ✅ **Stage K** — reviewer approve / reject / close.
-4. **Stage L** — read models (✅ `Core/Reporting`) + `TireForge.ApiProxy` HTTP endpoints (pending).
+4. ✅ **Stage L** — read models (`Core/Reporting`) + `TireForge.ApiProxy` HTTP endpoints
+   (5 read + 3 reviewer-write, anonymous auth per D10, `ApiJson` wire shape, `HttpProblem`
+   error mapping). 12 ApiProxy tests. Live `func` host smoke test pending (no core-tools
+   in this Codespace) — deferred to the dashboard-port step.
 5. **Stage M spike (D9)** — brought forward: one real Foundry agent via the .NET SDK,
    portal-visible, one invocation, trace in App Insights. De-risks everything below.
 6. **Stage M full** — all three agents created + wired behind the interfaces =
