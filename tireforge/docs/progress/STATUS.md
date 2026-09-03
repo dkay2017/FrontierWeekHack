@@ -188,7 +188,7 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 | — | Dashboard (port of v1.6) | ☐ |
 | — | APIM AI Gateway + token policies | ☐ |
 | — | Eval harness (4 scenarios) + Health Workbook | ☐ |
-| — | `infra/main.bicep` — Bicep port of `deploy.sh` (Challenge-0 Foundry stack) | ☑ compiles; not yet deployed |
+| — | `infra/main.bicep` — Bicep port of `deploy.sh` (Challenge-0 Foundry stack: account + project + `gpt-5.4` + App Insights). Agents are **not** IaC — runtime via `AgentTool provision` (see infra/README "Not Bicep — by design") | ☑ compiles; not yet deployed |
 
 ---
 

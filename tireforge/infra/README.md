@@ -33,6 +33,16 @@ Outputs mirror the keys `deploy.sh` writes into `factory/.env`
 Until those exist, `azure.yaml` service deploys (`azd deploy`) have nowhere to land —
 use the plain deployment below.
 
+## Not Bicep — by design
+
+The **three Foundry agents** (`anomaly-detection-agent` / `fault-diagnosis-agent` /
+`work-order-agent`) are **not** infrastructure. They are runtime resources created
+via the SDK — `tools/TireForge.AgentTool provision` (Decisions D9 / D11 rung 0,
+"create once, reuse forever" — matches `factory/challenge-*/agents.py`). Their
+`check_thresholds` tool runs in-process against `Core.ThresholdCheck`, so it needs
+no infra either. Bicep stands up the *account + project + model deployment + App
+Insights* the agents run on; the agents themselves are provisioned after deploy.
+
 ## Files
 
 | File | Purpose |

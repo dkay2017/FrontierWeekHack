@@ -171,54 +171,6 @@ exist (upload the jsonl + click through Evaluations; build the workflow in the d
 `eval/TireForge.Eval` and the Durable orchestrator are the automated/production supersets
 (Ch 4 "Option 5"), not replacements for the portal steps.
 
-## D12 — Real agents: hybrid split — agent writes the prose, Core owns the numbers
-
-The `Core.Agents` structured outputs (`AnomalyVerdict.IsAnomaly`,
-`FaultVerdict.Severity` / `Confidence` / `Cites`, every `WorkOrderDraft` field bar
-`ActionText`) drive the Gate and the write path — invariants 1.3 / 1.1. Letting a
-model produce them means a hallucinated confidence can auto-issue a work order, and
-the Gate stops being unit-testable.
-
-**Decision:** the Stage-M real implementations are **hybrid**:
-
-| Field | Source | Why |
-|---|---|---|
-| `AnomalyVerdict.IsAnomaly` | deterministic — `t1.AnyBreach` | T1 is agent-independent + unit-tested (design); the gate on "is there an anomaly" must not flake |
-| `AnomalyVerdict.Text` | **the agent** (calls `check_thresholds`, emoji-tagged summary) | Challenge 1's actual deliverable — coherent grounded narrative |
-| `FaultVerdict.Fault` | **the agent** (LIKELY CAUSE line) | the reasoning Challenge 1 asks for |
-| `FaultVerdict.Text` | **the agent** (LIKELY CAUSE / ACTIONS / URGENCY) | what Challenge 3 scores for Coherence / Fluency |
-| `FaultVerdict.Severity` | deterministic — `FaultHeuristics.Escalate(t1, t2)` | drives the Gate (invariant 1.3) |
-| `FaultVerdict.Confidence` | deterministic — `FaultHeuristics.Score(t1, t2)` | drives the Gate; a model's self-reported confidence is not calibrated |
-| `FaultVerdict.Cites` | deterministic — reading id + `t2` incident ids | grounding must be real record ids, not model output |
-| `WorkOrderDraft.ActionText` | **the agent** (work-order-agent) | the human-readable instruction the reviewer sees |
-| every other `WorkOrderDraft` field | deterministic — copied from the `Diagnosis` | already decided upstream |
-
-So the agents own exactly the free-text fields; deterministic Core owns everything
-structural. `FaultHeuristics` (`Escalate` + `Score`) is lifted out of
-`StubFaultDiagnoser` into `Core/Agents` so the stub and the Foundry impl share one
-copy. This matches Challenge 1 (its Fault Diagnosis agent is pure narrative — no
-structured fields at all) and keeps our superset (Gate / confidence / citations)
-deterministic and testable.
-
-**Consequence:** stub vs. Foundry produce the *same* gate routing for a given
-reading; they differ in the prose (and the `Fault` label). That's intended — the
-agent's value is the reasoning quality (Challenge 1 & 3), not the control flow.
-
-**DI switch:** `AddTireForgeAgents(config)` reads `TIREFORGE_AGENTS` —
-`stub` (default; offline, tests) or `foundry` (real, needs `az login` + `factory/.env`).
-
-**✅ Implemented (session 4).** `src/TireForge.Agents/Foundry/` — `FoundryAgentClient`
-(ensure-agent + invoke with the function-tool loop), `ThresholdsTool` (`check_thresholds`,
-body → `Core.ThresholdCheck`), the three `Foundry*` impls, `FoundryAgentProvisioner`,
-`AgentPrompts`. `tools/TireForge.AgentTool` provisions all three + runs one full
-pipeline pass. Verified live: the CP-003 critical reading produced a correct A1
-(grounded, tool called twice), A2 (LIKELY CAUSE / ACTIONS / URGENCY, cites inc-005/006),
-A3 (IMMEDIATE, cites the reading); Gate → Review (deterministic). App Insights showed
-one `pipeline.run` trace with `invoke_agent anomaly-detection-agent:2` / `fault-diagnosis-agent:1`
-/ `work-order-agent:1` + `chat gpt-5.4-2026-03-05` spans nested per step = **Challenge 2
-for real**; the three agents are portal-visible = **Challenge 1 for real**.
-120 tests green.
-
 ## D10 — `TireForge.ApiProxy` HTTP endpoints: anonymous auth for now
 
 Stage L exposes the pure read models (`/status` `/queue` `/workorders` `/health`
@@ -290,6 +242,54 @@ The only variable is how much Python we tolerate.
   dilutes "everything C#" and adds an always-on service to deploy. Design already
   supports it; stays documented but unused unless C# genuinely cannot invoke a
   hosted agent at all.
+
+## D12 — Real agents: hybrid split — agent writes the prose, Core owns the numbers
+
+The `Core.Agents` structured outputs (`AnomalyVerdict.IsAnomaly`,
+`FaultVerdict.Severity` / `Confidence` / `Cites`, every `WorkOrderDraft` field bar
+`ActionText`) drive the Gate and the write path — invariants 1.3 / 1.1. Letting a
+model produce them means a hallucinated confidence can auto-issue a work order, and
+the Gate stops being unit-testable.
+
+**Decision:** the Stage-M real implementations are **hybrid**:
+
+| Field | Source | Why |
+|---|---|---|
+| `AnomalyVerdict.IsAnomaly` | deterministic — `t1.AnyBreach` | T1 is agent-independent + unit-tested (design); the gate on "is there an anomaly" must not flake |
+| `AnomalyVerdict.Text` | **the agent** (calls `check_thresholds`, emoji-tagged summary) | Challenge 1's actual deliverable — coherent grounded narrative |
+| `FaultVerdict.Fault` | **the agent** (LIKELY CAUSE line) | the reasoning Challenge 1 asks for |
+| `FaultVerdict.Text` | **the agent** (LIKELY CAUSE / ACTIONS / URGENCY) | what Challenge 3 scores for Coherence / Fluency |
+| `FaultVerdict.Severity` | deterministic — `FaultHeuristics.Escalate(t1, t2)` | drives the Gate (invariant 1.3) |
+| `FaultVerdict.Confidence` | deterministic — `FaultHeuristics.Score(t1, t2)` | drives the Gate; a model's self-reported confidence is not calibrated |
+| `FaultVerdict.Cites` | deterministic — reading id + `t2` incident ids | grounding must be real record ids, not model output |
+| `WorkOrderDraft.ActionText` | **the agent** (work-order-agent) | the human-readable instruction the reviewer sees |
+| every other `WorkOrderDraft` field | deterministic — copied from the `Diagnosis` | already decided upstream |
+
+So the agents own exactly the free-text fields; deterministic Core owns everything
+structural. `FaultHeuristics` (`Escalate` + `Score`) is lifted out of
+`StubFaultDiagnoser` into `Core/Agents` so the stub and the Foundry impl share one
+copy. This matches Challenge 1 (its Fault Diagnosis agent is pure narrative — no
+structured fields at all) and keeps our superset (Gate / confidence / citations)
+deterministic and testable.
+
+**Consequence:** stub vs. Foundry produce the *same* gate routing for a given
+reading; they differ in the prose (and the `Fault` label). That's intended — the
+agent's value is the reasoning quality (Challenge 1 & 3), not the control flow.
+
+**DI switch:** `AddTireForgeAgents(config)` reads `TIREFORGE_AGENTS` —
+`stub` (default; offline, tests) or `foundry` (real, needs `az login` + `factory/.env`).
+
+**✅ Implemented (session 4).** `src/TireForge.Agents/Foundry/` — `FoundryAgentClient`
+(ensure-agent + invoke with the function-tool loop), `ThresholdsTool` (`check_thresholds`,
+body → `Core.ThresholdCheck`), the three `Foundry*` impls, `FoundryAgentProvisioner`,
+`AgentPrompts`. `tools/TireForge.AgentTool` provisions all three + runs one full
+pipeline pass. Verified live: the CP-003 critical reading produced a correct A1
+(grounded, tool called twice), A2 (LIKELY CAUSE / ACTIONS / URGENCY, cites inc-005/006),
+A3 (IMMEDIATE, cites the reading); Gate → Review (deterministic). App Insights showed
+one `pipeline.run` trace with `invoke_agent anomaly-detection-agent:2` / `fault-diagnosis-agent:1`
+/ `work-order-agent:1` + `chat gpt-5.4-2026-03-05` spans nested per step = **Challenge 2
+for real**; the three agents are portal-visible = **Challenge 1 for real**.
+120 tests green.
 
 ## Revised build sequence (post-Stage J)
 
