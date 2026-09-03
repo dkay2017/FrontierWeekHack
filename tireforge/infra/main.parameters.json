@@ -35,6 +35,9 @@
     "agentsMode": {
       "value": "${TIREFORGE_AGENTS=foundry}"
     },
+    "functionAppSuffix": {
+      "value": "${FUNCTION_APP_SUFFIX=}"
+    },
     "resourceGroupName": {
       "value": "${AZURE_RESOURCE_GROUP=foundry-hackathon-rg-${AZURE_ENV_NAME}}"
     },

@@ -20,6 +20,9 @@ param environmentName string
 param storageAccountName string
 param planName string = 'tireforge-plan-${environmentName}'
 
+@description('Suffix on the Function App names — bump it to dodge soft-deleted sites blocking re-creation.')
+param functionAppSuffix string = ''
+
 @description('App Insights connection string (from the foundry module).')
 param appInsightsConnectionString string
 
@@ -78,14 +81,14 @@ resource plan 'Microsoft.Web/serverfarms@2024-04-01' = {
 var apps = [
   {
     key: 'ingestion'
-    name: 'tireforge-ingestion-${environmentName}'
+    name: 'tireforge-ingestion-${environmentName}${functionAppSuffix}'
     settings: [
       { name: 'TIREFORGE_DB', value: databaseConnectionString }
     ]
   }
   {
     key: 'orchestrator'
-    name: 'tireforge-orchestrator-${environmentName}'
+    name: 'tireforge-orchestrator-${environmentName}${functionAppSuffix}'
     settings: [
       { name: 'TIREFORGE_DB', value: databaseConnectionString }
       { name: 'TIREFORGE_AGENTS', value: agentsMode }
@@ -95,7 +98,7 @@ var apps = [
   }
   {
     key: 'apiproxy'
-    name: 'tireforge-apiproxy-${environmentName}'
+    name: 'tireforge-apiproxy-${environmentName}${functionAppSuffix}'
     settings: [
       { name: 'TIREFORGE_DB', value: databaseConnectionString }
     ]

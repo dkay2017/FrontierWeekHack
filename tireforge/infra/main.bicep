@@ -84,6 +84,9 @@ param sqlAdminObjectId string = ''
 @description('Agent DI mode for the Orchestrator: stub | foundry.')
 param agentsMode string = 'foundry'
 
+@description('Suffix on the Function App names — bump to dodge soft-deleted Function App sites blocking re-creation.')
+param functionAppSuffix string = ''
+
 param storageAccountName string = 'tfstore${uniqueString(subscription().id, environmentName)}'
 param sqlServerName string = 'tireforge-sql-${uniqueString(subscription().id, environmentName)}'
 
@@ -135,6 +138,7 @@ module apps './modules/apps.bicep' = if (deployCompute) {
     location: location
     tags: allTags
     environmentName: environmentName
+    functionAppSuffix: functionAppSuffix
     storageAccountName: storageAccountName
     appInsightsConnectionString: appInsightsConnectionString
     foundryAccountName: foundryAccountName
