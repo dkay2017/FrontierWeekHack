@@ -4,11 +4,14 @@
 Keep this file current at every checkpoint and **commit + push it** — a Codespace
 rebuild loses anything uncommitted (see the `codespace-data-loss` memory).
 
-_Last updated: 2026-09-03 (session 4, end). Resume point: **finish the live deploy**
-— compute stack is provisioned + live on Azure (Y1); `azd deploy ingestion` done,
-`orchestrator` + `apiproxy` deploying; then verify end-to-end, then apply **D15**
-(SWA Free → Standard + linked backend), then the consolidated doc-reconciliation
-pass (`PENDING-DOC-UPDATES.md`)._
+_Last updated: 2026-09-03 (session 4, end). Resume point: **apply D15** (SWA Free →
+Standard + linked backend, bicep + re-provision), then the consolidated
+doc-reconciliation pass (`PENDING-DOC-UPDATES.md`). The live deploy is **done and
+verified end-to-end** (see below)._
+
+_**⚠ Before demoing next session:** re-enable the sensor timer —
+`az functionapp config appsettings delete -n tireforge-ingestion-tf1-v2 -g foundry-hackathon-rg-3e97ae19 --setting-names AzureWebJobs.SensorSimulator.Disabled`
+(disabled at stop time so it doesn't burn Foundry tokens overnight)._
 
 _**Challenges 0–4 all complete:** 0 infra ✅ · 1 agents (Stage M) ✅ · 2 App
 Insights agent traces ✅ · 3 portal eval **100/100** ✅ · 4 portal workflow
@@ -20,13 +23,20 @@ descoped** (D3) · **cost metering** (D13) · `eval/TireForge.Eval` CI gate (10/
 CI workflow · **`tools/TireForge.DbDeploy`** (azd postprovision — migrate + grant
 Function App identities + seed) + `azure.yaml` `hooks.postprovision`._
 
-_**Live deploy (session 4 end):** infra provisioned to RG `foundry-hackathon-rg-3e97ae19`
-on **classic Consumption (Y1) Linux** — Flex Consumption was abandoned (worker
-wouldn't stay up), see PENDING-DOC-UPDATES §4. Function Apps carry a `-v2` suffix
-(`FUNCTION_APP_SUFFIX` param) because the `tf1` names got soft-deleted. Azure SQL
-serverless migrated + seeded; 3 MI identities granted `db_datareader/writer`.
-Dashboard SWA live. `azd deploy ingestion` ✅; `orchestrator` + `apiproxy` in
-progress._
+_**Live deploy (session 4 end) — DONE + VERIFIED END TO END.** Infra provisioned to
+RG `foundry-hackathon-rg-3e97ae19` on **classic Consumption (Y1) Linux** — Flex
+Consumption was abandoned (worker wouldn't stay up), see PENDING-DOC-UPDATES §4.
+Function Apps carry a `-v2` suffix (`FUNCTION_APP_SUFFIX` param) because the `tf1`
+names got soft-deleted. Azure SQL serverless migrated + seeded; 3 MI identities
+granted `db_datareader/writer`. All 4 services deployed (`azd deploy`). **Proven
+live:** `POST /api/emit/CP-003/crit` → `readings` queue → Durable orchestrator →
+all 3 Foundry agents (A1 tool-called, A2 cites `inc-005`, A3) → Gate → review row
+in `/api/queue` (`severity crit`, `confidence 0.8`). `/api/cost` returns **real
+token metrics** (`tokenMetricsAvailable: true` — e.g. Anomaly Detection 5089 tok /
+$0.0165) = **D13 live**. `/api/status` `/api/health` serve from Azure SQL.
+Known cosmetic gap: the **orchestrator emits no App Insights telemetry** on Y1
+(OTel exporter quirk); the DB writes + cost rows + queue items prove every stage
+ran — follow-up, not a blocker._
 
 _**Live URLs:**_
 - _Dashboard: `https://jolly-glacier-02859e803.3.azurestaticapps.net`_
@@ -558,19 +568,24 @@ Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
   **Challenge 4:** portal workflow `factory-health-workflow-portal` built +
   preview-tested — 2 agents (`anomaly-detection-agent → fault-diagnosis-agent`),
   the 3rd agent + Gate stay in the Durable orchestrator (**D14**).
-- **Session 4 cont. — live deploy.** `azd env` `tf1` reuses the existing Foundry
-  stack (`DEPLOY_FOUNDRY=false`, `EXISTING_*` connection strings). Infra
-  provisioned. **Flex Consumption abandoned** — the 3 Flex apps 404'd on every
-  route with zero telemetry (dotnet-isolated + identity-based storage worker
-  wouldn't stay up); `apps.bicep` rewritten to **classic Consumption (Y1) Linux**
-  (storage connection string, `WEBSITE_RUN_FROM_PACKAGE`). The `tf1` Function App
-  names were soft-deleted by the rebuild and App Service has no purge API → new
+- **Session 4 cont. — live deploy, DONE + verified.** `azd env` `tf1` reuses the
+  existing Foundry stack (`DEPLOY_FOUNDRY=false`, `EXISTING_*` connection strings).
+  **Flex Consumption abandoned** — the 3 Flex apps 404'd on every route with zero
+  telemetry (dotnet-isolated + identity-based storage worker wouldn't stay up);
+  `apps.bicep` rewritten to **classic Consumption (Y1) Linux** (storage connection
+  string, `WEBSITE_RUN_FROM_PACKAGE`). The `tf1` Function App names were
+  soft-deleted by the rebuild and App Service has no purge API → new
   `functionAppSuffix` param (`FUNCTION_APP_SUFFIX=-v2`), live apps are
   `tireforge-*-tf1-v2`. `tools/TireForge.DbDeploy` run against Azure SQL:
   migrations applied, seeded (5 machines / 8 history), the 3 `-v2` managed
-  identities granted `db_datareader`+`db_datawriter`. `azd deploy ingestion` ✅;
-  `orchestrator` + `apiproxy` deploying at stop time. Codespace SQL firewall rule
-  `codespace-deploy` re-added for egress `20.61.127.49` (changes on restart).
+  identities granted `db_datareader`+`db_datawriter`. All 4 services deployed.
+  **End-to-end verified** (`emit CP-003 crit` → queue → Durable → 3 Foundry
+  agents → Gate → review row; `/api/cost` real tokens = D13 live; `/api/status`
+  from Azure SQL). Sensor timer disabled at stop (`AzureWebJobs.SensorSimulator.Disabled=true`)
+  so it doesn't burn Foundry tokens overnight — re-enable before demoing.
+  **Open:** orchestrator App Insights telemetry is empty on Y1 (OTel exporter
+  quirk — functionally fine, everything downstream proves the run). Codespace SQL
+  firewall rule `codespace-deploy` = egress `20.61.127.49` (changes on restart).
 - **Session 4 cont. — D15: dashboard host → SWA Standard.** Decided (not yet
   applied). SWA **Free** has no *linked backend* → the dashboard reaches the API
   cross-origin via `?api=` + CORS `*`. Storage `$web` static hosting has the same
