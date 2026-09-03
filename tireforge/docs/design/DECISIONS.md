@@ -110,10 +110,13 @@ column + migration + one line.
 
 ## D8 — Dashboard scope + APIM timebox
 
-- **Dashboard:** the v1.6 prototype (`docs/design/…-Dashboard_Prototype.html`) is
-  committed as **mock data**. The real `TireForge.Dashboard` is a port that binds the
-  mock `api` object to `TireForge.ApiProxy` and the **seeded Challenge data** (the
-  prototype's machine roster / numbers are illustrative — not reconciled).
+- **Dashboard:** ✅ **ported (session 4)** — `src/TireForge.Dashboard/index.html`.
+  The mock `api` object now `fetch`es `TireForge.ApiProxy` (`/status` `/queue`
+  `/workorders` `/cost`); Approve / Reject / Close hit the reviewer POST endpoints.
+  Machine roster + numbers come from `/status` (seeded Challenge data). `gpt-5.4`
+  labels, mojibake fixed, sim trimmed + made explicitly illustrative (no client
+  state mutation). `?api=` override; local CORS via `func start --cors "*"`. The
+  v1.6 prototype stays in `docs/design/` as the design reference.
 - **Dropped** (complexity without payoff for a judge):
   - Simulator "drift" / "stall" scenarios → cut the sim to `normal / warn / crit`
     (matches `ReadingFactory`; trend/rolling-window is TDD §9 roadmap).
@@ -309,9 +312,15 @@ for real**; the three agents are portal-visible = **Challenge 1 for real**.
    `TIREFORGE_AGENTS=stub|foundry` switch. Live full-pipeline pass verified;
    agent spans nest under the `pipeline.run` trace in App Insights = **Challenges 1 & 2
    for real**. 120 tests green.
-7. **Dashboard port** — real `fetch`, `gpt-5.4` labels, mojibake fix, sim cut to
-   normal/warn/crit. Also folds in the deferred live `func` host smoke test for the
-   ApiProxy. ← **next**
+7. ✅ **Dashboard port** — `src/TireForge.Dashboard/index.html` (port of prototype
+   v1.6). Mock `api` → real `fetch` at `TireForge.ApiProxy` (`/status` `/queue`
+   `/workorders` `/cost`; Approve/Reject/Close → the reviewer POSTs). Machine
+   identity from `/status` (seeded data, not the prototype roster). `gpt-5.4`
+   labels; mojibake fixed; sim trimmed to normal/warn/crit and made explicitly
+   illustrative (no client-side state mutation); Cost shows call counts + "—" for
+   token/spend until the gateway (D8). `?api=` override; CORS via
+   `func start --cors "*"` (`local.settings.sample.json`). jsdom render smoke test
+   green. Live `func` host smoke test still pending (no core-tools in this Codespace).
 8. **Ingestion + Orchestrator wiring** — timer → queue → Durable → `Pipeline.RunAsync` +
    `azd up` = **Challenge 4** (SDK/Functions path); then the portal workflow steps.
 9. **Challenge 3** — upload `eval_portal.jsonl`, run Coherence/Fluency in the portal;

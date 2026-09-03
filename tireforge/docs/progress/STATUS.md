@@ -4,12 +4,11 @@
 Keep this file current at every checkpoint and **commit + push it** — a Codespace
 rebuild loses anything uncommitted (see the `codespace-data-loss` memory).
 
-_Last updated: 2026-09-03 (session 4). Resume point: **step 7 — dashboard port**
-(`TireForge.Dashboard`: real `fetch` against `ApiProxy`, `gpt-5.4` labels, mojibake
-fix, sim → normal/warn/crit; also the deferred `func` host smoke test).
-**Stages A–L + Stage M (spike + full) all done.** Real Foundry agents live and
-verified end-to-end — see the session log + DECISIONS.md D12. 120 tests green
-(34 Core + 46 Data + 28 Agents + 12 ApiProxy)._
+_Last updated: 2026-09-03 (session 4). Resume point: **step 8 — Ingestion +
+Orchestrator wiring** (timer/queue → Durable → `Pipeline.RunAsync`; = Challenge 4
+SDK/Functions path), then the portal workflow designer steps. **Stages A–M +
+dashboard port all done.** 120 tests green (34 Core + 46 Data + 28 Agents +
+12 ApiProxy). Pending: live `func` host smoke test (no core-tools in this Codespace)._
 
 ---
 
@@ -51,7 +50,7 @@ just "agent-shaped logic". See DECISIONS.md D9.**
 | 2 | agent-keyed traces in portal Traces/Monitor/Agents(preview) | one `pipeline.run` trace in App Insights with `invoke_agent <name>:<ver>` + `chat gpt-5.4-2026-03-05` spans nested per step; tool loop visible | ✅ done (Stage M full) |
 | 3 | evaluate the `anomaly-detection-agent` target in the portal (Coherence/Fluency over `eval_portal.jsonl`) | agent now exists — portal Evaluations run + `eval/TireForge.Eval` CI-gate superset outstanding | ⬜ unblocked, not started |
 | 4 | agents visible as persistent assets + portal workflow designer | 3 agents live ✅; `TireForge.Ingestion`/`Orchestrator` wiring + portal workflow designer outstanding | 🟡 agents done, wiring pending |
-| superset | APIM gateway · Dashboard · Reviewer gate · Work Order Adapter | Reviewer ✅, read models ✅; ApiProxy + dashboard port pending; APIM last | 🟡 partial |
+| superset | APIM gateway · Dashboard · Reviewer gate · Work Order Adapter | Reviewer ✅, read models ✅, ApiProxy ✅, dashboard port ✅; APIM last (D3 spike gated) | 🟡 APIM only |
 
 **Challenge 1 specifics (from its README + `agents.py` + `sensor_data.json`):**
 - Seed data = `factory/challenge-1-build/sensor_data.json` — 5 machines, each with
@@ -185,7 +184,7 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 | M | Real **persistent Foundry agents** (D9/D11 nextgen `Azure.AI.Projects` 2.x, D12 hybrid) — `anomaly-detection-agent` (+ `check_thresholds`) / `fault-diagnosis-agent` / `work-order-agent`, wired behind `Core.Agents`; `TIREFORGE_AGENTS=stub\|foundry` | ☑ `src/TireForge.Agents/Foundry/` + `tools/TireForge.AgentTool`; full pipeline pass verified, spans in App Insights |
 | — | Ingestion Function + Storage Queue wiring | ☐ |
 | — | Orchestrator Durable wiring around `run_pipeline` | ☐ |
-| — | Dashboard (port of v1.6) | ☐ |
+| — | Dashboard (port of v1.6) | ☑ `src/TireForge.Dashboard/index.html` — mock `api` → live `fetch` at ApiProxy, reviewer POSTs, `gpt-5.4`, mojibake fixed, sim → illustrative; jsdom smoke test green |
 | — | APIM AI Gateway + token policies | ☐ |
 | — | Eval harness (4 scenarios) + Health Workbook | ☐ |
 | — | `infra/main.bicep` — Bicep port of `deploy.sh` (Challenge-0 Foundry stack: account + project + `gpt-5.4` + App Insights). Agents are **not** IaC — runtime via `AgentTool provision` (see infra/README "Not Bicep — by design") | ☑ compiles; not yet deployed |
@@ -194,8 +193,8 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 
 ## Next actions
 
-**Stages A–L + Stage M (spike + full) all done.** 120 tests green (34 Core +
-46 Data + 28 Agents + 12 ApiProxy). **Next: step 7 — dashboard port.**
+**Stages A–M + dashboard port all done.** 120 tests green (34 Core + 46 Data +
+28 Agents + 12 ApiProxy). **Next: step 8 — Ingestion + Orchestrator wiring.**
 
 **Stage M full — shipped (session 4):**
 - `src/TireForge.Agents/Foundry/` — `FoundryAgentClient` (ensure + invoke w/ tool
@@ -213,14 +212,28 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
   `fault-diagnosis-agent:1` / `work-order-agent:1` + `chat gpt-5.4-2026-03-05` spans
   nested per step.
 
-**Dashboard port — the plan (step 7):**
-1. `TireForge.Dashboard` = the v1.6 prototype HTML, `api` object → real `fetch` at
-   `TireForge.ApiProxy` (`/api/status` `/queue` `/workorders` `/health` `/cost`).
-2. Reconcile machine roster / numbers to the seeded Challenge data; `gpt-5.4` labels;
-   fix the mojibake; sim → `normal / warn / crit` only (D8 drops).
-3. Serve it (static files off the ApiProxy Functions host, or a tiny separate host).
-4. Fold in the deferred **`func` host smoke test** — needs `azure-functions-core-tools`
-   (not in this Codespace; `npm i -g azure-functions-core-tools@4` or the devcontainer feature).
+**Dashboard port — shipped (session 4):** `src/TireForge.Dashboard/index.html`.
+The mock `api` object now `fetch`es the ApiProxy (`/status` `/queue` `/workorders`
+`/cost`); Approve/Reject → `POST /api/review/*`, Close → `POST /api/workorders/{id}/close`.
+Render functions unchanged — new mappers (`mapStatus`/`mapQueue`/`mapWO`/`mapCost`)
+turn the real DTOs into the shapes they already expect; `MACHINES` etc. filled from
+`/status` (seeded data, not the prototype roster). `statusOf`/`cell` now read the
+server severity/standing instead of recomputing. `gpt-5.4` labels; mojibake fixed
+(`â`→`—`, `Â·`→`·`, …); sim scenarios → `normal/warn/crit`, made explicitly
+illustrative (no client-side QUEUE/WORKORDERS mutation); Cost shows call counts +
+`—` for token/spend (pending the gateway). `?api=` override, `API_BASE` defaults to
+same-origin `/api`, red banner on connection failure. jsdom render smoke test green.
+
+**Step 8 — Ingestion + Orchestrator (the plan):**
+1. `TireForge.Ingestion` — timer trigger (per-shift) or Storage Queue trigger; a
+   `SensorSimulator` wrapping `Core.Sensing.ReadingFactory` enqueues readings.
+2. `TireForge.Orchestrator` — Durable: queue-triggered client → orchestrator → **one
+   activity** running `Core.Pipeline.RunAsync` end-to-end (Decision D2). Register
+   `AddTireForgeData` + `AddTireForgeAgents` in both hosts.
+3. `azd up` / `azure.yaml` service wiring = **Challenge 4** (SDK/Functions path);
+   then the portal workflow-designer steps.
+4. Fold in the deferred **`func` host smoke test** for ApiProxy + Dashboard — needs
+   `azure-functions-core-tools` (`npm i -g azure-functions-core-tools@4`).
 
 - **Agent contracts refactor:** ports (`IAnomalyDetector` / `IFaultDiagnoser` /
   `IWorkOrderDrafter`) + outputs (`AnomalyVerdict` / `FaultVerdict` /
@@ -259,7 +272,7 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 6. ✅ **Stage M full** — provisioner + `check_thresholds` tool + hybrid real impls
    behind the `Core.Agents` interfaces (+ `TIREFORGE_AGENTS` switch, D12).
    3 agents live = **Challenge 1 real**; nested agent spans = **Challenge 2 real**.
-7. **Dashboard port** — real `fetch`, `gpt-5.4` labels, mojibake fix, sim → normal/warn/crit. ← **next**
+7. ✅ **Dashboard port** — `src/TireForge.Dashboard/index.html`: mock `api` → live `fetch` at ApiProxy, reviewer POSTs, `gpt-5.4`, mojibake fixed, sim illustrative.
 8. **Ingestion + Orchestrator + `azd up`** = **Challenge 4** (Functions path) → then portal workflow steps.
 9. **Challenge 3** — portal Evaluations over `eval_portal.jsonl`; `eval/TireForge.Eval` = CI-gate superset.
 10. **APIM** — only if the D3 spike passes (now in front of hosted-agent calls).
@@ -278,7 +291,7 @@ session-3 analysis; drops recorded in DECISIONS.md D8.
 | Stage L — `TireForge.ApiProxy` endpoints | 7 | 3 | ✅ done |
 | **Stage M spike — real Foundry agent, .NET SDK (D9)** | 10 | 5 | ✅ done (`spikes/FoundryAgentSpike`) |
 | Stage M full — 3 hosted agents behind the interfaces | 9 | 5 | ✅ done (`Foundry/` + `AgentTool`) |
-| Dashboard port (fetch, gpt-5.4 labels, mojibake, sim trim) | 7 | 3 | queued |
+| Dashboard port (fetch, gpt-5.4 labels, mojibake, sim trim) | 7 | 3 | ✅ done |
 | Ingestion + Orchestrator wiring + `azd up` | 7 | 5 | queued |
 | Challenge 3 portal evaluation + `eval/TireForge.Eval` | 6 | 3 | queued |
 | Cost tab real numbers | 5 | 5 | deferred → needs Stage M token spans |
@@ -409,3 +422,15 @@ Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
   `invoke_agent <name>:<ver>` + `chat gpt-5.4-2026-03-05` spans nested per step =
   Challenges 1 & 2 real. 6 new Agents tests (DI switch, `check_thresholds` payload).
   120 green (34 Core + 46 Data + 28 Agents + 12 ApiProxy).
+- **Session 4 cont. — dashboard port (step 7).** `src/TireForge.Dashboard/index.html`
+  (from prototype v1.6). Mock `api` → real `fetch` at `TireForge.ApiProxy`; new
+  `mapStatus`/`mapQueue`/`mapWO`/`mapCost` adapt the real DTOs into the shapes the
+  (unchanged) render functions expect. `MACHINES`/`QUEUE`/… now filled from the
+  endpoints; `statusOf`/`cell` read server severity/standing. Approve/Reject →
+  `POST /api/review/*`, Close → `POST /api/workorders/{id}/close`, then re-fetch.
+  Mojibake fixed (`â`→`—`, stray `Â` stripped). `gpt-5.4` labels throughout. Sim
+  scenarios → `normal/warn/crit`, explicitly illustrative (no client QUEUE/WORKORDERS
+  mutation). Cost tab: call counts real, token/spend `—` (pending the gateway, D8).
+  `?api=` override, same-origin `/api` default, red banner on failure.
+  `local.settings.sample.json` (CORS) added. jsdom render smoke test (16 checks)
+  green. Live `func` smoke test still pending (no core-tools here).

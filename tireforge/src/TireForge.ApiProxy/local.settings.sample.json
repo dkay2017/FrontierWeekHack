@@ -1,0 +1,16 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+
+    "TIREFORGE_DB": "Data Source=tireforge.db",
+    "TIREFORGE_SKIP_DB_INIT": "false",
+
+    "APPLICATIONINSIGHTS_CONNECTION_STRING": ""
+  },
+  "Host": {
+    "CORS": "*",
+    "CORSCredentials": false
+  }
+}

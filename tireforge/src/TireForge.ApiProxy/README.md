@@ -48,8 +48,12 @@ entity → 404, bad state transition → 409.
 ## Run locally
 
 ```bash
-func start   # requires azure-functions-core-tools (devcontainer feature)
+func start                       # requires azure-functions-core-tools
+func start --cors "*"            # if serving TireForge.Dashboard from a separate origin
 ```
+
+`local.settings.json` is git-ignored; see `local.settings.sample.json` for the
+shape (SQLite path, App Insights connection string, `Host.CORS`).
 
 Tests: `dotnet test tests/TireForge.ApiProxy.Tests` — `HttpProblem` mapping,
 `ApiJson` wire shape, and endpoint integration over a seeded in-memory DB.
