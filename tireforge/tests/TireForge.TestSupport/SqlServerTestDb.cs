@@ -1,9 +1,26 @@
+using System.Runtime.CompilerServices;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.MsSql;
 using TireForge.Data;
 
 namespace TireForge.TestSupport;
+
+/// <summary>
+/// Starts the shared SQL Server container once, up-front, before any test thread
+/// runs — so the sync <see cref="TestDb"/> ctor never blocks on a cold start
+/// (parallel sync-over-async on a cold container starves the thread pool).
+/// </summary>
+internal static class TestBootstrap
+{
+    [ModuleInitializer]
+    internal static void Init()
+    {
+        if (Environment.GetEnvironmentVariable("TIREFORGE_SKIP_CONTAINER") == "true") return;
+        try { SqlServer.NewConnectionStringAsync().GetAwaiter().GetResult(); }
+        catch { /* surfaced again by the first real TestDb use */ }
+    }
+}
 
 /// <summary>
 /// One throwaway SQL Server container per test process (Testcontainers). Each
@@ -27,9 +44,7 @@ public static class SqlServer
         {
             if (_container is null)
             {
-                var c = new MsSqlBuilder()
-                    .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
-                    .Build();
+                var c = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build();
                 await c.StartAsync();
                 _container = c;
             }

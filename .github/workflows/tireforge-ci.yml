@@ -13,6 +13,10 @@ permissions:
 jobs:
   build-test-eval:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      # ephemeral runner — no need for the Testcontainers resource reaper
+      TESTCONTAINERS_RYUK_DISABLED: "true"
     defaults:
       run:
         working-directory: tireforge
