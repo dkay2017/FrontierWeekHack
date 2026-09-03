@@ -16,7 +16,7 @@ builder.ConfigureFunctionsWebApplication();
 // The simulator reads the machine roster (+ bands) from the same store the
 // pipeline uses, so synthetic readings match the seeded Challenge machines.
 var connectionString = Environment.GetEnvironmentVariable("TIREFORGE_DB")
-                       ?? "Data Source=tireforge.db";
+                       ?? "Server=localhost,1433;Database=tireforge;User Id=sa;Password=Your_password123;TrustServerCertificate=True;";
 builder.Services.AddTireForgeData(connectionString);
 
 if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING")))

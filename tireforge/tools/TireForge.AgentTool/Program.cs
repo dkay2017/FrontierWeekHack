@@ -44,7 +44,7 @@ using var tracer = string.IsNullOrWhiteSpace(appInsights) ? null : Sdk.CreateTra
 
 // Share the DB the ApiProxy / dashboard read, so a `run` shows up there.
 var dbPath = Environment.GetEnvironmentVariable("TIREFORGE_DB")
-             ?? $"Data Source={Path.Combine(repoRoot, "tireforge", "tireforge.db")}";
+             ?? "Server=localhost,1433;Database=tireforge;User Id=sa;Password=Your_password123;TrustServerCertificate=True;";
 var services = new ServiceCollection();
 services.AddTireForgeData(dbPath);
 services.AddTireForgeAgents();

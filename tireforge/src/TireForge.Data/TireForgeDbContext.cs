@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TireForge.Core.Model;
 
 namespace TireForge.Data;
@@ -7,7 +6,7 @@ namespace TireForge.Data;
 /// <summary>
 /// EF Core context for the 5-table TireForge schema (Build Plan Stage A / §15):
 /// Machines · Readings (+ IsAnomaly) · History · Diagnoses · WorkOrders.
-/// SQLite for local / tests / demo (Decision D4).
+/// Azure SQL (SqlServer provider); tests use a throwaway SQL Server container.
 /// </summary>
 public class TireForgeDbContext(DbContextOptions<TireForgeDbContext> options) : DbContext(options)
 {
@@ -16,13 +15,6 @@ public class TireForgeDbContext(DbContextOptions<TireForgeDbContext> options) : 
     public DbSet<HistoryIncident> History => Set<HistoryIncident>();
     public DbSet<Diagnosis> Diagnoses => Set<Diagnosis>();
     public DbSet<WorkOrder> WorkOrders => Set<WorkOrder>();
-
-    protected override void ConfigureConventions(ModelConfigurationBuilder cfg)
-    {
-        // SQLite can't ORDER BY a DateTimeOffset column. This converter stores it
-        // as a sort-order-preserving long so time-ordered queries work.
-        cfg.Properties<DateTimeOffset>().HaveConversion<DateTimeOffsetToBinaryConverter>();
-    }
 
     protected override void OnModelCreating(ModelBuilder b)
     {

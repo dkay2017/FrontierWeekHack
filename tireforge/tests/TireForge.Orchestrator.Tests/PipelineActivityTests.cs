@@ -1,29 +1,26 @@
-using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using TireForge.Agents;
 using TireForge.Core.Model;
 using TireForge.Core.Pipeline;
 using TireForge.Data;
 using TireForge.Orchestrator;
+using TireForge.TestSupport;
 
 namespace TireForge.Orchestrator.Tests;
 
 /// <summary>
 /// The durable activity path — the same DI wiring `Program.cs` builds
 /// (<c>AddTireForgeData</c> + <c>AddTireForgeAgents</c> + <c>Pipeline</c>), driven
-/// end to end over a seeded in-memory DB with the agent stubs.
+/// end to end over a seeded SQL Server DB (Testcontainers) with the agent stubs.
 /// </summary>
 public sealed class PipelineActivityTests : IAsyncLifetime, IDisposable
 {
-    private const string Conn = "Data Source=file:orch-tests?mode=memory&cache=shared";
-    private readonly SqliteConnection _keepAlive = new(Conn);
     private ServiceProvider _sp = null!;
 
     public async Task InitializeAsync()
     {
-        _keepAlive.Open();
         var services = new ServiceCollection();
-        services.AddTireForgeData(Conn);
+        services.AddTireForgeData(await SqlServer.NewConnectionStringAsync());
         services.AddTireForgeAgents();            // TIREFORGE_AGENTS unset -> stubs
         services.AddScoped<Pipeline>();
         services.AddScoped<PipelineFunctions>();
@@ -32,7 +29,7 @@ public sealed class PipelineActivityTests : IAsyncLifetime, IDisposable
     }
 
     public Task DisposeAsync() => Task.CompletedTask;
-    public void Dispose() { _sp?.Dispose(); _keepAlive.Dispose(); }
+    public void Dispose() => _sp?.Dispose();
 
     private static Reading Reading(string machineId, double t, double p, double v, double r) => new()
     {

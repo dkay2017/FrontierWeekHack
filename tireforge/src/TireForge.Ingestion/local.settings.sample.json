@@ -4,7 +4,7 @@
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
 
-    "TIREFORGE_DB": "Data Source=../../tireforge.db",
+    "TIREFORGE_DB": "Server=localhost,1433;Database=tireforge;User Id=sa;Password=Your_password123;TrustServerCertificate=True;",
     "TIREFORGE_SKIP_DB_INIT": "false",
 
     "APPLICATIONINSIGHTS_CONNECTION_STRING": ""

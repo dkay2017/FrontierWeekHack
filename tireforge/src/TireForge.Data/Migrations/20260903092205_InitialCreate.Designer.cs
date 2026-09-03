@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TireForge.Data;
@@ -11,88 +12,92 @@ using TireForge.Data;
 namespace TireForge.Data.Migrations
 {
     [DbContext(typeof(TireForgeDbContext))]
-    [Migration("20260902220819_AddDiagnosisDraftActionText")]
-    partial class AddDiagnosisDraftActionText
+    [Migration("20260903092205_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "8.0.11");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "8.0.11")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("TireForge.Core.Model.Diagnosis", b =>
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(48)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(48)");
 
                     b.Property<double>("Confidence")
-                        .HasColumnType("REAL");
+                        .HasColumnType("float");
 
-                    b.Property<long>("CreatedAt")
-                        .HasColumnType("INTEGER");
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("DetectText")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DiagnoseText")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DraftActionText")
                         .IsRequired()
                         .HasMaxLength(1024)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<string>("Fault")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("GateReason")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("IncidentCites")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("MachineId")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<string>("MatchText")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ReadingId")
                         .IsRequired()
                         .HasMaxLength(48)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(48)");
 
                     b.Property<string>("Route")
                         .IsRequired()
                         .HasMaxLength(8)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(8)");
 
                     b.Property<string>("Severity")
                         .IsRequired()
                         .HasMaxLength(8)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(8)");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<string>("TraceId")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.HasKey("Id");
 
@@ -107,35 +112,35 @@ namespace TireForge.Data.Migrations
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(16)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<string>("Fault")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("MachineId")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<DateOnly>("OccurredOn")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<string>("Resolution")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<string>("Severity")
                         .IsRequired()
                         .HasMaxLength(8)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(8)");
 
                     b.Property<string>("Signature")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.HasKey("Id");
 
@@ -148,25 +153,25 @@ namespace TireForge.Data.Migrations
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(16)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<DateOnly?>("LastMaintenance")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("SeedStatus")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(16)");
 
                     b.HasKey("Id");
 
@@ -177,34 +182,34 @@ namespace TireForge.Data.Migrations
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(48)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(48)");
 
-                    b.Property<long>("CapturedAt")
-                        .HasColumnType("INTEGER");
+                    b.Property<DateTimeOffset>("CapturedAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<bool?>("IsAnomaly")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bit");
 
                     b.Property<string>("MachineId")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<string>("Mode")
                         .HasMaxLength(8)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(8)");
 
                     b.Property<double>("Pressure")
-                        .HasColumnType("REAL");
+                        .HasColumnType("float");
 
                     b.Property<double>("Rpm")
-                        .HasColumnType("REAL");
+                        .HasColumnType("float");
 
                     b.Property<double>("Temperature")
-                        .HasColumnType("REAL");
+                        .HasColumnType("float");
 
                     b.Property<double>("Vibration")
-                        .HasColumnType("REAL");
+                        .HasColumnType("float");
 
                     b.HasKey("Id");
 
@@ -217,57 +222,57 @@ namespace TireForge.Data.Migrations
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(48)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(48)");
 
                     b.Property<string>("ActionText")
                         .IsRequired()
                         .HasMaxLength(1024)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(1024)");
 
-                    b.Property<long?>("ClosedAt")
-                        .HasColumnType("INTEGER");
+                    b.Property<DateTimeOffset?>("ClosedAt")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<long>("CreatedAt")
-                        .HasColumnType("INTEGER");
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("DiagnosisId")
                         .IsRequired()
                         .HasMaxLength(48)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(48)");
 
                     b.Property<string>("Fault")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("IssuedBy")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("MachineId")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<string>("ReadingId")
                         .IsRequired()
                         .HasMaxLength(48)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(48)");
 
                     b.Property<string>("RejectNote")
                         .HasMaxLength(512)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<string>("Severity")
                         .IsRequired()
                         .HasMaxLength(8)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(8)");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(8)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(8)");
 
                     b.HasKey("Id");
 
@@ -306,17 +311,17 @@ namespace TireForge.Data.Migrations
                     b.OwnsOne("TireForge.Core.Model.SensorBand", "Pressure", b1 =>
                         {
                             b1.Property<string>("MachineId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(16)");
 
                             b1.Property<double>("Max")
-                                .HasColumnType("REAL");
+                                .HasColumnType("float");
 
                             b1.Property<double>("Min")
-                                .HasColumnType("REAL");
+                                .HasColumnType("float");
 
                             b1.Property<string>("Unit")
                                 .IsRequired()
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(max)");
 
                             b1.HasKey("MachineId");
 
@@ -329,17 +334,17 @@ namespace TireForge.Data.Migrations
                     b.OwnsOne("TireForge.Core.Model.SensorBand", "Rpm", b1 =>
                         {
                             b1.Property<string>("MachineId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(16)");
 
                             b1.Property<double>("Max")
-                                .HasColumnType("REAL");
+                                .HasColumnType("float");
 
                             b1.Property<double>("Min")
-                                .HasColumnType("REAL");
+                                .HasColumnType("float");
 
                             b1.Property<string>("Unit")
                                 .IsRequired()
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(max)");
 
                             b1.HasKey("MachineId");
 
@@ -352,17 +357,17 @@ namespace TireForge.Data.Migrations
                     b.OwnsOne("TireForge.Core.Model.SensorBand", "Temperature", b1 =>
                         {
                             b1.Property<string>("MachineId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(16)");
 
                             b1.Property<double>("Max")
-                                .HasColumnType("REAL");
+                                .HasColumnType("float");
 
                             b1.Property<double>("Min")
-                                .HasColumnType("REAL");
+                                .HasColumnType("float");
 
                             b1.Property<string>("Unit")
                                 .IsRequired()
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(max)");
 
                             b1.HasKey("MachineId");
 
@@ -375,17 +380,17 @@ namespace TireForge.Data.Migrations
                     b.OwnsOne("TireForge.Core.Model.SensorBand", "Vibration", b1 =>
                         {
                             b1.Property<string>("MachineId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(16)");
 
                             b1.Property<double>("Max")
-                                .HasColumnType("REAL");
+                                .HasColumnType("float");
 
                             b1.Property<double>("Min")
-                                .HasColumnType("REAL");
+                                .HasColumnType("float");
 
                             b1.Property<string>("Unit")
                                 .IsRequired()
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(max)");
 
                             b1.HasKey("MachineId");
 

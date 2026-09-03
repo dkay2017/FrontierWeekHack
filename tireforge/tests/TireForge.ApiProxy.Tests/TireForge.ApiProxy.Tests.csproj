@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\TireForge.ApiProxy\TireForge.ApiProxy.csproj" />
+    <ProjectReference Include="..\TireForge.TestSupport\TireForge.TestSupport.csproj" />
   </ItemGroup>
 
 </Project>

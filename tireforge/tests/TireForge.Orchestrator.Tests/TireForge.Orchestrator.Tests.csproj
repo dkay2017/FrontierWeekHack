@@ -11,7 +11,6 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.11" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="xunit" Version="2.5.3" />
@@ -24,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\TireForge.Orchestrator\TireForge.Orchestrator.csproj" />
+    <ProjectReference Include="..\TireForge.TestSupport\TireForge.TestSupport.csproj" />
   </ItemGroup>
 
 </Project>

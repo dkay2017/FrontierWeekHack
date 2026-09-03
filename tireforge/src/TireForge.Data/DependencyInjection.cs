@@ -17,7 +17,7 @@ public static class DependencyInjection
     /// </summary>
     public static IServiceCollection AddTireForgeData(this IServiceCollection services, string connectionString)
     {
-        services.AddDbContext<TireForgeDbContext>(o => o.UseSqlite(connectionString));
+        services.AddDbContext<TireForgeDbContext>(o => o.UseSqlServer(connectionString));
         services.AddSingleton(TimeProvider.System);
 
         services.AddScoped<IMachineStore, MachineStore>();

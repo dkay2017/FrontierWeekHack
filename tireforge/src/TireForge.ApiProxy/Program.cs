@@ -14,10 +14,11 @@ var builder = FunctionsApplication.CreateBuilder(args);
 
 builder.ConfigureFunctionsWebApplication();
 
-// Read models (Reports) + the reviewer write path (Reviewer) over EF Core / SQLite.
-// TIREFORGE_DB matches TireForgeDbContextFactory; defaults to a local file for the demo.
+// Read models (Reports) + the reviewer write path (Reviewer) over EF Core / Azure SQL.
+// TIREFORGE_DB matches TireForgeDbContextFactory; the fallback is a local SQL Server
+// (docker) for dev — Azure SQL uses "Authentication=Active Directory Default".
 var connectionString = Environment.GetEnvironmentVariable("TIREFORGE_DB")
-                       ?? "Data Source=tireforge.db";
+                       ?? "Server=localhost,1433;Database=tireforge;User Id=sa;Password=Your_password123;TrustServerCertificate=True;";
 builder.Services.AddTireForgeData(connectionString);
 
 // IActionResult payloads serialize through ASP.NET Core's JSON formatter — align it

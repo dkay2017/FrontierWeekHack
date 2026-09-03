@@ -1,27 +1,26 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using TireForge.ApiProxy;
 using TireForge.Core.Reporting;
 using TireForge.Data;
+using TireForge.TestSupport;
 
 namespace TireForge.ApiProxy.Tests;
 
 /// <summary>
-/// Drives the function classes over a real seeded SQLite DB and the same DI
-/// container <c>Program.cs</c> builds — the HTTP wiring without a Functions host.
+/// Drives the function classes over a real seeded SQL Server DB (Testcontainers)
+/// and the same DI container <c>Program.cs</c> builds — the HTTP wiring without a
+/// Functions host.
 /// </summary>
 public sealed class EndpointIntegrationTests : IAsyncLifetime, IDisposable
 {
-    private readonly SqliteConnection _keepAlive = new("Data Source=file:apiproxy-tests?mode=memory&cache=shared");
     private ServiceProvider _sp = null!;
 
     public async Task InitializeAsync()
     {
-        _keepAlive.Open(); // hold the shared in-memory DB open for the test's lifetime
         var services = new ServiceCollection();
-        services.AddTireForgeData("Data Source=file:apiproxy-tests?mode=memory&cache=shared");
+        services.AddTireForgeData(await SqlServer.NewConnectionStringAsync());
         services.AddScoped<ReportsFunctions>();
         services.AddScoped<ReviewFunctions>();
         _sp = services.BuildServiceProvider();
@@ -29,7 +28,7 @@ public sealed class EndpointIntegrationTests : IAsyncLifetime, IDisposable
     }
 
     public Task DisposeAsync() => Task.CompletedTask;
-    public void Dispose() { _sp?.Dispose(); _keepAlive.Dispose(); }
+    public void Dispose() => _sp?.Dispose();
 
     private static HttpRequest Req() => new DefaultHttpContext().Request;
 

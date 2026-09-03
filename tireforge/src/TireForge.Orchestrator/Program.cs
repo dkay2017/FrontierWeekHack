@@ -18,7 +18,7 @@ builder.ConfigureFunctionsWebApplication();
 // The pipeline runs inside one durable activity (Decision D2): EF stores + the
 // agent ports (stub or real Foundry, per TIREFORGE_AGENTS) + Core.Pipeline itself.
 var connectionString = Environment.GetEnvironmentVariable("TIREFORGE_DB")
-                       ?? "Data Source=tireforge.db";
+                       ?? "Server=localhost,1433;Database=tireforge;User Id=sa;Password=Your_password123;TrustServerCertificate=True;";
 builder.Services.AddTireForgeData(connectionString);
 builder.Services.AddTireForgeAgents();
 builder.Services.AddScoped<Pipeline>();

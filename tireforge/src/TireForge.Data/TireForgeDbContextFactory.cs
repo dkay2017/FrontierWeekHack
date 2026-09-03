@@ -11,10 +11,12 @@ public sealed class TireForgeDbContextFactory : IDesignTimeDbContextFactory<Tire
 {
     public TireForgeDbContext CreateDbContext(string[] args)
     {
+        // Design-time only (dotnet ef). `migrations add` builds the model without
+        // connecting; `database update` needs a real server — set TIREFORGE_DB.
         var cs = Environment.GetEnvironmentVariable("TIREFORGE_DB")
-                 ?? "Data Source=tireforge.db";
+                 ?? "Server=localhost,1433;Database=tireforge;User Id=sa;Password=Your_password123;TrustServerCertificate=True;";
         var options = new DbContextOptionsBuilder<TireForgeDbContext>()
-            .UseSqlite(cs)
+            .UseSqlServer(cs)
             .Options;
         return new TireForgeDbContext(options);
     }
