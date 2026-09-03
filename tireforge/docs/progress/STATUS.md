@@ -5,9 +5,10 @@ Keep this file current at every checkpoint and **commit + push it** — a Codesp
 rebuild loses anything uncommitted (see the `codespace-data-loss` memory).
 
 _Last updated: 2026-09-03 (session 4). Resume point: **Stage M spike (D9)** — one
-real persistent Foundry agent via the .NET Agents SDK, portal-visible, one
-invocation, trace in App Insights. Stage L is **done** (ApiProxy endpoints
-shipped). 114 tests green (34 Core + 46 Data + 22 Agents + 12 ApiProxy)._
+real persistent Foundry agent, portal-visible, one invocation, trace in App
+Insights. Run at **rung 0** of the D11 ladder (pure C#, `Azure.AI.Agents.Persistent`);
+fall back rung 0 → 2 (Python deploy script) → 1 (C# invoke). Stage L is **done**
+(ApiProxy endpoints shipped). 114 tests green (34 Core + 46 Data + 22 Agents + 12 ApiProxy)._
 
 ---
 
@@ -94,10 +95,19 @@ context" layer if time allows.
 - **D2** v1 Durable orchestrator = ONE activity running `Core.Pipeline.Run` end-to-end.
 - **D3** APIM built LAST. *(For the real-agent path, superseded by D9 — agents are
   hosted Foundry agents, not direct model calls; APIM would front those.)*
-- **D9** Stage M real agents = **persistent Foundry agents via the .NET Agents SDK**
+- **D9** Stage M real agents = **persistent Foundry agents**
   (`anomaly-detection-agent` / `fault-diagnosis-agent` / `work-order-agent`,
   portal-visible), because Challenges 1–4 are agent-keyed. Interfaces + pipeline
   unchanged. Spike brought forward.
+- **D10** `TireForge.ApiProxy` endpoints — `AuthorizationLevel.Anonymous` for now
+  (keyless dashboard SPA; gateway or Function key before any non-local deploy).
+- **D11** Agent SDK fallback ladder: provisioning and invocation are separable
+  (an agent is a service-side resource; the invoke API is OpenAI-compatible).
+  Preference order — **rung 0** pure C# (`Azure.AI.Agents.Persistent`, GA) →
+  **rung 2** one-shot Python `provision_agents.py` (the Challenge-0 `deploy.sh`
+  pattern, not in the request path) → **rung 1** C# invocation over the Responses
+  endpoint on top. Rung 3 (Python sidecar) = last resort only. Stage M spike runs
+  at rung 0.
 - **D4** `TireForge.Data` = EF Core + repo interfaces; SQLite now, Azure SQL serverless as swap target.
 - **D5** schema = 5 tables incl. `Diagnoses`.
 - Guiding principle: **one end-to-end run first, refine after.**
@@ -163,7 +173,7 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 | J.5 | Tracing — `Activity`-based correlation + host export (D6) = Challenge 2 | ☑ `Core/Observability/Telemetry`, root+child spans, hosts registered |
 | K | Reviewer decisions — approve / reject / close lifecycle | ☑ `Core/Reviewing/Reviewer` — 10 tests |
 | L | Report logic — `/status` `/queue` `/workorders` `/cost` + health metrics | ☑ `Core/Reporting/Reports` (14 tests) + `TireForge.ApiProxy` HTTP endpoints (5 read + 3 reviewer-write, anonymous auth per D10, 12 tests) |
-| M | Swap stubs for real **persistent Foundry agents** via the .NET Agents SDK (D9) — portal-visible `anomaly-detection-agent` / `fault-diagnosis-agent` / `work-order-agent`; = Challenge 1 & 2 for real | ☐ **spike brought forward (step 5)** |
+| M | Swap stubs for real **persistent Foundry agents** (D9, SDK path per D11 ladder) — portal-visible `anomaly-detection-agent` / `fault-diagnosis-agent` / `work-order-agent`; = Challenge 1 & 2 for real | ☐ **spike brought forward (step 5)** |
 | — | Ingestion Function + Storage Queue wiring | ☐ |
 | — | Orchestrator Durable wiring around `run_pipeline` | ☐ |
 | — | Dashboard (port of v1.6) | ☐ |
@@ -211,8 +221,8 @@ detail for stages already shipped; kept for reference.
    `ApiJson` camelCase+enum-string wire shape, `HttpProblem` exception→status mapping.
    12 ApiProxy tests. **Pending:** live `func` host smoke test (no core-tools in this
    Codespace) — folded into the dashboard-port step.
-5. **Stage M spike (D9)** — one real Foundry agent via the .NET Agents SDK, portal-visible,
-   one invocation, trace in App Insights. Brought forward to de-risk the .NET↔Foundry story. ← **next**
+5. **Stage M spike (D9)** — one real Foundry agent, portal-visible, one invocation, trace in
+   App Insights. Rung 0 of the D11 ladder (pure C#); fall back 0 → 2 → 1. ← **next**
 6. **Stage M full** — 3 agents behind the interfaces = **Challenge 1 real**; `gen_ai.*` spans = **Challenge 2 real**.
 7. **Dashboard port** — real `fetch`, `gpt-5.4` labels, mojibake fix, sim → normal/warn/crit.
 8. **Ingestion + Orchestrator + `azd up`** = **Challenge 4** (Functions path) → then portal workflow steps.

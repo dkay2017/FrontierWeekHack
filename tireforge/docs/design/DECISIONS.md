@@ -189,6 +189,39 @@ move to the gateway and the Functions stay anonymous behind it (standard APIM �
 Functions pattern). If APIM is dropped, add `AuthorizationLevel.Function` + a key
 for any non-localhost deployment before `azd up`. Tracked in the roadmap, not v1.
 
+## D11 — Agent SDK fallback ladder (provision vs. invoke are separable)
+
+`factory/challenge-1-build/agents.py` uses the **nextgen** surface
+(`client.agents.create_version` + `PromptAgentDefinition` + the Responses API with
+`extra_body={"agent_reference": {…}}`). The .NET equivalent of *that exact
+surface* may lag Python. But a Foundry agent is a **service-side resource**, not a
+language object — once it exists in `factory-project`, anything that can send an
+authenticated HTTPS request can invoke it, and the invocation API is
+OpenAI-compatible (a POST; `agent_reference` is just an extra JSON field). Both
+SDKs authenticate the same way (`DefaultAzureCredential` / `az login`). The
+`Core.Agents` interfaces (`IAnomalyDetector` / `IFaultDiagnoser` /
+`IWorkOrderDrafter`) already isolate the seam, so **how** an agent is created and
+invoked is swappable without touching the pipeline / gate / adapter / reviewer.
+
+**Feasibility: confirmed at every rung** (Challenge 4's README itself lists
+"FastAPI app + client calls it" as a supported production pattern — Option 3).
+The only variable is how much Python we tolerate.
+
+**Preference order (agreed session 4):**
+
+| Rung | Provision | Invoke | Python | Notes |
+|---|---|---|---|---|
+| **0 — try first** | `Azure.AI.Agents.Persistent` (GA) `CreateAgent` | same SDK, threads/runs | none | Different API *shape* from `agents.py`, same outcome: portal-visible agents, traces via the Azure Monitor exporter. Most likely to just work. |
+| **2 — first fallback** | one-shot **Python deploy script** (`provision_agents.py`, run once — exactly the `challenge-0` `deploy.sh` pattern; not in the request path) | C# (rung 1) | one-time, offline | Keeps the C# **runtime** 100% C#. Python is infra tooling, like Bicep. |
+| **1 — layered on rung 2** | (done by rung 2's script, or the portal) | C# via the OpenAI-compatible Responses endpoint (`HttpClient` / `Azure.AI.OpenAI`, `agent_reference` in the body) | none | The C# invocation path that the pipeline's real `IAnomalyDetector` etc. call. |
+| **3 — last resort** | Python sidecar (FastAPI) owns create + invoke | C# `HttpAnomalyDetector : IAnomalyDetector` POSTs to it | always-on service | Only rung that dilutes "everything C#" and adds a service to deploy. Design already supports it. |
+
+**Net:** the Stage M spike runs at **rung 0**. If `CreateAgent` / invocation
+won't cooperate against `factory-project`, provision with a small **Python script**
+(rung 2, familiar from Challenge 0) and do **all invocation in C#** (rung 1).
+Sidecar (rung 3) stays documented but unused unless C# genuinely cannot invoke a
+hosted agent at all.
+
 ## Revised build sequence (post-Stage J)
 
 1. ✅ **A1** — `Diagnosis.DraftActionText` (D7).
@@ -198,8 +231,9 @@ for any non-localhost deployment before `azd up`. Tracked in the roadmap, not v1
    (5 read + 3 reviewer-write, anonymous auth per D10, `ApiJson` wire shape, `HttpProblem`
    error mapping). 12 ApiProxy tests. Live `func` host smoke test pending (no core-tools
    in this Codespace) — deferred to the dashboard-port step.
-5. **Stage M spike (D9)** — brought forward: one real Foundry agent via the .NET SDK,
-   portal-visible, one invocation, trace in App Insights. De-risks everything below.
+5. **Stage M spike (D9)** — brought forward: one real Foundry agent, portal-visible,
+   one invocation, trace in App Insights. De-risks everything below. Run at **rung 0**
+   of the D11 ladder (pure C#, `Azure.AI.Agents.Persistent`); fall back rung 0 → 2 → 1.
 6. **Stage M full** — all three agents created + wired behind the interfaces =
    **Challenge 1 for real**; the `gen_ai.*` spans = **Challenge 2 for real**.
 7. **Dashboard port** — real `fetch`, `gpt-5.4` labels, mojibake fix, sim cut to normal/warn/crit.
