@@ -1,0 +1,46 @@
+name: TireForge CI
+
+on:
+  push:
+    branches: [main]
+    paths: ["tireforge/**", ".github/workflows/tireforge-ci.yml"]
+  pull_request:
+    paths: ["tireforge/**", ".github/workflows/tireforge-ci.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  build-test-eval:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tireforge
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore TireForge.sln
+
+      - name: Build
+        run: dotnet build TireForge.sln --no-restore -c Release
+
+      # ubuntu-latest ships Docker, so the Testcontainers SQL Server tests run here.
+      - name: Test
+        run: dotnet test TireForge.sln --no-build -c Release --logger "trx;LogFileName=test.trx"
+
+      # Challenge 3 CI gate — deterministic classification/urgency accuracy over
+      # the 10-case dataset must stay at 100 %.
+      - name: Eval gate
+        run: dotnet run --project eval/TireForge.Eval -c Release --no-build -- --min-accuracy 1.0 --json eval-report.json
+
+      - name: Upload eval report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report
+          path: tireforge/eval-report.json

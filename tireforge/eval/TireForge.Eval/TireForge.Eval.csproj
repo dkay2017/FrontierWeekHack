@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\TireForge.Core\TireForge.Core.csproj" />
-    <ProjectReference Include="..\..\src\TireForge.Agents\TireForge.Agents.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -10,6 +9,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AssemblyName>tireforge-eval</AssemblyName>
   </PropertyGroup>
 
 </Project>
