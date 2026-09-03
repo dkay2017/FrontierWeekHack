@@ -34,6 +34,21 @@
     },
     "agentsMode": {
       "value": "${TIREFORGE_AGENTS=foundry}"
+    },
+    "resourceGroupName": {
+      "value": "${AZURE_RESOURCE_GROUP=foundry-hackathon-rg-${AZURE_ENV_NAME}}"
+    },
+    "foundryAccountName": {
+      "value": "${FOUNDRY_RESOURCE_NAME=foundry-${AZURE_ENV_NAME}}"
+    },
+    "deployFoundry": {
+      "value": "${DEPLOY_FOUNDRY=true}"
+    },
+    "existingAppInsightsConnectionString": {
+      "value": "${EXISTING_APPINSIGHTS_CONNECTION_STRING=}"
+    },
+    "existingProjectConnectionString": {
+      "value": "${EXISTING_PROJECT_CONNECTION_STRING=}"
     }
   }
 }

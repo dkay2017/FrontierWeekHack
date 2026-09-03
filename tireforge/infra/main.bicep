@@ -61,6 +61,16 @@ param appInsightsName string = 'foundry-insights-${environmentName}'
 @description('Extra resource tags. environment=hack and azd-env-name are always added.')
 param tags object = {}
 
+// --- Layer toggles ---------------------------------------------------------
+@description('Deploy the Foundry stack (account + project + model + App Insights). Set false to reuse an existing one — e.g. the Challenge-0 deployment.')
+param deployFoundry bool = true
+
+@description('When deployFoundry=false: the existing App Insights connection string.')
+param existingAppInsightsConnectionString string = ''
+
+@description('When deployFoundry=false: the existing Foundry project connection string (PROJECT_CONNECTION_STRING).')
+param existingProjectConnectionString string = ''
+
 // --- Compute layer (Challenge 4) --------------------------------------------
 @description('Deploy the three Function Apps + storage. Set false to stand up only the Foundry stack.')
 param deployCompute bool = true
@@ -85,7 +95,7 @@ resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
   tags: allTags
 }
 
-module foundry './modules/foundry.bicep' = {
+module foundry './modules/foundry.bicep' = if (deployFoundry) {
   name: 'foundry'
   scope: rg
   params: {
@@ -102,6 +112,9 @@ module foundry './modules/foundry.bicep' = {
     appInsightsName: appInsightsName
   }
 }
+
+var appInsightsConnectionString = deployFoundry ? foundry!.outputs.appInsightsConnectionString : existingAppInsightsConnectionString
+var projectConnectionString = deployFoundry ? foundry!.outputs.projectConnectionString : existingProjectConnectionString
 
 // --- Compute layer: Azure SQL (D4) + the three Function Apps -----------------
 module data './modules/data.bicep' = if (deployCompute && deployDatabase) {
@@ -123,12 +136,12 @@ module apps './modules/apps.bicep' = if (deployCompute) {
     tags: allTags
     environmentName: environmentName
     storageAccountName: storageAccountName
-    appInsightsConnectionString: foundry.outputs.appInsightsConnectionString
+    appInsightsConnectionString: appInsightsConnectionString
     foundryAccountName: foundryAccountName
     databaseConnectionString: (deployCompute && deployDatabase) ? data!.outputs.connectionString : ''
     agentsMode: agentsMode
     modelDeploymentName: modelDeploymentName
-    projectConnectionString: foundry.outputs.projectConnectionString
+    projectConnectionString: projectConnectionString
   }
 }
 
@@ -139,11 +152,11 @@ output RESOURCE_GROUP string = rg.name
 output AZURE_SUBSCRIPTION_ID string = subscription().subscriptionId
 output FOUNDRY_RESOURCE_NAME string = foundryAccountName
 output PROJECT_NAME string = projectName
-output FOUNDRY_ENDPOINT string = foundry.outputs.foundryEndpoint
-output PROJECT_CONNECTION_STRING string = foundry.outputs.projectConnectionString
+output FOUNDRY_ENDPOINT string = deployFoundry ? foundry!.outputs.foundryEndpoint : ''
+output PROJECT_CONNECTION_STRING string = projectConnectionString
 output MODEL_DEPLOYMENT_NAME string = modelDeploymentName
-output APPLICATIONINSIGHTS_CONNECTION_STRING string = foundry.outputs.appInsightsConnectionString
-output APPINSIGHTS_INSTRUMENTATION_KEY string = foundry.outputs.appInsightsInstrumentationKey
+output APPLICATIONINSIGHTS_CONNECTION_STRING string = appInsightsConnectionString
+output APPINSIGHTS_INSTRUMENTATION_KEY string = deployFoundry ? foundry!.outputs.appInsightsInstrumentationKey : ''
 
 // --- Compute outputs -------------------------------------------------------
 output TIREFORGE_DB string = (deployCompute && deployDatabase) ? data!.outputs.connectionString : ''
