@@ -20,3 +20,4 @@ services:
     project: src/TireForge.Dashboard
     language: js
     host: staticwebapp
+    dist: .

@@ -72,8 +72,13 @@ code path).
   `IHistoryStore`, `IDiagnosisStore`, `IWorkOrderStore`).
 - **Local / tests / Stages A–L / demo:** SQLite (file, or in-memory for tests). Zero infra,
   satisfies "no cloud" for the pure-logic stages. EF migrations = the Stage-A schema DDL.
-- **Deploy target if SQLite friction appears:** Azure SQL **serverless** (auto-pause, ~$0 idle) —
-  same EF Core code, swap the provider + connection string.
+- **Deploy target:** Azure SQL **serverless** (auto-pause, ~$0 idle) — provisioned by
+  `infra/modules/data.bicep`, Entra-only auth, connection string wired to all three
+  Function Apps as `TIREFORGE_DB`. Flex Consumption has no persistent local disk, so
+  SQLite is local/tests/demo only. **Remaining before a live `azd up` persists:** add
+  `Microsoft.EntityFrameworkCore.SqlServer`, make `AddTireForgeData` pick the provider
+  from the connection string, generate a SqlServer migrations set (column types differ
+  from SQLite), and an `azd postprovision` hook to migrate + seed.
 - **Cosmos DB** stays an option if we later want JSON-native / globally-distributed, but it would
   mean hand-rolling the joins and FK integrity this design leans on — not the low-friction path
   for this data shape.
@@ -328,14 +333,20 @@ for real**; the three agents are portal-visible = **Challenge 1 for real**.
    token/spend until the gateway (D8). `?api=` override; CORS via
    `func start --cors "*"` (`local.settings.sample.json`). jsdom render smoke test
    green. Live `func` host smoke test still pending (no core-tools in this Codespace).
-8. ◐ **Ingestion + Orchestrator wiring** (session 4) — **code done**:
-   `TireForge.Ingestion` (`SensorSimulator` timer + `EmitReading` HTTP → `readings`
-   queue) + `TireForge.Orchestrator` (`PipelineStarter` queue trigger →
-   `PipelineOrchestrator` → `RunPipeline` activity = one `Core.Pipeline.RunAsync`,
-   D2; instance id = reading id for idempotency). Both hosts wire
-   `AddTireForgeData` + `AddTireForgeAgents`. 4 `TireForge.Orchestrator.Tests`
-   (DI + activity end-to-end). **Remaining:** Function App bicep in `infra/` + a
-   live `azd up`, then the portal workflow-designer steps = **Challenge 4** finish.
+8. ◐ **Ingestion + Orchestrator + infra** (session 4):
+   - ✅ **code** — `TireForge.Ingestion` (`SensorSimulator` timer + `EmitReading`
+     HTTP → `readings` queue) + `TireForge.Orchestrator` (`PipelineStarter` queue
+     trigger → `PipelineOrchestrator` → `RunPipeline` activity = one
+     `Core.Pipeline.RunAsync`, D2; instance id = reading id for idempotency). Both
+     hosts wire `AddTireForgeData` + `AddTireForgeAgents`. 4 `Orchestrator.Tests`.
+   - ✅ **infra** — `infra/modules/apps.bicep` (identity-only storage + Durable hub
+     + `readings` queue, Flex Consumption plan, 3 Function Apps with MI + App
+     Insights + RBAC, Free SWA for the dashboard) + `infra/modules/data.bicep`
+     (Azure SQL serverless, D4). `az bicep build` clean; `azure.yaml` maps all 4
+     services.
+   - ⬜ **remaining for Challenge 4:** (a) EF `SqlServer` provider + a SqlServer
+     migrations set + `azd postprovision` to migrate/seed (see `infra/README.md`);
+     (b) live `azd up`; (c) the portal workflow-designer steps.
 9. **Challenge 3** — upload `eval_portal.jsonl`, run Coherence/Fluency in the portal;
    `eval/TireForge.Eval` as the CI-gate superset.
 10. **APIM** — only if the D3 spike passes and time remains (now sits in front of the

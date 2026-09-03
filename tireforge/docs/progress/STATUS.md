@@ -4,12 +4,13 @@
 Keep this file current at every checkpoint and **commit + push it** — a Codespace
 rebuild loses anything uncommitted (see the `codespace-data-loss` memory).
 
-_Last updated: 2026-09-03 (session 4). Resume point: **finish Challenge 4** —
-Function App bicep in `infra/` + a live `azd up`, then the portal
-workflow-designer steps; then **step 9 — Challenge 3** (portal Evaluations over
-`eval_portal.jsonl`). **Stages A–M + dashboard + Ingestion/Orchestrator code all
-done.** 124 tests green (34 Core + 46 Data + 28 Agents + 12 ApiProxy + 4
-Orchestrator). Pending: live multi-host `func` run (no core-tools in this Codespace)._
+_Last updated: 2026-09-03 (session 4). Resume point: **the EF SqlServer swap**
+(provider + SqlServer migrations + `azd postprovision`) — the one code task before
+a live `azd up` persists; then **step 9 — Challenge 3** (portal Evaluations over
+`eval_portal.jsonl`). **Stages A–M + dashboard + Ingestion/Orchestrator + the
+Challenge-4 infra all done.** 124 tests green (34 Core + 46 Data + 28 Agents +
+12 ApiProxy + 4 Orchestrator). Pending: EF SqlServer swap, live `azd up`, portal
+workflow designer, live multi-host `func` run._
 
 ---
 
@@ -50,7 +51,7 @@ just "agent-shaped logic". See DECISIONS.md D9.**
 | 1 | `anomaly-detection-agent` + `fault-diagnosis-agent` created via SDK, flag 2 warn + 1 crit | **all 3 agents live** (`anomaly-detection-agent` + `check_thresholds` tool, `fault-diagnosis-agent`, `work-order-agent`), pure C#, wired behind `Core.Agents` interfaces, full pipeline pass verified | ✅ done (Stage M full) |
 | 2 | agent-keyed traces in portal Traces/Monitor/Agents(preview) | one `pipeline.run` trace in App Insights with `invoke_agent <name>:<ver>` + `chat gpt-5.4-2026-03-05` spans nested per step; tool loop visible | ✅ done (Stage M full) |
 | 3 | evaluate the `anomaly-detection-agent` target in the portal (Coherence/Fluency over `eval_portal.jsonl`) | agent now exists — portal Evaluations run + `eval/TireForge.Eval` CI-gate superset outstanding | ⬜ unblocked, not started |
-| 4 | agents visible as persistent assets + portal workflow designer | 3 agents live ✅; `TireForge.Ingestion`/`Orchestrator` Durable wiring done ✅ (code); Function App bicep + `azd up` + portal workflow designer outstanding | 🟡 code done, deploy + portal pending |
+| 4 | agents visible as persistent assets + portal workflow designer | 3 agents live ✅; Durable pipeline wiring ✅; `infra/modules/apps.bicep` + `data.bicep` (Flex Consumption ×3 + storage + Azure SQL + SWA + RBAC) ✅ compiles; outstanding: EF SqlServer swap → live `azd up` → portal workflow designer | 🟡 code + infra done, deploy + portal pending |
 | superset | APIM gateway · Dashboard · Reviewer gate · Work Order Adapter | Reviewer ✅, read models ✅, ApiProxy ✅, dashboard port ✅; APIM last (D3 spike gated) | 🟡 APIM only |
 
 **Challenge 1 specifics (from its README + `agents.py` + `sensor_data.json`):**
@@ -190,15 +191,16 @@ Legend: ☐ not started · ◐ in progress · ☑ done (tests green)
 | — | Dashboard (port of v1.6) | ☑ `src/TireForge.Dashboard/index.html` — mock `api` → live `fetch` at ApiProxy, reviewer POSTs, `gpt-5.4`, mojibake fixed, sim → illustrative; jsdom smoke test green |
 | — | APIM AI Gateway + token policies | ☐ |
 | — | Eval harness (4 scenarios) + Health Workbook | ☐ |
-| — | `infra/main.bicep` — Bicep port of `deploy.sh` (Challenge-0 Foundry stack: account + project + `gpt-5.4` + App Insights). Agents are **not** IaC — runtime via `AgentTool provision` (see infra/README "Not Bicep — by design") | ☑ compiles; not yet deployed |
+| — | `infra/` bicep — **Layer 1** `modules/foundry.bicep` (Challenge-0 stack) + **Layer 2** `modules/apps.bicep` (storage + Durable hub + `readings` queue, Flex Consumption ×3 Function Apps + MI + RBAC, Free SWA) + `modules/data.bicep` (Azure SQL serverless, D4). Agents = runtime `AgentTool provision`, not IaC. | ☑ `az bicep build` clean; not yet deployed |
 
 ---
 
 ## Next actions
 
-**Stages A–M + dashboard + Ingestion/Orchestrator code all done.** 124 tests green
-(34 Core + 46 Data + 28 Agents + 12 ApiProxy + 4 Orchestrator). **Next: finish
-Challenge 4** (Function App bicep + `azd up` + portal workflow), then Challenge 3.
+**Stages A–M + dashboard + Ingestion/Orchestrator + Challenge-4 infra all done.**
+124 tests green (34 Core + 46 Data + 28 Agents + 12 ApiProxy + 4 Orchestrator).
+**Next: the EF SqlServer swap** (the one code task before `azd up` persists), then
+Challenge 3.
 
 **Stage M full — shipped (session 4):**
 - `src/TireForge.Agents/Foundry/` — `FoundryAgentClient` (ensure + invoke w/ tool
@@ -243,12 +245,22 @@ same-origin `/api`, red banner on connection failure. jsdom render smoke test gr
 - 4 `TireForge.Orchestrator.Tests` — DI wiring + the activity end to end
   (crit → review, normal → stop, confident warn → auto WO).
 
+**Challenge-4 infra — done (session 4):** `infra/modules/apps.bicep` (identity-only
+storage + Durable hub + `readings` queue; Flex Consumption `FC1` plan; 3 Function
+Apps with system-assigned MI, App Insights, `azd-service-name` tags, CORS on
+apiproxy; Free Static Web App for the dashboard; RBAC — storage blob/queue/table
+data roles per identity + Cognitive Services User on Foundry for the orchestrator)
++ `infra/modules/data.bicep` (Azure SQL serverless `GP_S_Gen5_1`, auto-pause,
+Entra-only auth). `main.bicep` gains `deployCompute`/`deployDatabase` toggles + the
+compute outputs. `azd up` provisions both layers + deploys all 4 services.
+`az bicep build` clean.
+
 **Remaining for Challenge 4:**
-1. Function App bicep in `infra/` (Flex Consumption × ingestion/orchestrator/apiproxy,
-   Storage, Durable hub, managed identity + RBAC) + a live `azd up`.
-2. Portal workflow-designer steps (Challenge 4 Part 2) once agents + `azd up` land.
-3. Live multi-host `func start` smoke test (ApiProxy + Ingestion + Orchestrator +
-   Azurite + dashboard) — needs `azure-functions-core-tools` (not in this Codespace).
+1. **EF SqlServer swap** (the resume point) — `Microsoft.EntityFrameworkCore.SqlServer`,
+   provider chosen from the connection string, a SqlServer migrations set, an `azd
+   postprovision` hook to migrate + seed. See `infra/README.md`.
+2. Live `azd up` + the portal workflow-designer steps (Challenge 4 Part 2).
+3. Live multi-host `func start` smoke test — needs `azure-functions-core-tools`.
 
 - **Agent contracts refactor:** ports (`IAnomalyDetector` / `IFaultDiagnoser` /
   `IWorkOrderDrafter`) + outputs (`AnomalyVerdict` / `FaultVerdict` /
@@ -288,7 +300,7 @@ same-origin `/api`, red banner on connection failure. jsdom render smoke test gr
    behind the `Core.Agents` interfaces (+ `TIREFORGE_AGENTS` switch, D12).
    3 agents live = **Challenge 1 real**; nested agent spans = **Challenge 2 real**.
 7. ✅ **Dashboard port** — `src/TireForge.Dashboard/index.html`: mock `api` → live `fetch` at ApiProxy, reviewer POSTs, `gpt-5.4`, mojibake fixed, sim illustrative.
-8. ◐ **Ingestion + Orchestrator** code done (Durable pipeline, `readings` queue, 4 tests); Function App bicep + `azd up` + portal workflow = Challenge 4 finish.
+8. ◐ **Ingestion + Orchestrator + Challenge-4 infra** — Durable pipeline (4 tests) + `apps.bicep`/`data.bicep` (Flex ×3 + storage + Azure SQL + SWA + RBAC) done; EF SqlServer swap + `azd up` + portal workflow remain.
 9. **Challenge 3** — portal Evaluations over `eval_portal.jsonl`; `eval/TireForge.Eval` = CI-gate superset.
 10. **APIM** — only if the D3 spike passes (now in front of hosted-agent calls).
 
@@ -307,7 +319,7 @@ session-3 analysis; drops recorded in DECISIONS.md D8.
 | **Stage M spike — real Foundry agent, .NET SDK (D9)** | 10 | 5 | ✅ done (`spikes/FoundryAgentSpike`) |
 | Stage M full — 3 hosted agents behind the interfaces | 9 | 5 | ✅ done (`Foundry/` + `AgentTool`) |
 | Dashboard port (fetch, gpt-5.4 labels, mojibake, sim trim) | 7 | 3 | ✅ done |
-| Ingestion + Orchestrator wiring | 7 | 5 | ✅ code done (`azd up` + Function App bicep remain) |
+| Ingestion + Orchestrator + Challenge-4 infra | 7 | 5 | ✅ code + bicep done (EF SqlServer swap + `azd up` remain) |
 | Challenge 3 portal evaluation + `eval/TireForge.Eval` | 6 | 3 | queued |
 | Cost tab real numbers | 5 | 5 | deferred → needs Stage M token spans |
 | APIM gateway + policies | 6 | 8 | deferred → 1 h spike, else roadmap |
@@ -461,5 +473,18 @@ Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
   seed. `local.settings.sample.json` for all three hosts point `TIREFORGE_DB` at a
   shared `../../tireforge.db`; `AgentTool` uses the repo-root path too. New
   `tests/TireForge.Orchestrator.Tests` (4): DI wiring + activity end-to-end
-  (crit→review, normal→stop, confident-warn→auto WO). 124 green. **Remaining for
-  Challenge 4:** Function App bicep + `azd up`, then the portal workflow designer.
+  (crit→review, normal→stop, confident-warn→auto WO). 124 green.
+- **Session 4 cont. — Challenge-4 infra.** `infra/` split into two layers.
+  `modules/apps.bicep`: identity-only storage account (`allowSharedKeyAccess:false`)
+  = Functions host + Durable hub + `readings` queue; Flex Consumption `FC1` plan;
+  3 Function Apps (`functionAppConfig`, `dotnet-isolated` 8.0, system-assigned MI,
+  App Insights, `azd-service-name` tags, CORS `*` on apiproxy); Free Static Web App
+  for the dashboard; RBAC — Storage Blob Data Owner + Queue/Table Data Contributor
+  per identity + **Cognitive Services User** on the Foundry account for the
+  orchestrator. `modules/data.bicep`: Azure SQL serverless `GP_S_Gen5_1` (auto-pause
+  1 h, 0.5–1 vCore), Entra-only auth, connection string → `TIREFORGE_DB` on all 3
+  apps (D4). `main.bicep` + `main.parameters.json` gain `deployCompute` /
+  `deployDatabase` / `sqlAdminObjectId` (azd `AZURE_PRINCIPAL_ID`) / `agentsMode` +
+  compute outputs. `azure.yaml` dashboard gets `dist: .`. `az bicep build` clean.
+  **Remaining for Challenge 4:** the EF SqlServer swap (provider + migrations +
+  `azd postprovision`), then live `azd up` + the portal workflow designer.

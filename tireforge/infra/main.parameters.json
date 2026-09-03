@@ -22,6 +22,18 @@
     },
     "modelCapacity": {
       "value": "${MODEL_CAPACITY=10}"
+    },
+    "deployCompute": {
+      "value": "${DEPLOY_COMPUTE=true}"
+    },
+    "deployDatabase": {
+      "value": "${DEPLOY_DATABASE=true}"
+    },
+    "sqlAdminObjectId": {
+      "value": "${AZURE_PRINCIPAL_ID}"
+    },
+    "agentsMode": {
+      "value": "${TIREFORGE_AGENTS=foundry}"
     }
   }
 }
