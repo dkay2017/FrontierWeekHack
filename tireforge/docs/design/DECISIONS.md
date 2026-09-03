@@ -156,12 +156,15 @@ implementations **create persistent Foundry agents via the .NET Agents SDK** and
 The `Core.Agents` interfaces and the whole pipeline / gate / adapter / reviewer chain are
 **unchanged** — only the impls behind the interfaces change.
 
-**Open spike (do early — before wiring):** `agents.py` uses the *nextgen* API
-(`agents.create_version` + `PromptAgentDefinition` + Responses API with `agent_reference`).
-Confirm the .NET path — `Azure.AI.Agents.Persistent` (`PersistentAgentsClient.CreateAgent` +
-threads/runs, established GA) vs a newer `Azure.AI.Projects`. Both create portal-visible
-agents; pick the one that works against `factory-project`. Deliverable: one agent created,
-visible in Build → Agents, invoked once, trace lands in App Insights.
+**Open spike — ✅ RESOLVED 2026-09-03 (session 4). Rung 0 works.** `tireforge/spikes/
+FoundryAgentSpike` (pure C#, no Python) created `anomaly-detection-agent` v1 against
+`factory-project`, invoked it once (correct output — 2 warn + 1 crit), confirmed it
+portal-visible via REST, and the `invoke_agent anomaly-detection-agent:1` span
+(`type: AI`) reached App Insights. Path = the **nextgen Foundry projects 2.x API**
+(`Azure.AI.Projects` 2.0.1 + `Azure.AI.Projects.Agents` 2.0.0 + `Azure.AI.Extensions.OpenAI`
+2.0.0), NOT the older `Azure.AI.Agents.Persistent`. `Azure.Core` 1.53 lets
+`DefaultAzureCredential` pass straight in as `AuthenticationTokenProvider`. Full API
+notes + code in `tireforge/spikes/FoundryAgentSpike/FINDINGS.md`.
 
 **What this doesn't change:** Challenges 3 & 4 stay mostly **portal work** once the agents
 exist (upload the jsonl + click through Evaluations; build the workflow in the designer).
@@ -209,10 +212,14 @@ The only variable is how much Python we tolerate.
 
 **Preference order (agreed session 4):**
 
-- **Rung 0 — try first.** Pure C#: `Azure.AI.Agents.Persistent` (GA) `CreateAgent`
-  for provisioning, the same SDK (threads/runs) for invocation. No Python.
-  Different API *shape* from `agents.py`, same outcome — portal-visible agents,
-  traces via the Azure Monitor exporter. Most likely to just work.
+- **Rung 0 — ✅ CONFIRMED WORKING (session 4).** Pure C#, the **nextgen Foundry
+  projects 2.x API** (`Azure.AI.Projects` + `Azure.AI.Projects.Agents` +
+  `Azure.AI.Extensions.OpenAI`) — `AgentAdministrationClient.CreateAgentVersion` to
+  provision, `ProjectResponsesClient.CreateResponse` (+ `AgentReference`) to invoke.
+  Same API surface as `agents.py`, no Python. `DefaultAzureCredential` passes
+  straight in (Azure.Core 1.53). Spike + full API notes:
+  `tireforge/spikes/FoundryAgentSpike/`. **We build Stage M on this — the fallback
+  below is now dead weight, kept only for the record.**
 
 - **Fallback — `0 → 2 + 1`, fully scripted, no manual portal steps.** If rung 0's
   `CreateAgent` / invocation won't cooperate against `factory-project`:
@@ -245,11 +252,14 @@ The only variable is how much Python we tolerate.
    (5 read + 3 reviewer-write, anonymous auth per D10, `ApiJson` wire shape, `HttpProblem`
    error mapping). 12 ApiProxy tests. Live `func` host smoke test pending (no core-tools
    in this Codespace) — deferred to the dashboard-port step.
-5. **Stage M spike (D9)** — brought forward: one real Foundry agent, portal-visible,
-   one invocation, trace in App Insights. De-risks everything below. Run at **rung 0**
-   of the D11 ladder (pure C#, `Azure.AI.Agents.Persistent`); fall back to `0 → 2 + 1` (scripted, no manual portal steps).
-6. **Stage M full** — all three agents created + wired behind the interfaces =
-   **Challenge 1 for real**; the `gen_ai.*` spans = **Challenge 2 for real**.
+5. ✅ **Stage M spike (D9)** — done (session 4). `tireforge/spikes/FoundryAgentSpike`:
+   pure C# created `anomaly-detection-agent` v1, invoked it (2 warn + 1 crit),
+   portal-visible, `invoke_agent` span in App Insights. Rung 0 of the D11 ladder
+   confirmed; fallback not needed. API notes in the spike's `FINDINGS.md`.
+6. **Stage M full** — three agents (`anomaly-detection-agent` + `check_thresholds`
+   tool, `fault-diagnosis-agent`, `work-order-agent`) provisioned + wired behind the
+   `Core.Agents` interfaces = **Challenge 1 for real**; the agent spans = **Challenge 2
+   for real**. ← **next**
 7. **Dashboard port** — real `fetch`, `gpt-5.4` labels, mojibake fix, sim cut to normal/warn/crit.
 8. **Ingestion + Orchestrator wiring** — timer → queue → Durable → `Pipeline.RunAsync` +
    `azd up` = **Challenge 4** (SDK/Functions path); then the portal workflow steps.
