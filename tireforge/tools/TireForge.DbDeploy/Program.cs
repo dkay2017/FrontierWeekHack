@@ -51,12 +51,18 @@ await using (var sql = new SqlConnection(connectionString))
     {
         var cmd = sql.CreateCommand();
         cmd.CommandText = """
+            DECLARE @sql nvarchar(max);
             IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = @name)
-                EXEC('CREATE USER ' + QUOTENAME(@name) + ' FROM EXTERNAL PROVIDER;');
-            EXEC('ALTER ROLE db_datareader ADD MEMBER ' + QUOTENAME(@name) + ';');
-            EXEC('ALTER ROLE db_datawriter ADD MEMBER ' + QUOTENAME(@name) + ';');
+            BEGIN
+                SET @sql = N'CREATE USER ' + QUOTENAME(@name) + N' FROM EXTERNAL PROVIDER;';
+                EXEC sp_executesql @sql;
+            END
+            SET @sql = N'ALTER ROLE db_datareader ADD MEMBER ' + QUOTENAME(@name) + N';';
+            EXEC sp_executesql @sql;
+            SET @sql = N'ALTER ROLE db_datawriter ADD MEMBER ' + QUOTENAME(@name) + N';';
+            EXEC sp_executesql @sql;
             """;
-        cmd.Parameters.AddWithValue("@name", identity);
+        cmd.Parameters.Add("@name", System.Data.SqlDbType.NVarChar, 128).Value = identity;
         await RetryAsync(() => cmd.ExecuteNonQueryAsync());
         Console.WriteLine($"  {identity}: db_datareader + db_datawriter");
     }
