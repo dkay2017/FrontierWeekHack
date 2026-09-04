@@ -504,6 +504,26 @@ rect.seg:hover{opacity:.8;cursor:pointer;}
     </div>
   </section>
 
+  <!-- =============== EARLY WARNINGS (T0, predictive — Decision D17) =============== -->
+  <section class="pane" id="pane-predict" style="--pane-hue:var(--l2);--pane-hue2:var(--l2);--pane-soft:var(--l2-soft);">
+    <div class="phead" id="phead-predict"></div>
+    <div class="card">
+      <div class="card-head">
+        <h2 data-ic="spark" data-tint="l2">Trending toward a breach</h2>
+        <span class="cap">nothing has broken yet — these are still in spec, projected forward</span>
+        <span class="right"><span class="cap" id="predictCap">—</span></span>
+      </div>
+      <div class="tw">
+        <table class="t">
+          <thead><tr>
+            <th class="sr">#</th><th>Machine</th><th>Sensor</th><th>Trend</th><th>Confidence</th><th>Projected breach</th>
+          </tr></thead>
+          <tbody id="predictBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
   <!-- =============== WORK ORDERS =============== -->
   <section class="pane" id="pane-wo" style="--pane-hue:var(--l4);--pane-hue2:var(--l5);--pane-soft:var(--l4-soft);">
     <div class="phead" id="phead-wo"></div>
@@ -663,7 +683,7 @@ async function postJSON(path, body){
 }
 
 // Global state the render functions read. Filled by the api.* mappers below.
-let MACHINES = [], QUEUE = [], WORKORDERS = [], MODELS = [], ANOM_24H = {}, COST_NOTE = "";
+let MACHINES = [], QUEUE = [], WORKORDERS = [], MODELS = [], ANOM_24H = {}, COST_NOTE = "", WARNINGS = [];
 
 // Illustrative only — the AI Gateway (APIM) is on the roadmap (Decisions D3 / D8).
 const GW_EVENTS = [
@@ -713,6 +733,16 @@ function mapWO(res){
     by: w.by === "auto" ? "auto" : "reviewer", rejectNote:w.rejectNote
   }));
 }
+function mapWarnings(res){
+  WARNINGS = (res.items || []).map(w => ({
+    id:w.id, machine:w.machineId, machineName:w.machineName,
+    sensor:w.sensor, current:w.currentValue, unit:w.unit,
+    rate:w.rateOfChangePerHour, bound:w.boundApproached,
+    projectedAt:new Date(w.projectedBreachAt), hoursToBreach:w.hoursToBreachAt,
+    confidence:w.confidence, narrative:w.narrativeText,
+    status:String(w.status || "open").toLowerCase(), raisedAt:new Date(w.raisedAt)
+  }));
+}
 function mapCost(res){
   const pending = !res.tokenMetricsAvailable;
   MODELS = (res.agents || []).map(a => ({
@@ -729,12 +759,13 @@ const api = {
   async status(){      mapStatus(await getJSON("/status")); },
   async queue(){        mapQueue(await getJSON("/queue")); },
   async workorders(){   mapWO(await getJSON("/workorders")); },
-  async cost(){         mapCost(await getJSON("/cost")); }
+  async cost(){         mapCost(await getJSON("/cost")); },
+  async warnings(){     mapWarnings(await getJSON("/warnings")); }
 };
 
 async function refresh(){
-  await Promise.all([api.status(), api.queue(), api.workorders(), api.cost()]);
-  renderReview(); renderWO(); renderCost(); renderHealth(); renderTabs();
+  await Promise.all([api.status(), api.queue(), api.workorders(), api.cost(), api.warnings()]);
+  renderReview(); renderWO(); renderCost(); renderHealth(); renderWarnings(); renderTabs();
 }
 
 /* ==========================================================================
@@ -817,7 +848,7 @@ function initRange(){
   $$("#rangeCtl button").forEach(b => b.addEventListener("click", () => {
     rangeDays = +b.dataset.d;
     $$("#rangeCtl button").forEach(x => x.classList.toggle("on", x === b));
-    renderReview(); renderWO(); renderCost(); renderHealth(); renderTabs();
+    renderReview(); renderWO(); renderCost(); renderHealth(); renderWarnings(); renderTabs();
   }));
 }
 
@@ -825,7 +856,8 @@ function initRange(){
    4 · TABS   (order: Review · Work Orders · Health · Cost · Simulator)
    ========================================================================== */
 const TABS = [
-  { k:"review", label:"Pending Review",     ic:"review", tint:"lemon" },
+  { k:"review",  label:"Pending Review",     ic:"review", tint:"lemon" },
+  { k:"predict", label:"Early Warnings",     ic:"spark",  tint:"l2" },
   { k:"wo",     label:"Work Orders",         ic:"wo",     tint:"l4" },
   { k:"health", label:"Health Report",       ic:"health", tint:"l5" },
   { k:"cost",   label:"Cost & Governance",   ic:"cost",   tint:"l3" },
@@ -857,6 +889,8 @@ function show(k){
 const BRIEF = {
   review:{ ic:"open", t:["Pending","Review"],
     p:"Diagnoses the system wasn't confident enough to action on its own. You approve — a work order goes out — or reject." },
+  predict:{ ic:"spark", t:["Early","Warnings"],
+    p:"Predictive, not reactive (T0): a sensor still in spec today, but trending toward its threshold. Nothing has broken yet — this is a heads-up to schedule a look before it does." },
   wo:{ ic:"wo", t:["Work","Orders"],
     p:"Every job the system raised — auto-issued when it cleared the gate, or reviewer-approved. Close it here once the work is done on the floor; rejected means dismissed." },
   health:{ ic:"health", t:["Factory","Health"],
@@ -910,6 +944,37 @@ function renderReview(){
       <td class="mono" style="color:var(--faint);">${fmtWhen(q.raisedAt)}</td>
     </tr>`).join("");
   $$("#reviewBody tr.click").forEach(r => r.addEventListener("click", () => openDrawer(r.dataset.id)));
+}
+
+/* ==========================================================================
+   6b · EARLY WARNINGS (T0 — predictive, Decision D17)
+   ========================================================================== */
+function renderWarnings(){
+  const rows = WARNINGS.filter(w => w.status === "open");
+  const soon = rows.filter(w => w.hoursToBreach <= 6).length;
+
+  phead("predict", [
+    { v:rows.length, l:"Open warnings", tone: rows.length ? "warn" : "ok", d:"still in spec, on a trajectory" },
+    { v:soon, l:"Within 6 hours", tone: soon ? "crit" : "", d:"at the current rate" },
+    { v:"24h", l:"Watch horizon", d:"beyond this, not flagged yet" }
+  ]);
+
+  $("#predictCap").textContent = rows.length ? `${rows.length} open` : "nothing trending";
+  const b = $("#predictBody");
+  if (!rows.length){
+    b.innerHTML = `<tr><td colspan="6"><div class="empty"><b>Nothing trending</b>Every in-spec sensor is holding steady — no projected breach within the ${24}h horizon.</div></td></tr>`;
+    return;
+  }
+  const sensorLabel = s => s ? s[0].toUpperCase() + s.slice(1) : s;
+  b.innerHTML = rows.map((w,i) => `
+    <tr title="${esc(w.narrative)}">
+      <td class="sr">${i+1}</td>
+      <td><b>${esc(mById(w.machine)?.name || w.machine)}</b> <span class="mono" style="color:var(--faint);">${w.machine}</span></td>
+      <td>${esc(sensorLabel(w.sensor))}</td>
+      <td class="mono" style="color:var(--faint);">${w.current}${w.unit} ${w.rate > 0 ? "↑" : "↓"} ${Math.abs(w.rate)}${w.unit}/h → ${w.bound}${w.unit}</td>
+      <td><span class="conf"><span class="bar"><i style="width:${Math.round(w.confidence*100)}%;background:var(--l2);"></i></span><span class="n">${w.confidence.toFixed(2)}</span></span></td>
+      <td class="mono" style="color:var(--faint);">~${w.hoursToBreach}h · ${fmtWhen(w.projectedAt)}</td>
+    </tr>`).join("");
 }
 
 /* ==========================================================================
@@ -1375,7 +1440,7 @@ async function boot(){
   phead("sim");
 
   try {
-    await Promise.all([api.status(), api.queue(), api.workorders(), api.cost()]);
+    await Promise.all([api.status(), api.queue(), api.workorders(), api.cost(), api.warnings()]);
   } catch (e) {
     document.body.insertAdjacentHTML("afterbegin",
       `<div style="background:var(--crit-soft);color:var(--crit);padding:10px 16px;font-weight:600;font-size:12px;">
@@ -1389,6 +1454,7 @@ async function boot(){
   renderWO();
   renderCost();
   renderHealth();
+  renderWarnings();
 
   $("#simEmit").addEventListener("click", simEmit);
 }
