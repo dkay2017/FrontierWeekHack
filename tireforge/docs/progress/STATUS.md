@@ -4,33 +4,36 @@
 Keep this file current at every checkpoint and **commit + push it** — a Codespace
 rebuild loses anything uncommitted (see the `codespace-data-loss` memory).
 
-_Last updated: 2026-09-03 (session 4, end). The live deploy is **done and verified
-end-to-end** (see below). Session 5 = the punch list below._
+_Last updated: 2026-09-04 (session 5). Live deploy verified end-to-end (session 4).
+Session 5: #1 ✅ #2 ✅ (+ security hardening, D16). Remaining: #3, #4._
 
-### Session 5 — do these in order
+### Session 5 — punch list
 
-1. **Re-enable the sensor timer** (disabled at stop so it didn't burn Foundry
-   tokens overnight):
-   `az functionapp config appsettings delete -n tireforge-ingestion-tf1-v2 -g foundry-hackathon-rg-3e97ae19 --setting-names AzureWebJobs.SensorSimulator.Disabled`
-2. **Apply D15 — dashboard host → SWA Standard + linked backend.** `apps.bicep`
-   `sku` Free → Standard + a `Microsoft.Web/staticSites/linkedBackends` → the
-   apiproxy; `azd provision`; redeploy the dashboard. Then confirm the **bare**
-   dashboard URL (no `?api=`) loads data and the machine dropdown fills.
-   _(Today's "Can't reach the API / empty dropdown" screenshot = the bare URL
-   hitting same-origin `/api` which SWA Free can't route — one cause, expected,
-   this is the fix. Detail lower in this file + DECISIONS D15.)_
+1. ✅ **Sensor timer re-enabled** (`AzureWebJobs.SensorSimulator.Disabled` deleted).
+2. ✅ **D15 + D16 — SWA Standard + Key Vault + identity-based storage.** New
+   `infra/modules/storage.bicep` + `keyvault.bicep`; `apps.bicep` rewritten.
+   - SWA Free → **Standard** + `linkedBackends` → apiproxy. Bare dashboard URL
+     now serves `/api` same-origin (no `?api=`, no CORS).
+   - `AzureWebJobsStorage` → **managed identity** (`__accountName` + service URIs);
+     per-identity Storage Blob Data Owner + Queue/Table Data Contributor.
+   - Key Vault `tfkvcy3oncsu6rsla` (RBAC mode). `APPLICATIONINSIGHTS_CONNECTION_STRING`
+     → `@Microsoft.KeyVault` ref; each identity → Key Vault Secrets User.
+   - **Staged:** `CONTENT_SHARE_KEY_IN_VAULT=false` this round (content-share key
+     still inline) → flip to `true` + re-provision now the KV role has propagated,
+     so the cold-start file-share mount can't race the grant.
+   - Rollback toggles: `STORAGE_IDENTITY_BASED` / `CONTENT_SHARE_KEY_IN_VAULT` /
+     `STATIC_WEB_APP_SKU` (azd env).
 3. **Orchestrator App Insights telemetry is empty on Y1** — OTel exporter quirk
-   (`APPLICATIONINSIGHTS_CONNECTION_STRING` is set, host runs, functions execute,
-   but no traces/requests land). Non-blocking for function, but Challenge 2's
-   agent traces won't show for the deployed path until it's fixed. Compare with
-   ingestion/apiproxy (which do report) — likely a missing
-   `Microsoft.ApplicationInsights.WorkerService` / `ConfigureFunctionsApplicationInsights()`
-   wire-up in `TireForge.Orchestrator/Program.cs`, or the Durable extension
-   swallowing the logger config.
-4. **Consolidated doc-reconciliation pass** — `PENDING-DOC-UPDATES.md` §1–§5
-   (SQLite→Azure SQL, Challenge 3 eval + CI, APIM descoped + cost metering,
-   Flex→Y1 + suffix + SWA Standard, Challenges 3 & 4 portal done). Design docs /
-   TDD / README / architecture SVG all in one sweep.
+   (host runs, functions execute, but no traces/requests land). Non-blocking for
+   function; Challenge 2's agent traces won't show for the deployed path until
+   fixed. Compare with ingestion/apiproxy (which do report) — likely the manual
+   `AddOpenTelemetry().UseAzureMonitorExporter()` in `Orchestrator/Program.cs`
+   racing `host.json` `telemetryMode: OpenTelemetry`, or Y1 killing the instance
+   before the batch export flushes.
+4. **Consolidated doc-reconciliation pass** — `PENDING-DOC-UPDATES.md` §1–§6
+   (SQLite→Azure SQL · Challenge 3 eval + CI · APIM descoped + cost metering ·
+   Flex→Y1 + suffix · Challenges 3 & 4 portal · **§6 security + new TDD "Security"
+   section**). Design docs / TDD / README / architecture SVG in one sweep.
 
 _**Challenges 0–4 all complete:** 0 infra ✅ · 1 agents (Stage M) ✅ · 2 App
 Insights agent traces ✅ · 3 portal eval **100/100** ✅ · 4 portal workflow
