@@ -38,6 +38,15 @@
     "functionAppSuffix": {
       "value": "${FUNCTION_APP_SUFFIX=}"
     },
+    "staticWebAppSku": {
+      "value": "${STATIC_WEB_APP_SKU=Standard}"
+    },
+    "storageIdentityBased": {
+      "value": "${STORAGE_IDENTITY_BASED=true}"
+    },
+    "contentShareKeyInVault": {
+      "value": "${CONTENT_SHARE_KEY_IN_VAULT=true}"
+    },
     "resourceGroupName": {
       "value": "${AZURE_RESOURCE_GROUP=foundry-hackathon-rg-${AZURE_ENV_NAME}}"
     },

@@ -87,8 +87,19 @@ param agentsMode string = 'foundry'
 @description('Suffix on the Function App names — bump to dodge soft-deleted Function App sites blocking re-creation.')
 param functionAppSuffix string = ''
 
+@description('Static Web App SKU. Standard = linked backend (same-origin /api, no CORS). Free = ?api= querystring fallback.')
+@allowed([ 'Free', 'Standard' ])
+param staticWebAppSku string = 'Standard'
+
+@description('AzureWebJobsStorage via managed identity (no key). false = key connection string.')
+param storageIdentityBased bool = true
+
+@description('Content-share connection string in Key Vault (referenced). false = inline key.')
+param contentShareKeyInVault bool = true
+
 param storageAccountName string = 'tfstore${uniqueString(subscription().id, environmentName)}'
 param sqlServerName string = 'tireforge-sql-${uniqueString(subscription().id, environmentName)}'
+param keyVaultName string = 'tfkv${uniqueString(subscription().id, environmentName)}'
 
 var allTags = union({ environment: 'hack', 'azd-env-name': environmentName }, tags)
 
@@ -131,6 +142,32 @@ module data './modules/data.bicep' = if (deployCompute && deployDatabase) {
   }
 }
 
+// Shared storage account (Functions host + Durable + readings queue). Split out
+// so keyvault.bicep can read its key for the content-share secret before the
+// Function Apps exist.
+module storage './modules/storage.bicep' = if (deployCompute) {
+  name: 'storage'
+  scope: rg
+  params: {
+    location: location
+    tags: allTags
+    storageAccountName: storageAccountName
+  }
+}
+
+// Key Vault — the two residual secrets (content-share key, App Insights string).
+module keyvault './modules/keyvault.bicep' = if (deployCompute) {
+  name: 'keyvault'
+  scope: rg
+  params: {
+    location: location
+    tags: allTags
+    keyVaultName: keyVaultName
+    storageAccountName: storage!.outputs.name
+    appInsightsConnectionString: appInsightsConnectionString
+  }
+}
+
 module apps './modules/apps.bicep' = if (deployCompute) {
   name: 'apps'
   scope: rg
@@ -139,8 +176,13 @@ module apps './modules/apps.bicep' = if (deployCompute) {
     tags: allTags
     environmentName: environmentName
     functionAppSuffix: functionAppSuffix
-    storageAccountName: storageAccountName
-    appInsightsConnectionString: appInsightsConnectionString
+    staticWebAppSku: staticWebAppSku
+    storageIdentityBased: storageIdentityBased
+    contentShareKeyInVault: contentShareKeyInVault
+    storageAccountName: storage!.outputs.name
+    keyVaultName: keyvault!.outputs.vaultName
+    storageSecretUri: keyvault!.outputs.storageSecretUri
+    appInsightsSecretUri: keyvault!.outputs.appInsightsSecretUri
     foundryAccountName: foundryAccountName
     databaseConnectionString: (deployCompute && deployDatabase) ? data!.outputs.connectionString : ''
     agentsMode: agentsMode
@@ -169,3 +211,4 @@ output ORCHESTRATOR_APP_NAME string = deployCompute ? apps!.outputs.orchestrator
 output APIPROXY_APP_NAME string = deployCompute ? apps!.outputs.apiProxyName : ''
 output APIPROXY_URL string = deployCompute ? 'https://${apps!.outputs.apiProxyHostName}' : ''
 output DASHBOARD_URL string = deployCompute ? 'https://${apps!.outputs.dashboardHostName}' : ''
+output KEY_VAULT_NAME string = deployCompute ? keyvault!.outputs.vaultName : ''
