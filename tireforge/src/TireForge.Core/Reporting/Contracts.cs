@@ -83,3 +83,26 @@ public sealed record CostResponse(
     bool TokenMetricsAvailable,
     string Note,
     DateTimeOffset GeneratedAt);
+
+// --- /warnings ------------------------------------------------------
+// T0 predictive early warnings (Core.Trends.TrendCheck, Decision D17) — a sensor
+// still in spec today but trending toward a breach. Advisory, separate from the
+// reactive /queue (which is T1/A2-driven, post-breach).
+public sealed record EarlyWarningView(
+    string Id,
+    string MachineId,
+    string MachineName,
+    SensorKind Sensor,
+    double CurrentValue,
+    string Unit,
+    double RateOfChangePerHour,
+    double BoundApproached,
+    DateTimeOffset ProjectedBreachAt,
+    double HoursToBreachAt,
+    double Confidence,
+    string NarrativeText,
+    EarlyWarningStatus Status,
+    DateTimeOffset RaisedAt,
+    string TraceId);
+
+public sealed record WarningsResponse(IReadOnlyList<EarlyWarningView> Items, DateTimeOffset GeneratedAt);

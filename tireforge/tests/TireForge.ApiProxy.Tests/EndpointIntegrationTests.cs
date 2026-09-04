@@ -56,6 +56,17 @@ public sealed class EndpointIntegrationTests : IAsyncLifetime, IDisposable
     }
 
     [Fact]
+    public async Task Warnings_endpoint_returns_the_open_list_shape()
+    {
+        using var scope = _sp.CreateScope();
+        var fn = scope.ServiceProvider.GetRequiredService<ReportsFunctions>();
+
+        var result = Assert.IsType<OkObjectResult>(await fn.Warnings(Req(), default));
+        var body = Assert.IsType<WarningsResponse>(result.Value);
+        Assert.Empty(body.Items);   // no trend has been raised on the seeded snapshot data
+    }
+
+    [Fact]
     public async Task Approving_an_unknown_diagnosis_is_404()
     {
         using var scope = _sp.CreateScope();

@@ -14,6 +14,7 @@ public sealed class Reports(
     IDiagnosisStore diagnoses,
     IWorkOrderStore workOrders,
     IReportingQueries queries,
+    IEarlyWarningStore earlyWarnings,
     TimeProvider? clock = null)
 {
     private readonly TimeProvider _clock = clock ?? TimeProvider.System;
@@ -54,6 +55,20 @@ public sealed class Reports(
             d.DetectText, d.MatchText, d.DiagnoseText, d.DraftActionText, d.TraceId)).ToList();
 
         return new QueueResponse(items, _clock.GetUtcNow());
+    }
+
+    /// <summary>T0 predictive early warnings (Decision D17) — open ones, newest first.</summary>
+    public async Task<WarningsResponse> WarningsAsync(CancellationToken ct = default)
+    {
+        var names = await MachineNames(ct);
+        var open = await earlyWarnings.OpenAsync(ct);
+        var items = open.Select(w => new EarlyWarningView(
+            w.Id, w.MachineId, names.GetValueOrDefault(w.MachineId, w.MachineId),
+            w.Sensor, w.CurrentValue, w.Unit, w.RateOfChangePerHour, w.BoundApproached,
+            w.ProjectedBreachAt, w.HoursToBreachAt, w.Confidence, w.NarrativeText,
+            w.Status, w.RaisedAt, w.TraceId)).ToList();
+
+        return new WarningsResponse(items, _clock.GetUtcNow());
     }
 
     public async Task<WorkOrdersResponse> WorkOrdersAsync(CancellationToken ct = default)

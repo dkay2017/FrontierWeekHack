@@ -58,7 +58,7 @@ internal sealed class PipelineHarness : IDisposable
         var ctx = _db.NewContext();
         return new Reports(
             new MachineStore(ctx), new DiagnosisStore(ctx), new WorkOrderStore(ctx),
-            new ReportingQueries(ctx), new FixedClock(Now + offset));
+            new ReportingQueries(ctx), new EarlyWarningStore(ctx), new FixedClock(Now + offset));
     }
 
     public void Dispose() => _db.Dispose();

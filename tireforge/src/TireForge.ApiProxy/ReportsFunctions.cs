@@ -41,4 +41,11 @@ public sealed class ReportsFunctions(Reports reports)
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "cost")] HttpRequest req,
         CancellationToken ct)
         => new OkObjectResult(await reports.CostAsync(ct));
+
+    /// <summary>T0 predictive early warnings (Decision D17) — see <see cref="Reports.WarningsAsync"/>.</summary>
+    [Function("Warnings")]
+    public async Task<IActionResult> Warnings(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "warnings")] HttpRequest req,
+        CancellationToken ct)
+        => new OkObjectResult(await reports.WarningsAsync(ct));
 }

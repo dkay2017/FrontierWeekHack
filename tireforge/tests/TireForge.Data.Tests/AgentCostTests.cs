@@ -13,6 +13,7 @@ public class AgentCostTests
         new DiagnosisStore(db.NewContext()),
         new WorkOrderStore(db.NewContext()),
         new ReportingQueries(db.NewContext()),
+        new EarlyWarningStore(db.NewContext()),
         new FixedClock(new DateTimeOffset(2026, 9, 1, 12, 0, 0, TimeSpan.Zero)));
 
     [Fact]
