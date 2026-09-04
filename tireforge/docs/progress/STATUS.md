@@ -4,8 +4,31 @@
 Keep this file current at every checkpoint and **commit + push it** — a Codespace
 rebuild loses anything uncommitted (see the `codespace-data-loss` memory).
 
-_Last updated: 2026-09-04 (session 5). Live deploy verified end-to-end (session 4).
-Session 5: #1 ✅ #2 ✅ (+ security hardening, D16). Remaining: #3, #4._
+_Last updated: 2026-09-04 (session 5, end). Live deploy verified end-to-end (session
+4). Session 5: #1 ✅ #2 ✅ #3 ✅ (+ security hardening D16, + T0 predictive
+early-warning D17 built + tested locally, not yet deployed). Resume point:
+**session 6 punch list**, below._
+
+### Session 6 — do these first (resume point)
+
+1. **Re-provision Foundry.** The 3 agent prompts changed (Meridian rebrand) and
+   this needs a new version to go live: `dotnet run --project tools/TireForge.AgentTool -- provision`
+   (or `AgentTool run` for a live pipeline pass first). No code change needed —
+   this alone pushes the renamed prompts.
+2. **Redeploy the 3 Function Apps** — `Pipeline`/`Reports`/`ApiProxy` all changed
+   (T0 wiring + `/warnings` endpoint). `azd deploy ingestion` / `orchestrator` /
+   `apiproxy`, one at a time (OOM risk deploying in parallel — see session 4 notes).
+3. **Verify T0 live**: emit a reading trending toward a bound (or wait for the
+   sensor sim), confirm a row lands in `GET /api/warnings` and the dashboard's new
+   **Early Warnings** tab renders it.
+4. **Re-run the Challenge 3 portal eval** if there's time — the anomaly-detection
+   prompt changed (company name only; Coherence/Fluency shouldn't move, but the
+   100/100 was scored against the prior version).
+5. **Fast-follow, not urgent:** the `predictive-maintenance-agent` (4th Foundry
+   agent, narrates the T0 warning instead of the deterministic sentence) —
+   deliberately deferred, see DECISIONS **D17**. The feature works without it.
+6. Then: the consolidated doc-reconciliation pass (item 4 below) + the rest of
+   the judging-score backlog (item 5 below).
 
 ### Session 5 — punch list
 
@@ -80,7 +103,9 @@ _**Live URLs:**_
 - _Ingestion (direct, not linked): `https://tireforge-ingestion-tf1-v2.azurewebsites.net/api/emit/{machine}/{mode}`_
 - _Key Vault: `tfkvcy3oncsu6rsla` · verify flow uses `SWA/api/*` for reads._
 
-_**127 tests green** (~5 s, no Docker). CI green. All committed + pushed._
+_**136 tests green** (~5 s, no Docker; +8 for T0 TrendCheck, session 5).
+CI green. All committed + pushed. Not yet deployed — see the session 6 punch
+list at the top._
 
 ---
 
@@ -628,3 +653,41 @@ Build: `dotnet build TireForge.sln` · Test: `dotnet test TireForge.sln`
   gap (rejected). SWA **Standard** (~$9/mo) + a `linkedBackends` resource → API at
   same-origin `/api`, no CORS, no querystring. Bicep change + re-provision is the
   first task next session. See DECISIONS **D15**, PENDING-DOC-UPDATES §4.
+
+- **Session 5 cont. — D17: T0 TrendCheck (predictive early warning), full
+  vertical slice, deployed nowhere yet.** Triggered by a strict self-assessment
+  against the official judging rubric (`JUDGING-SELF-ASSESSMENT.md`): Innovation
+  scored 16/30, capped by "the pipeline only reacts after a breach, despite the
+  product being named *predictive* maintenance." Built the fix:
+  `Core.Trends.TrendCheck` (T0) — deterministic linear-trend fit per sensor over
+  the recent-reading window `Pipeline` already fetches for A1, flags an in-spec
+  sensor projected to breach within 24h (rate, ETA, R² confidence, `MinPoints=3`,
+  `MinConfidence=0.6`); skips any sensor T1 already reports breaching so the two
+  never double-signal. 8 new Core tests (steady rise, flat, improving, falling
+  toward the low bound, noisy fit rejected, beyond-horizon rejected, insufficient
+  history, already-breaching sensor left to T1). `EarlyWarning` model (7th table,
+  `AddEarlyWarnings` migration) + `EarlyWarningStore`; `Pipeline.RunAsync` raises
+  warnings alongside A1, advisory only — never gates Diagnosis/WorkOrder, never
+  stops the pipeline. `Reports.WarningsAsync` + `GET /api/warnings`. Dashboard:
+  new **Early Warnings** tab next to Pending Review (machine, sensor, trend,
+  confidence bar, projected-breach ETA; row hover shows the full narrative).
+  **136/136 tests green.** Deliberately **not** built alongside it: a 4th Foundry
+  agent to narrate the warning — the feature is fully functional on the
+  deterministic narrative alone; the agent is a portal-visibility fast-follow
+  (D17). See DECISIONS **D17** for the full reasoning.
+- **Session 5 cont. — rebrand: TireForge Industries → Meridian Tire
+  Manufacturing (display layer only).** "TireForge Industries" turned out to be
+  the challenge scenario's own fictional company name, verbatim in our agent
+  prompts (ported from `agents.py`) and seed data — a free "used the given
+  scenario as-is" tell for a judge. Renamed the 3 agent system prompts, seed
+  data's `factory` field, and the dashboard title/brand ("Meridian Anomaly &
+  Predictive IQ"). Explicitly **not** renamed: any folder, C# namespace, or Azure
+  resource — a judge never sees those, and a full rename risks re-provisioning
+  everything for zero score benefit (discussed and agreed explicitly — see
+  DECISIONS D17). **Consequence, not yet actioned:** the 3 live Foundry agents
+  still serve the old prompt version — a `provision` run is needed to push the
+  rename live, and the Challenge 3 portal eval (100/100) was scored against the
+  prior version.
+- **Session 5 end — stopping for the day.** Everything above is committed and
+  pushed; nothing has been re-provisioned or redeployed to Azure yet. Session 6
+  punch list is at the top of this file.

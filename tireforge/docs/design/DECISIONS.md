@@ -444,6 +444,56 @@ Private Endpoint is the production hardening.
 
 **Doc owed:** a **"Security"** section in the TDD — see `PENDING-DOC-UPDATES.md` §6.
 
+## D17 — T0 TrendCheck: predictive early warning, closing the "detection vs. prediction" gap
+
+**Context.** Self-scored against the official judging rubric (`JUDGING-SELF-ASSESSMENT.md`,
+2026-09-04), Innovation landed at 16/30 — "an addition to an existing agent," not
+"completely new" — largely because the agent roles, threshold logic, and prompt
+language are ported near-verbatim from the challenge reference. The single most
+defensible gap: the product is named **predictive** maintenance, but the pipeline
+only ever reacted *after* a threshold (T1) was already breached.
+
+**Decision.** Add **T0 — TrendCheck**: a new, pure, deterministic component that
+fits a simple linear trend per sensor over the recent-reading window (already
+fetched for the Anomaly agent and previously unused past the current snapshot)
+and flags a sensor that is **still in spec today** but on a trajectory to breach
+its band within a 24h horizon — with a rate, an ETA, and an R² confidence
+(`MinConfidence = 0.6`, `MinPoints = 3`), all arithmetic. No LLM guess, consistent
+with D12: deterministic Core owns every number; a narrative agent may enrich the
+prose later without touching the numbers.
+
+**Where it lives.** `Core.Trends.TrendCheck`/`EarlyWarningMapper` → new
+`EarlyWarning` entity (7th table, `AddEarlyWarnings` migration) → `Pipeline`
+raises it alongside A1, using the same `recent` window, **advisory only** — never
+gates the Diagnosis/WorkOrder path, never stops the pipeline, never double-signals
+a sensor T1 already reports breaching → `Reports.WarningsAsync` /
+`GET /api/warnings` → dashboard **Early Warnings** tab, positioned next to
+Pending Review.
+
+**Deliberately not built alongside it (yet):** a 4th Foundry agent
+(`predictive-maintenance-agent`) to narrate the warning instead of the
+deterministic sentence. The capability is fully functional and demoable without
+it — the narrative text (`EarlyWarningMapper.Narrate`) is already human-readable.
+The agent is a portal-visibility enhancement (make the innovation nameable in the
+Foundry agent list), not a functional dependency. Sequencing chosen deliberately:
+ship the lower-risk, fully-tested deterministic version first; the agent is a
+fast-follow, not a blocker.
+
+**Also bundled:** the fictional customer was renamed **TireForge Industries →
+Meridian Tire Manufacturing** in all user-facing text (agent prompts, seed data,
+dashboard title) — "TireForge Industries" is the challenge scenario's own name,
+verbatim, and was a free "used the given scenario as-is" tell. No folder,
+namespace, or Azure resource renamed (judges never see those; the risk of
+re-provisioning everything for a cosmetic change wasn't worth it — see the
+session log). **Consequence:** the 3 existing Foundry agents need a new version
+to actually serve the renamed prompt — provisioning pending (see STATUS.md).
+
+**Status:** Core/Data/API/Dashboard shipped and tested (136/136 green) — 2026-09-04.
+**Not yet done:** provision the renamed prompts + this feature needs no new agent
+to work, but the 3 existing agents' prompts changed so they need a version bump;
+redeploy the 3 Function Apps (code changed); the predictive-maintenance-agent
+fast-follow; re-run the Challenge 3 portal eval if there's time (prompt changed).
+
 ## Revised build sequence (post-Stage J)
 
 1. ✅ **A1** — `Diagnosis.DraftActionText` (D7).

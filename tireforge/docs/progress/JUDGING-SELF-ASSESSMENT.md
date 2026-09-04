@@ -120,6 +120,19 @@ an exciting capability. Medium, upper-middle.
 
 ---
 
+## Progress since the 2026-09-04 assessment (not yet re-scored)
+
+- **Item 6 built** — T0 TrendCheck (predictive early warning), see DECISIONS
+  D17. Core/Data/API/Dashboard shipped, 136/136 tests green. **Not yet
+  deployed** (see STATUS.md session-6 punch list) — hold off re-scoring
+  Innovation until it's live and demoable, not just tested locally.
+- **The "TireForge Industries" tell is fixed** — that name turned out to be the
+  challenge scenario's own fictional company, verbatim, in our agent prompts
+  and seed data. Renamed to "Meridian Tire Manufacturing" (display layer only).
+  This wasn't in the original scoring reasoning (found afterward in
+  conversation) but would have counted against Innovation/Usability polish if
+  left as-is — worth noting for consistency next time this file is re-scored.
+
 ## Improvement backlog (priority order, cheapest/highest-leverage first)
 
 Track status here as items land; re-score when a batch is done.
@@ -131,7 +144,7 @@ Track status here as items land; re-score when a batch is done.
 | 3 | Impact | Attach even an illustrative ROI figure to the Health Report tab (e.g. "$X/hour downtime × early-catch window ≈ $Y saved") — converts a narrative claim into a quantified one | ⬜ not started |
 | 4 | Usability | Consider light auth (or at least a visible "demo mode, unauthenticated" banner) on reviewer write endpoints so it doesn't read as an unguarded prod tool | ⬜ not started |
 | 5 | Usability | Warm-keep or pre-warm the orchestrator before a scheduled judge session (Y1 cold start is the root cause of #1) | ⬜ not started |
-| 6 | Innovation | Consider one genuinely new capability beyond the reference (not just re-engineering it) if time allows — e.g. proactive maintenance scheduling suggestion, cross-machine pattern detection, or a capability the Python reference doesn't have at all | ⬜ not started |
+| 6 | Innovation | Consider one genuinely new capability beyond the reference (not just re-engineering it) if time allows — e.g. proactive maintenance scheduling suggestion, cross-machine pattern detection, or a capability the Python reference doesn't have at all | 🟡 built (D17 — T0 TrendCheck, predictive early warning), 136/136 tests green, not yet deployed. Fast-follow: a 4th Foundry agent (`predictive-maintenance-agent`) to narrate it — not required for the capability itself. |
 
 ---
 
