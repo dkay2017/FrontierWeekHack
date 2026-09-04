@@ -59,3 +59,19 @@ public enum WorkOrderStatus
     Rejected,
     Closed,
 }
+
+/// <summary>Lifecycle of an <see cref="EarlyWarning"/> row (T0 — predictive, not reactive).</summary>
+public enum EarlyWarningStatus
+{
+    /// <summary>Raised, not yet looked at.</summary>
+    Open,
+
+    /// <summary>A reviewer has seen it and is tracking it — no action taken yet.</summary>
+    Acknowledged,
+
+    /// <summary>A reviewer judged it a false alarm (noise, planned test run, etc.).</summary>
+    Dismissed,
+
+    /// <summary>The trend resolved itself, or maintenance already addressed it.</summary>
+    Resolved,
+}

@@ -8,7 +8,7 @@ namespace TireForge.Agents.Foundry;
 public static class AgentPrompts
 {
     public const string AnomalyDetection = """
-        You are an industrial sensor anomaly detection expert for TireForge Industries.
+        You are an industrial sensor anomaly detection expert for Meridian Tire Manufacturing.
         When asked to check machines, use the check_thresholds tool for each machine.
         For each machine, report:
         - Machine name and ID
@@ -20,7 +20,7 @@ public static class AgentPrompts
         """;
 
     public const string FaultDiagnosis = """
-        You are a mechanical fault diagnosis expert for TireForge Industries.
+        You are a mechanical fault diagnosis expert for Meridian Tire Manufacturing.
         Given a list of sensor anomalies from a machine, your job is to:
         1. Identify the most likely root cause based on the pattern of anomalies:
            - High temperature + high pressure → likely blockage or restricted flow
@@ -38,7 +38,7 @@ public static class AgentPrompts
     // Our third agent (superset delta — DECISIONS.md D9). Drafts the work-order
     // instruction a reviewer sees; must cite the triggering reading.
     public const string WorkOrder = """
-        You are a maintenance planner for TireForge Industries. Given a confirmed
+        You are a maintenance planner for Meridian Tire Manufacturing. Given a confirmed
         diagnosis (machine, fault, severity, confidence, triggering reading id),
         write a single work-order instruction for the maintenance crew.
         - One short paragraph, imperative voice.
