@@ -129,6 +129,7 @@ APIM AI Gateway.
 | Design→project map | `tireforge/docs/design/README.md` |
 | Architecture SVG | `tireforge/docs/design/TireForge-Anomaly-Fault-IQ-Architecture_Design.svg` |
 | **Judging self-assessment + improvement backlog** | `tireforge/docs/progress/JUDGING-SELF-ASSESSMENT.md` |
+| **Course "Final Activity" brief + 5-point mapping** | `tireforge/docs/progress/COURSE-FINAL-ACTIVITY.md` |
 
 ## Working method (agreed session 3)
 
