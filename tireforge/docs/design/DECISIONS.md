@@ -407,8 +407,42 @@ harmless fallback).
 removes it cleanly rather than shipping the querystring/CORS workaround in the
 submission. Everything else in the stack is already consumption-billed.
 
-**Status:** decided end of session 4 (2026-09-03); bicep change + re-provision
-pending (the compute stack had just gone live on Y1 when we stopped).
+**Status:** decided end of session 4 (2026-09-03); implemented session 5 — SWA
+`sku: Standard` + a `Microsoft.Web/staticSites/linkedBackends` → the apiproxy.
+`staticWebAppSku` param (azd `STATIC_WEB_APP_SKU`, default `Standard`) toggles back
+to `Free` if needed. Dashboard `API_BASE` already defaults to same-origin `/api`.
+
+## D16 — Secrets & identity: managed identity first, Key Vault for the residual
+
+**Stance.** No secret in app configuration that managed identity can replace.
+
+| Path | Auth | Secret? |
+|---|---|---|
+| Azure SQL | connection string `Authentication=Active Directory Default` → each Function App's system-assigned MI; `DbDeploy` grants `db_datareader`/`db_datawriter` | none |
+| Foundry (agent calls) | `DefaultAzureCredential` → orchestrator MI; **Cognitive Services User** on the account | none |
+| Functions runtime storage (`AzureWebJobsStorage`) — host, Durable hub, `readings` queue | **identity-based** (`AzureWebJobsStorage__accountName` + `__blob/queue/tableServiceUri`); MI gets **Storage Blob Data Owner** + **Queue Data Contributor** + **Table Data Contributor** | none |
+| App Insights | connection string, but delivered as a **`@Microsoft.KeyVault` reference** | vaulted |
+| Deployment content share (`WEBSITE_CONTENTAZUREFILECONNECTIONSTRING`) | storage **key** — *unavoidable on Consumption/Y1*, only Flex removed it — delivered as a **`@Microsoft.KeyVault` reference** | vaulted (platform-forced) |
+
+**Key Vault** (`modules/keyvault.bicep`) — RBAC-authorization mode (no access
+policies), soft-delete 7 days, purge protection off (hackathon). Two secrets:
+`storage-connection-string`, `appinsights-connection-string`. Each Function App MI
+gets **Key Vault Secrets User**; `keyVaultReferenceIdentity: SystemAssigned`.
+App settings carry `@Microsoft.KeyVault(SecretUri=…)` (unversioned → auto-rotate),
+never the literal.
+
+**Toggles** (azd env) for a fast rollback if a platform edge bites:
+`STORAGE_IDENTITY_BASED` (default true), `CONTENT_SHARE_KEY_IN_VAULT` (default true;
+staged — first provision inline, flip once the KV role has propagated so the
+cold-start file-share mount can't race the role assignment).
+
+**Not done (noted):** App Insights could be fully identity-based
+(`APPLICATIONINSIGHTS_AUTHENTICATION_STRING=Authorization=AAD` + *Monitoring
+Metrics Publisher*) — deferred; the ingestion key is low-sensitivity and now
+vaulted. SQL firewall is `AllowAllAzureIps` (0.0.0.0) — fine for MI-only auth;
+Private Endpoint is the production hardening.
+
+**Doc owed:** a **"Security"** section in the TDD — see `PENDING-DOC-UPDATES.md` §6.
 
 ## Revised build sequence (post-Stage J)
 

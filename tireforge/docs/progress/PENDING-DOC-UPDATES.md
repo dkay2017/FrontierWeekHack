@@ -148,11 +148,7 @@ the orchestrator stays.
 App Service has no purge API, so the live apps are `tireforge-{ingestion,
 orchestrator,apiproxy}-tf1-v2`. A clean future environment leaves the suffix empty.
 
-**SWA Free → Standard (D15).** See DECISIONS **D15**. `sku` Free → Standard,
-add a `Microsoft.Web/staticSites/linkedBackends` → `tireforge-apiproxy`, dashboard
-`API_BASE` defaults to same-origin `/api`, drop the `?api=` + CORS `*` workaround.
-**Bicep change + re-provision still pending** (stopped right after the Y1 compute
-stack went live).
+**SWA Free → Standard (D15).** Implemented session 5 — see §6.
 
 **Doc/design updates still owed:**
 - **STATUS.md** — the "Flex Consumption ×3" phrasing everywhere (stage table,
@@ -160,9 +156,61 @@ stack went live).
   `-v2` app names.
 - **DECISIONS D8** — "Flex Consumption `FC1`" → "classic Consumption `Y1`".
 - **`infra/README.md`** — Flex → Y1; the `functionAppSuffix` escape hatch; SWA
-  Standard + linked backend.
+  Standard + linked backend; the storage/keyvault module split (§6).
 - **Architecture SVG / TDD** — any "Flex Consumption" label.
 - **`docs/design/README.md`** — infra module description.
+
+---
+
+## 6. Security: Key Vault + identity-based storage + SWA Standard (D15/D16)
+
+**Made:** session 5 (2026-09-04). See DECISIONS **D16** (+ **D15**).
+
+**Infra changed:**
+- `infra/modules/storage.bicep` (**NEW**) — the storage account split out of
+  `apps.bicep` so `keyvault.bicep` can read its key before the Function Apps exist.
+- `infra/modules/keyvault.bicep` (**NEW**) — RBAC-mode Key Vault; secrets
+  `storage-connection-string` + `appinsights-connection-string`.
+- `apps.bicep` — `AzureWebJobsStorage` identity-based (`__accountName` + service
+  URIs); per-identity **Storage Blob Data Owner** + **Queue/Table Data
+  Contributor** + **Key Vault Secrets User**; `APPLICATIONINSIGHTS_CONNECTION_STRING`
+  and `WEBSITE_CONTENTAZUREFILECONNECTIONSTRING` are `@Microsoft.KeyVault(SecretUri=…)`
+  references; `keyVaultReferenceIdentity: SystemAssigned`. SWA `sku` Free →
+  Standard + `linkedBackends` → apiproxy (D15).
+- `main.bicep` / `main.parameters.json` — `storage` + `keyvault` modules wired;
+  azd bindings `STATIC_WEB_APP_SKU` / `STORAGE_IDENTITY_BASED` /
+  `CONTENT_SHARE_KEY_IN_VAULT`. New output `KEY_VAULT_NAME`.
+
+**Doc/design updates still owed:**
+- **TDD — add a "Security" section.** Outline (write in the reconciliation pass):
+  1. **Identity model** — system-assigned MI per Function App; the table from
+     DECISIONS D16 (SQL / Foundry / storage / App Insights / content share → auth
+     mechanism → secret? ). "MI first, Key Vault for the residual, zero static
+     credentials in code or `local.settings`."
+  2. **RBAC least-privilege** — exact role per identity and why (Blob Data Owner =
+     Durable leases; Queue Data Contributor = `readings` + control queues; Table =
+     Durable history; Cognitive Services User = agent invoke; KV Secrets User =
+     the two references; SQL `db_datareader`/`db_datawriter` via `DbDeploy`, admin
+     is break-glass Entra only).
+  3. **Secret management** — Key Vault (RBAC mode, soft-delete), the two secrets,
+     `@Microsoft.KeyVault` references, unversioned URIs = auto-rotation. The one
+     platform-forced secret (content share) and why it can't be MI on Y1.
+  4. **Network** — HTTPS-only, TLS 1.2 floor, FTPS disabled, SQL `Encrypt=True` +
+     Entra-only + `azureADOnlyAuthentication`, storage `allowBlobPublicAccess:false`.
+     Known gaps: SQL firewall `AllowAllAzureIps`, no Private Endpoints, apiproxy
+     anonymous (D10) — all deliberate scope calls, Private Endpoint = prod step.
+  5. **Data-plane auth to the API** — apiproxy anonymous (D10); with SWA Standard
+     the dashboard reaches it same-origin through the linked backend; direct
+     `*.azurewebsites.net` access stays open + CORS `*` (relax later).
+  6. **App Insights / audit trail** — every pipeline run traced (W3C), agent spans,
+     `AgentCalls` cost ledger; no PII in telemetry (machine + reading ids only).
+  7. **AI governance** — APIM AI Gateway considered, descoped (D3); token metering
+     is done in-process (D13).
+  8. **Supply chain** — pinned SDK versions, `dotnet` deterministic build, CI gate.
+- **DECISIONS D8** — Y1 storage note ("Y1 uses the key") is now wrong — identity-based.
+- **`infra/README.md`** — the module list (storage / keyvault / apps / data /
+  foundry), the toggles, the staged `CONTENT_SHARE_KEY_IN_VAULT` rollout.
+- **Architecture SVG** — add the Key Vault; mark MI arrows.
 
 ---
 
