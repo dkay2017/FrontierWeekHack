@@ -5,6 +5,12 @@ specific, defensible improvements before submission instead of polishing at
 random. Re-run this assessment (or update it) whenever a change plausibly moves
 one of the three scores — don't let it go stale.
 
+**Current standing (2026-09-04, session 6):** Innovation **22/30** (re-scored,
+up from 16 — see the Re-assessment log), Usability **17/30**, Impact **17/30**
+(not yet re-scored since D17 went live). See "Assessment #1" below for the full
+original reasoning and "Innovation re-score reasoning" further down for why it
+moved.
+
 ---
 
 ## Official judging criteria
@@ -161,3 +167,29 @@ Track status here as items land; re-score when a batch is done.
 | Date | Trigger | Total | Innovation | Usability | Impact |
 |---|---|---|---|---|---|
 | 2026-09-04 | Initial strict self-assessment (session 5) | 50/90 | 16 | 17 | 17 |
+| 2026-09-04 | Innovation re-scored only (session 6) — D17 live, not just built; the orchestrator organically raised 2 real early warnings from live sensor traffic, unprompted | n/a — see below | **22** (+6) | 17 (not re-scored) | 17 (not re-scored) |
+
+### Innovation re-score reasoning (2026-09-04, session 6) — 16 → 22
+
+**Moved by:** the single gap that capped it last time — "reacts after a breach
+despite being named *predictive* maintenance" — is now closed **and proven
+live**, not just built: the orchestrator raised 2 real early warnings on its
+own from live sensor data with no demo scenario prompting it. This changes the
+system's *operating mode* (reactive-only → reactive **and** predictive running
+in parallel), not just its feature count — structurally different from "an
+addition to an existing agent" (Medium-band language).
+
+**Not scored higher (28–30, "completely new") because:** linear-trend early
+warning is not a novel algorithm — it's textbook statistical process control,
+decades old in industrial monitoring. New to this solution and this
+competition's scaffold, not new to the world. It's also still one deterministic
+module + a UI tab on the same 3-agent architecture, not a rethink of the agent
+paradigm itself (no agent debate, no closed-loop learning, no cross-machine
+reasoning). **22 = solidly High band, its lower half** — "an exciting update on
+an existing agent" (the rubric's own High-band language, and accurate: it gives
+the Anomaly Detection concept's previously-unused recent-reading window a
+genuinely new forward-looking capability), not "completely new."
+
+**Usability/Impact intentionally not re-scored here** — the user asked
+specifically for Innovation. A full re-score is still owed once the remaining
+backlog items land (see the improvement backlog above).
