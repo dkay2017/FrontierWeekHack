@@ -7,6 +7,7 @@ using TireForge.Core.History;
 using TireForge.Core.Model;
 using TireForge.Core.Observability;
 using TireForge.Core.Thresholds;
+using TireForge.Core.Trends;
 
 namespace TireForge.Core.Pipeline;
 
@@ -28,6 +29,7 @@ public sealed class Pipeline(
     IAnomalyDetector anomalyDetector,
     IFaultDiagnoser faultDiagnoser,
     IWorkOrderDrafter workOrderDrafter,
+    IEarlyWarningStore earlyWarningStore,
     TimeProvider? clock = null)
 {
     private const int RecentWindow = 5;
@@ -57,10 +59,10 @@ public sealed class Pipeline(
         Log(t1.Trace);
 
         // D — Anomaly Detection (A1)
+        var recent = await readings.RecentAsync(machine.Id, RecentWindow, ct);
         AnomalyVerdict a1;
         using (var s = Telemetry.Source.StartActivity(Telemetry.Spans.Detect))
         {
-            var recent = await readings.RecentAsync(machine.Id, RecentWindow, ct);
             await readings.AddAsync(reading, ct);
             a1 = await anomalyDetector.DetectAsync(reading, t1, recent, ct);
             a1.ApplyTo(reading);
@@ -69,11 +71,29 @@ public sealed class Pipeline(
         }
         Log(a1.Text);
 
+        // T0 — TrendCheck: predictive early warning. Runs regardless of A1's verdict —
+        // it's a different signal (trajectory, not current state) — using the same
+        // recent-reading window already fetched above. Advisory only: never gates
+        // the Diagnosis/WorkOrder path below, and never stops the pipeline.
+        var raisedWarnings = new List<EarlyWarning>();
+        using (var s = Telemetry.Source.StartActivity(Telemetry.Spans.TrendCheck))
+        {
+            var t0 = TrendCheck.Evaluate(reading, recent, machine, t1);
+            foreach (var warning in t0.Warnings)
+            {
+                var entity = EarlyWarningMapper.ToEntity(warning, reading, traceId, at);
+                await earlyWarningStore.AddAsync(entity, ct);
+                raisedWarnings.Add(entity);
+            }
+            s?.SetTag(Telemetry.Tags.EarlyWarningCount, raisedWarnings.Count);
+            Log(t0.Trace);
+        }
+
         if (!a1.IsAnomaly)
         {
             Log($"STOP {reading.Id}: not anomalous — no diagnosis");
             root?.SetTag(Telemetry.Tags.Anomaly, false);
-            return new PipelineResult(traceId, reading.Id, machine.Id, t1.Severity, false, null, null, trace);
+            return new PipelineResult(traceId, reading.Id, machine.Id, t1.Severity, false, null, null, trace, raisedWarnings);
         }
 
         // E — HistoryMatch (T2)
@@ -129,7 +149,7 @@ public sealed class Pipeline(
 
         root?.SetTag(Telemetry.Tags.DiagnosisId, diagnosis.Id);
         root?.SetTag(Telemetry.Tags.GateRoute, gate.Route.ToString());
-        return new PipelineResult(traceId, reading.Id, machine.Id, t1.Severity, true, diagnosis, act, trace);
+        return new PipelineResult(traceId, reading.Id, machine.Id, t1.Severity, true, diagnosis, act, trace, raisedWarnings);
     }
 
     private static Exception Fail(Activity? activity, Exception ex)
@@ -148,7 +168,8 @@ public sealed record PipelineResult(
     bool IsAnomaly,
     Diagnosis? Diagnosis,
     ActResult? Act,
-    IReadOnlyList<string> Trace)
+    IReadOnlyList<string> Trace,
+    IReadOnlyList<EarlyWarning> EarlyWarnings)
 {
     public bool StoppedAtDetection => !IsAnomaly;
     public WorkOrder? WorkOrder => Act?.WorkOrder;

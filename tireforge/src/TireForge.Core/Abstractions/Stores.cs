@@ -54,3 +54,14 @@ public interface IWorkOrderStore
     Task UpdateAsync(WorkOrder workOrder, CancellationToken ct = default);
     Task<IReadOnlyList<WorkOrder>> ListAsync(CancellationToken ct = default);
 }
+
+/// <summary>T0 predictive early warnings (Core.Trends.TrendCheck) — advisory, separate from Diagnoses.</summary>
+public interface IEarlyWarningStore
+{
+    Task AddAsync(EarlyWarning warning, CancellationToken ct = default);
+    Task<EarlyWarning?> GetAsync(string id, CancellationToken ct = default);
+    Task UpdateAsync(EarlyWarning warning, CancellationToken ct = default);
+
+    /// <summary>Open warnings, newest first.</summary>
+    Task<IReadOnlyList<EarlyWarning>> OpenAsync(CancellationToken ct = default);
+}

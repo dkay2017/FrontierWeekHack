@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<IHistoryStore, HistoryStore>();
         services.AddScoped<IDiagnosisStore, DiagnosisStore>();
         services.AddScoped<IWorkOrderStore, WorkOrderStore>();
+        services.AddScoped<IEarlyWarningStore, EarlyWarningStore>();
         services.AddScoped<IReportingQueries, ReportingQueries>();
 
         // Cost metering (D13) — overrides the no-op recorder from AddTireForgeAgents.

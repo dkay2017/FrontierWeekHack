@@ -36,6 +36,7 @@ internal sealed class PipelineHarness : IDisposable
             new StubAnomalyDetector(),
             new StubFaultDiagnoser(),
             new StubWorkOrderDrafter(),
+            new EarlyWarningStore(ctx),
             new FixedClock(Now));
     }
 

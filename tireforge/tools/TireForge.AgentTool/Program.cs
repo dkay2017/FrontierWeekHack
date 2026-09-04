@@ -76,7 +76,8 @@ var pipeline = new Pipeline(
     s.GetRequiredService<IWorkOrderStore>(),
     s.GetRequiredService<TireForge.Core.Agents.IAnomalyDetector>(),
     s.GetRequiredService<TireForge.Core.Agents.IFaultDiagnoser>(),
-    s.GetRequiredService<TireForge.Core.Agents.IWorkOrderDrafter>());
+    s.GetRequiredService<TireForge.Core.Agents.IWorkOrderDrafter>(),
+    s.GetRequiredService<IEarlyWarningStore>());
 
 // CP-003 curing press — the seeded critical snapshot (Challenge 1 data).
 var reading = new Reading

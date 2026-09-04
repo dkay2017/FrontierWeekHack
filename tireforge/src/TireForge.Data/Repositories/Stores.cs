@@ -101,3 +101,28 @@ public sealed class WorkOrderStore(TireForgeDbContext db) : IWorkOrderStore
     public async Task<IReadOnlyList<WorkOrder>> ListAsync(CancellationToken ct = default) =>
         await db.WorkOrders.AsNoTracking().OrderByDescending(w => w.CreatedAt).ToListAsync(ct);
 }
+
+/// <summary>T0 predictive early warnings (Core.Trends.TrendCheck) — advisory, separate from Diagnoses.</summary>
+public sealed class EarlyWarningStore(TireForgeDbContext db) : IEarlyWarningStore
+{
+    public async Task AddAsync(EarlyWarning warning, CancellationToken ct = default)
+    {
+        db.EarlyWarnings.Add(warning);
+        await db.SaveChangesAsync(ct);
+    }
+
+    public Task<EarlyWarning?> GetAsync(string id, CancellationToken ct = default) =>
+        db.EarlyWarnings.FirstOrDefaultAsync(w => w.Id == id, ct);
+
+    public async Task UpdateAsync(EarlyWarning warning, CancellationToken ct = default)
+    {
+        db.EarlyWarnings.Update(warning);
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<EarlyWarning>> OpenAsync(CancellationToken ct = default) =>
+        await db.EarlyWarnings.AsNoTracking()
+            .Where(w => w.Status == EarlyWarningStatus.Open)
+            .OrderByDescending(w => w.RaisedAt)
+            .ToListAsync(ct);
+}

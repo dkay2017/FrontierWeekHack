@@ -79,6 +79,6 @@ public class SeedTests
     {
         var file = SensorDataFile.Load();
         Assert.Equal(5, file.Machines.Count);
-        Assert.Equal("TireForge Industries", file.Factory);
+        Assert.Equal("Meridian Tire Manufacturing", file.Factory);
     }
 }

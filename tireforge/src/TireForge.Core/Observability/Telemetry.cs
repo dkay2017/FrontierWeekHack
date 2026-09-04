@@ -28,6 +28,7 @@ public static class Telemetry
         public const string GateRoute = "tireforge.gate_route";
         public const string DiagnosisId = "tireforge.diagnosis_id";
         public const string WorkOrderId = "tireforge.work_order_id";
+        public const string EarlyWarningCount = "tireforge.early_warning_count";
     }
 
     // Span names for the pipeline steps.
@@ -41,5 +42,6 @@ public static class Telemetry
         public const string Gate = "gate";
         public const string Draft = "a3.draft";
         public const string Act = "act";
+        public const string TrendCheck = "t0.trend_check";
     }
 }

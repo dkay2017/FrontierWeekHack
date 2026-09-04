@@ -5,9 +5,10 @@ using TireForge.Core.Model;
 namespace TireForge.Data;
 
 /// <summary>
-/// EF Core context for the 6-table TireForge schema (Build Plan Stage A / §15 +
-/// D13): Machines · Readings (+ IsAnomaly) · History · Diagnoses · WorkOrders ·
-/// AgentCalls. Runtime = Azure SQL (SqlServer); tests = in-memory SQLite (D4).
+/// EF Core context for the 7-table TireForge schema (Build Plan Stage A / §15 +
+/// D13/D17): Machines · Readings (+ IsAnomaly) · History · Diagnoses · WorkOrders ·
+/// AgentCalls · EarlyWarnings. Runtime = Azure SQL (SqlServer); tests = in-memory
+/// SQLite (D4).
 /// </summary>
 public class TireForgeDbContext(DbContextOptions<TireForgeDbContext> options) : DbContext(options)
 {
@@ -17,6 +18,7 @@ public class TireForgeDbContext(DbContextOptions<TireForgeDbContext> options) : 
     public DbSet<Diagnosis> Diagnoses => Set<Diagnosis>();
     public DbSet<WorkOrder> WorkOrders => Set<WorkOrder>();
     public DbSet<AgentCall> AgentCalls => Set<AgentCall>();
+    public DbSet<EarlyWarning> EarlyWarnings => Set<EarlyWarning>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder cfg)
     {
@@ -113,6 +115,23 @@ public class TireForgeDbContext(DbContextOptions<TireForgeDbContext> options) : 
             e.Property(a => a.ReadingId).HasMaxLength(48);
             e.Ignore(a => a.TotalTokens);
             e.HasIndex(a => a.AgentName);
+        });
+
+        b.Entity<EarlyWarning>(e =>
+        {
+            e.HasKey(w => w.Id);
+            e.Property(w => w.Id).HasMaxLength(48);
+            e.Property(w => w.ReadingId).HasMaxLength(48);
+            e.Property(w => w.MachineId).HasMaxLength(16);
+            e.Property(w => w.Sensor).HasConversion<string>().HasMaxLength(16);
+            e.Property(w => w.Unit).HasMaxLength(16);
+            e.Property(w => w.NarrativeText).HasMaxLength(1024);
+            e.Property(w => w.Status).HasConversion<string>().HasMaxLength(16);
+            e.Property(w => w.ReviewerNote).HasMaxLength(512);
+            e.Property(w => w.TraceId).HasMaxLength(64);
+            e.HasOne(w => w.Machine).WithMany()
+                .HasForeignKey(w => w.MachineId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(w => w.Status);
         });
     }
 }

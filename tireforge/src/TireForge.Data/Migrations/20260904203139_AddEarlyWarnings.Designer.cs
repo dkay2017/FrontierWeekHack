@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TireForge.Data;
 
@@ -11,9 +12,11 @@ using TireForge.Data;
 namespace TireForge.Data.Migrations
 {
     [DbContext(typeof(TireForgeDbContext))]
-    partial class TireForgeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260904203139_AddEarlyWarnings")]
+    partial class AddEarlyWarnings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
