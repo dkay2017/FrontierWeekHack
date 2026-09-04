@@ -485,14 +485,21 @@ dashboard title) — "TireForge Industries" is the challenge scenario's own name
 verbatim, and was a free "used the given scenario as-is" tell. No folder,
 namespace, or Azure resource renamed (judges never see those; the risk of
 re-provisioning everything for a cosmetic change wasn't worth it — see the
-session log). **Consequence:** the 3 existing Foundry agents need a new version
-to actually serve the renamed prompt — provisioning pending (see STATUS.md).
+session log). **Consequence, actioned:** the 3 existing Foundry agents were
+re-provisioned (`anomaly-detection-agent:3`, `fault-diagnosis-agent:2`,
+`work-order-agent:2`) to serve the renamed prompt.
 
-**Status:** Core/Data/API/Dashboard shipped and tested (136/136 green) — 2026-09-04.
-**Not yet done:** provision the renamed prompts + this feature needs no new agent
-to work, but the 3 existing agents' prompts changed so they need a version bump;
-redeploy the 3 Function Apps (code changed); the predictive-maintenance-agent
-fast-follow; re-run the Challenge 3 portal eval if there's time (prompt changed).
+**Status: LIVE — 2026-09-04 (session 6).** Core/Data/API/Dashboard shipped and
+tested (136/136 green), Foundry re-provisioned, all 3 Function Apps redeployed,
+the `AddEarlyWarnings` migration applied to Azure SQL (this was missed on first
+deploy — `/api/warnings` 500'd until it was applied). **Verified live twice
+over:** a throwaway script proved the DB-write/read-path end to end, then —
+better evidence — **the orchestrator had already organically raised 2 real
+early warnings from live sensor traffic before that script even ran**, fully
+unprompted (IS-005 vibration, MX-001 pressure). Synthetic test data cleaned up
+afterward. **Remaining:** the predictive-maintenance-agent fast-follow (not
+required — the feature works without it); re-run the Challenge 3 portal eval
+if there's time (prompt changed, version bumped).
 
 ## Revised build sequence (post-Stage J)
 

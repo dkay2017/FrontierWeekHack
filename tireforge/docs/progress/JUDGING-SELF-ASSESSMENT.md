@@ -122,16 +122,24 @@ an exciting capability. Medium, upper-middle.
 
 ## Progress since the 2026-09-04 assessment (not yet re-scored)
 
-- **Item 6 built** — T0 TrendCheck (predictive early warning), see DECISIONS
-  D17. Core/Data/API/Dashboard shipped, 136/136 tests green. **Not yet
-  deployed** (see STATUS.md session-6 punch list) — hold off re-scoring
-  Innovation until it's live and demoable, not just tested locally.
+- **Item 6 built AND deployed** — T0 TrendCheck (predictive early warning), see
+  DECISIONS D17. Core/Data/API/Dashboard shipped, 136/136 tests green,
+  **live on Azure as of 2026-09-04** — provisioned, redeployed, migration
+  applied, and verified: the orchestrator organically raised 2 real early
+  warnings from live sensor traffic with no test scenario prompting it. This is
+  the strongest evidence available that Innovation should move off 16/30 at the
+  next formal re-score — not just built, but caught something true, unprompted,
+  in production.
 - **The "TireForge Industries" tell is fixed** — that name turned out to be the
   challenge scenario's own fictional company, verbatim, in our agent prompts
-  and seed data. Renamed to "Meridian Tire Manufacturing" (display layer only).
+  and seed data. Renamed to "Meridian Tire Manufacturing" (display layer only),
+  and the renamed prompts are now live (agents re-provisioned to `:3`/`:2`/`:2`).
   This wasn't in the original scoring reasoning (found afterward in
   conversation) but would have counted against Innovation/Usability polish if
-  left as-is — worth noting for consistency next time this file is re-scored.
+  left as-is.
+- **Formal re-score still owed** — this file's headline numbers (50/90,
+  16/17/17) are from before D17 shipped. Worth a fresh strict pass once the
+  Challenge 3 eval is re-run and there's been a live demo click-through.
 
 ## Improvement backlog (priority order, cheapest/highest-leverage first)
 
@@ -144,7 +152,7 @@ Track status here as items land; re-score when a batch is done.
 | 3 | Impact | Attach even an illustrative ROI figure to the Health Report tab (e.g. "$X/hour downtime × early-catch window ≈ $Y saved") — converts a narrative claim into a quantified one | ⬜ not started |
 | 4 | Usability | Consider light auth (or at least a visible "demo mode, unauthenticated" banner) on reviewer write endpoints so it doesn't read as an unguarded prod tool | ⬜ not started |
 | 5 | Usability | Warm-keep or pre-warm the orchestrator before a scheduled judge session (Y1 cold start is the root cause of #1) | ⬜ not started |
-| 6 | Innovation | Consider one genuinely new capability beyond the reference (not just re-engineering it) if time allows — e.g. proactive maintenance scheduling suggestion, cross-machine pattern detection, or a capability the Python reference doesn't have at all | 🟡 built (D17 — T0 TrendCheck, predictive early warning), 136/136 tests green, not yet deployed. Fast-follow: a 4th Foundry agent (`predictive-maintenance-agent`) to narrate it — not required for the capability itself. |
+| 6 | Innovation | Consider one genuinely new capability beyond the reference (not just re-engineering it) if time allows — e.g. proactive maintenance scheduling suggestion, cross-machine pattern detection, or a capability the Python reference doesn't have at all | ✅ **live** (D17 — T0 TrendCheck, predictive early warning). 136/136 tests green, deployed + verified 2026-09-04 — the orchestrator organically raised 2 real early warnings from live sensor traffic with no test scenario prompting it. Fast-follow, not required: a 4th Foundry agent (`predictive-maintenance-agent`) to narrate it instead of the deterministic sentence. |
 
 ---
 

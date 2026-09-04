@@ -4,31 +4,42 @@
 Keep this file current at every checkpoint and **commit + push it** — a Codespace
 rebuild loses anything uncommitted (see the `codespace-data-loss` memory).
 
-_Last updated: 2026-09-04 (session 5, end). Live deploy verified end-to-end (session
-4). Session 5: #1 ✅ #2 ✅ #3 ✅ (+ security hardening D16, + T0 predictive
-early-warning D17 built + tested locally, not yet deployed). Resume point:
-**session 6 punch list**, below._
+_Last updated: 2026-09-04 (session 6). **T0 predictive early warning is now LIVE**
+— provisioned + redeployed + verified end-to-end on real sensor traffic. Resume
+point: session 6 remaining items, below (re-run Ch3 eval, 4th agent fast-follow,
+doc pass, judging-score backlog)._
 
-### Session 6 — do these first (resume point)
+### Session 6 — done
 
-1. **Re-provision Foundry.** The 3 agent prompts changed (Meridian rebrand) and
-   this needs a new version to go live: `dotnet run --project tools/TireForge.AgentTool -- provision`
-   (or `AgentTool run` for a live pipeline pass first). No code change needed —
-   this alone pushes the renamed prompts.
-2. **Redeploy the 3 Function Apps** — `Pipeline`/`Reports`/`ApiProxy` all changed
-   (T0 wiring + `/warnings` endpoint). `azd deploy ingestion` / `orchestrator` /
-   `apiproxy`, one at a time (OOM risk deploying in parallel — see session 4 notes).
-3. **Verify T0 live**: emit a reading trending toward a bound (or wait for the
-   sensor sim), confirm a row lands in `GET /api/warnings` and the dashboard's new
-   **Early Warnings** tab renders it.
-4. **Re-run the Challenge 3 portal eval** if there's time — the anomaly-detection
+1. ✅ **Re-provisioned Foundry** — `AgentTool provision` pushed the Meridian
+   rebrand live: `anomaly-detection-agent:3`, `fault-diagnosis-agent:2`,
+   `work-order-agent:2`.
+2. ✅ **Redeployed all 3 Function Apps** (ingestion/orchestrator/apiproxy), one
+   at a time — T0 wiring + `GET /api/warnings` now live.
+3. ✅ **Applied the `AddEarlyWarnings` migration to Azure SQL** — this was
+   missing and caused the first live check to 500 (`EarlyWarnings` table didn't
+   exist yet); `TireForge.DbDeploy` run fixed it, idempotent, no data loss.
+4. ✅ **Verified T0 live, twice over:**
+   - A throwaway verification script (`Core.Pipeline.RunAsync` called directly
+     against the live Azure SQL DB, stub agents, deleted after) confirmed the
+     DB-write + read-path plumbing end to end.
+   - **Better proof: the orchestrator had already organically raised 2 real
+     early warnings on its own** (IS-005 vibration, MX-001 pressure) from
+     nothing but live sensor-sim traffic, before the verification script even
+     ran — visible at `GET /api/warnings` and the dashboard's Early Warnings tab.
+     Synthetic test rows cleaned up afterward; the 2 organic ones are real.
+
+### Session 6 — remaining
+
+1. **Re-run the Challenge 3 portal eval** if there's time — the anomaly-detection
    prompt changed (company name only; Coherence/Fluency shouldn't move, but the
-   100/100 was scored against the prior version).
-5. **Fast-follow, not urgent:** the `predictive-maintenance-agent` (4th Foundry
+   100/100 was scored against the prior version, now `:3`).
+2. **Fast-follow, not urgent:** the `predictive-maintenance-agent` (4th Foundry
    agent, narrates the T0 warning instead of the deterministic sentence) —
    deliberately deferred, see DECISIONS **D17**. The feature works without it.
-6. Then: the consolidated doc-reconciliation pass (item 4 below) + the rest of
-   the judging-score backlog (item 5 below).
+3. The consolidated doc-reconciliation pass (item 4 below) + the rest of the
+   judging-score backlog (item 5 below) + re-score the judging self-assessment
+   now that D17 is actually live, not just tested.
 
 ### Session 5 — punch list
 
