@@ -39,6 +39,14 @@ Session 5: #1 ✅ #2 ✅ (+ security hardening, D16). Remaining: #3, #4._
    (SQLite→Azure SQL · Challenge 3 eval + CI · APIM descoped + cost metering ·
    Flex→Y1 + suffix · Challenges 3 & 4 portal · **§6 security + new TDD "Security"
    section**). Design docs / TDD / README / architecture SVG in one sweep.
+5. **Improve the judging score** — see `JUDGING-SELF-ASSESSMENT.md`. Strict
+   self-assessment (2026-09-04): **50/90** (Innovation 16, Usability 17, Impact
+   17 — every score mid-Medium, no standout). Backlog, cheapest-first: cold-start
+   progress indicator (Usability) → foreground the hybrid-agent/gate design +
+   portal-workflow reasoning in the write-up (Innovation) → an illustrative ROI
+   figure on the Health Report (Impact) → light auth on reviewer writes → warm-keep
+   before a judge session → **one genuinely new capability beyond the reference**
+   (the only lever that changes Innovation's *band*, not just its score).
 
 _**Challenges 0–4 all complete:** 0 infra ✅ · 1 agents (Stage M) ✅ · 2 App
 Insights agent traces ✅ · 3 portal eval **100/100** ✅ · 4 portal workflow
@@ -95,6 +103,7 @@ APIM AI Gateway.
 | Implementation deltas | `tireforge/docs/design/DECISIONS.md` |
 | Design→project map | `tireforge/docs/design/README.md` |
 | Architecture SVG | `tireforge/docs/design/TireForge-Anomaly-Fault-IQ-Architecture_Design.svg` |
+| **Judging self-assessment + improvement backlog** | `tireforge/docs/progress/JUDGING-SELF-ASSESSMENT.md` |
 
 ## Working method (agreed session 3)
 
