@@ -18,18 +18,23 @@ Session 5: #1 ✅ #2 ✅ (+ security hardening, D16). Remaining: #3, #4._
      per-identity Storage Blob Data Owner + Queue/Table Data Contributor.
    - Key Vault `tfkvcy3oncsu6rsla` (RBAC mode). `APPLICATIONINSIGHTS_CONNECTION_STRING`
      → `@Microsoft.KeyVault` ref; each identity → Key Vault Secrets User.
-   - **Staged:** `CONTENT_SHARE_KEY_IN_VAULT=false` this round (content-share key
-     still inline) → flip to `true` + re-provision now the KV role has propagated,
-     so the cold-start file-share mount can't race the grant.
-   - Rollback toggles: `STORAGE_IDENTITY_BASED` / `CONTENT_SHARE_KEY_IN_VAULT` /
-     `STATIC_WEB_APP_SKU` (azd env).
-3. **Orchestrator App Insights telemetry is empty on Y1** — OTel exporter quirk
-   (host runs, functions execute, but no traces/requests land). Non-blocking for
-   function; Challenge 2's agent traces won't show for the deployed path until
-   fixed. Compare with ingestion/apiproxy (which do report) — likely the manual
-   `AddOpenTelemetry().UseAzureMonitorExporter()` in `Orchestrator/Program.cs`
-   racing `host.json` `telemetryMode: OpenTelemetry`, or Y1 killing the instance
-   before the batch export flushes.
+   - **Staged rollout complete:** provision 1 (`CONTENT_SHARE_KEY_IN_VAULT=false`)
+     → verify → provision 2 (`=true`) → restart → cold-start with the content-share
+     string from KV (`WEBSITE_SKIP_CONTENTSHARE_VALIDATION=1`) verified: all 3 apps
+     up, emit→queue→orchestrator→agents→gate chain green, telemetry flowing.
+   - **Net: zero plaintext secrets in app config** — both KV secrets are
+     `@Microsoft.KeyVault` references. SQL/Foundry/storage-runtime = MI.
+   - Rollback toggles (azd env): `STORAGE_IDENTITY_BASED` /
+     `CONTENT_SHARE_KEY_IN_VAULT` / `STATIC_WEB_APP_SKU`.
+3. ✅ **Orchestrator telemetry — resolved.** After the session-5 re-provision +
+   restart, App Insights shows the full trace tree from the orchestrator:
+   `PipelineStarter → RunPipeline → pipeline.run → t1/a1/t2/a2/gate/a3/act` +
+   `invoke_agent anomaly-detection-agent:2 / fault-diagnosis-agent:1 /
+   work-order-agent:1` + `chat gpt-5.4-2026-03-05`, all `success`. Yesterday's
+   empty telemetry was Y1 de-allocating the cold instance before the OTel batch
+   exporter flushed (single manual emit); the sensor sim + steady traffic keeps
+   it warm now. If it regresses under true idle, shorten the OTel batch delay or
+   add `WEBSITE_...` always-ready — noted, not needed.
 4. **Consolidated doc-reconciliation pass** — `PENDING-DOC-UPDATES.md` §1–§6
    (SQLite→Azure SQL · Challenge 3 eval + CI · APIM descoped + cost metering ·
    Flex→Y1 + suffix · Challenges 3 & 4 portal · **§6 security + new TDD "Security"
@@ -45,34 +50,27 @@ descoped** (D3) · **cost metering** (D13) · `eval/TireForge.Eval` CI gate (10/
 CI workflow · **`tools/TireForge.DbDeploy`** (azd postprovision — migrate + grant
 Function App identities + seed) + `azure.yaml` `hooks.postprovision`._
 
-_**Live deploy (session 4 end) — DONE + VERIFIED END TO END.** Infra provisioned to
-RG `foundry-hackathon-rg-3e97ae19` on **classic Consumption (Y1) Linux** — Flex
-Consumption was abandoned (worker wouldn't stay up), see PENDING-DOC-UPDATES §4.
-Function Apps carry a `-v2` suffix (`FUNCTION_APP_SUFFIX` param) because the `tf1`
-names got soft-deleted. Azure SQL serverless migrated + seeded; 3 MI identities
-granted `db_datareader/writer`. All 4 services deployed (`azd deploy`). **Proven
-live:** `POST /api/emit/CP-003/crit` → `readings` queue → Durable orchestrator →
-all 3 Foundry agents (A1 tool-called, A2 cites `inc-005`, A3) → Gate → review row
-in `/api/queue` (`severity crit`, `confidence 0.8`). `/api/cost` returns **real
-token metrics** (`tokenMetricsAvailable: true` — e.g. Anomaly Detection 5089 tok /
-$0.0165) = **D13 live**. `/api/status` `/api/health` serve from Azure SQL.
-Known cosmetic gap: the **orchestrator emits no App Insights telemetry** on Y1
-(OTel exporter quirk); the DB writes + cost rows + queue items prove every stage
-ran — follow-up, not a blocker._
+_**Live deploy — DONE + VERIFIED END TO END (session 5).** RG
+`foundry-hackathon-rg-3e97ae19`, **classic Consumption (Y1) Linux**. Function Apps
+carry a `-v2` suffix (`FUNCTION_APP_SUFFIX` — the `tf1` names got soft-deleted).
+**Identity-first (D16):** SQL + Foundry + `AzureWebJobsStorage` all managed
+identity; Key Vault `tfkvcy3oncsu6rsla` holds the App Insights + content-share
+strings as `@Microsoft.KeyVault` refs. **D15:** SWA **Standard** + `linkedBackends`
+→ apiproxy; the dashboard serves `/api` same-origin — and the linking auto-enabled
+EasyAuth on the apiproxy so it is **only reachable through the SWA** (direct
+`*.azurewebsites.net` = 401 — a bonus lockdown). **Proven live (session 5):**
+`POST` to ingestion `/api/emit/CP-003/crit` → `readings` queue (MI) → Durable
+orchestrator (MI) → 3 Foundry agents → Gate → review row via `SWA/api/queue`.
+App Insights shows the full `pipeline.run` tree + `invoke_agent <name>` + `chat
+gpt-5.4` spans from the orchestrator (**#3 telemetry now flowing** — yesterday's
+gap was Y1 killing the cold instance before the OTel batch flushed). `SWA/api/cost`
+= real token metrics (**D13 live**)._
 
 _**Live URLs:**_
-- _Dashboard: `https://jolly-glacier-02859e803.3.azurestaticapps.net`_
-- _ApiProxy: `https://tireforge-apiproxy-tf1-v2.azurewebsites.net/api`_
-- _Ingestion: `https://tireforge-ingestion-tf1-v2.azurewebsites.net`_
-- _Dashboard wired to the API (until D15 lands): append
-  `?api=https://tireforge-apiproxy-tf1-v2.azurewebsites.net/api`_
-- _**Not a bug:** opening the **bare** dashboard URL shows "Can't reach the API …/api
-  HTTP 404" + an empty machine dropdown. Same single cause — `API_BASE`
-  ([index.html:643](../../src/TireForge.Dashboard/index.html#L643)) defaults to
-  same-origin `/api`, which SWA Free can't route (no linked backend); the dropdown
-  ([:1387](../../src/TireForge.Dashboard/index.html#L1387)) is filled from
-  `/status`. Works with `?api=…`; **D15 fixes it for the bare URL.** API + CORS
-  (`Access-Control-Allow-Origin: *` for the SWA origin) both verified live._
+- _Dashboard (+ API, same-origin): `https://jolly-glacier-02859e803.3.azurestaticapps.net`_
+  _— bare URL now works; `?api=` no longer needed (and direct apiproxy is 401 by design)._
+- _Ingestion (direct, not linked): `https://tireforge-ingestion-tf1-v2.azurewebsites.net/api/emit/{machine}/{mode}`_
+- _Key Vault: `tfkvcy3oncsu6rsla` · verify flow uses `SWA/api/*` for reads._
 
 _**127 tests green** (~5 s, no Docker). CI green. All committed + pushed._
 
