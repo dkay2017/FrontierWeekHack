@@ -90,8 +90,9 @@ serve every procedure type and both regions.
   policy reference.
 - **Why it can't merge:** payer rule sets differ per plan and change monthly;
   getting this wrong means wasted work or an automatic denial.
-- **Tools / data:** payer rule-set knowledge base (`data/policies/`), procedure
-  code lookup. Mostly deterministic; agent reasons over ambiguous plan language.
+- **Tools / data:** payer rule-set knowledge base (`policies/` Blob, File
+  Search), procedure code lookup. Mostly deterministic; agent reasons over
+  ambiguous plan language.
 - **In → out:** request → `{ authRequired, code, policyRef, region }`.
 
 ### 5.2 Evidence Gap
@@ -101,8 +102,8 @@ serve every procedure type and both regions.
 - **Why it can't merge:** this is deep language comprehension over messy free
   text vs. a structured rubric — the hardest task, and the one humans are slowest
   at (scrolling notes for "conservative treatment tried, and for how long").
-- **Tools / data:** the payer's criteria for the procedure (File Search over
-  `data/policies/`), the patient's clinical note.
+- **Tools / data:** the payer's criteria for the procedure (Foundry File Search
+  over the `policies/` Blob container), the patient's clinical note.
 - **In → out:** request + criteria → `{ met[], missing[], conflicts[], readiness }`.
 
 ### 5.3 Appeal Builder  *(the differentiator)*
@@ -113,8 +114,9 @@ serve every procedure type and both regions.
 - **Why it can't merge:** operates on the *corpus of past outcomes*, a different
   altitude from the single case in front of it. This is where the 62%-wrong-belief
   problem is solved — with recorded fact, not a hunch.
-- **Tools / data:** the outcomes store (`Submissions` + `Outcomes` tables),
-  fact-pattern similarity match (deterministic), the payer policy text.
+- **Tools / data:** the outcomes metadata (`submissions` + `outcomes` in Cosmos)
+  for the deterministic shortlist, the precedent narratives via File Search, the
+  payer policy text.
 - **In → out:** case + gap report → `{ precedents[], recommendation, appealDraft? }`.
 
 ### 5.4 Expiry Watch  *(runs continuously)*
@@ -186,10 +188,10 @@ only in the prose. Tests and CI run against the stubs, offline.
 
 ## 9. Region abstraction (UK ⇄ US)
 
-The payer-specific knowledge is **data, not code**:
+The payer-specific knowledge is **data, not code** — Blob-stored, File-Search-indexed:
 
 ```
-data/policies/
+policies/ (Blob container)
   uk/bupa/<procedure>.md         criteria, required codes, appeal path (→ FOS)
   uk/axa/<procedure>.md
   us/<payer>/<procedure>.md      criteria, CPT/HCPCS, appeal path (→ state / external review)
@@ -209,8 +211,8 @@ flowchart TB
       DASH[Zynara.Dashboard<br/>Static Web App, Standard + linked backend]
     end
     subgraph Compute [Function Apps · Consumption Y1 · .NET 8 isolated]
-      ING[Zynara.Intake<br/>HTTP + queue]
-      ORC[Zynara.Orchestrator<br/>Durable Functions pipeline]
+      ORC[Zynara.Orchestrator<br/>HTTP starter POST /api/requests<br/>+ Durable Functions pipeline + activities]
+      ADP[Zynara.SubmissionAdapter<br/>sole outbound path to payers]
       API[Zynara.ApiProxy<br/>read models + reviewer actions]
     end
     subgraph AI [Azure AI Foundry]
@@ -219,29 +221,38 @@ flowchart TB
       A3[appeal-builder-agent]
       A4[expiry-watch-agent]
       A5[policy-drift-agent]
+      FS[File Search index]
     end
     subgraph State
-      SQL[(Azure SQL serverless<br/>requests · submissions · outcomes ·<br/>auths · policies · early-warnings · agent-calls)]
+      COS[(Azure Cosmos DB serverless<br/>requests · submissions · outcomes · auths ·<br/>earlyWarnings · agentCalls · precedent/policy metadata)]
+      BLOB[Blob Storage<br/>policy docs · denial PDFs · precedent narratives]
       KV[Key Vault]
-      ST[Storage — queue + Durable hub]
     end
 
+    U[clinician request] -->|POST /api/requests| ORC
     DASH -->|/api| API
-    ING --> ST --> ORC
     ORC --> A1 & A2 & A3 & A4 & A5
-    ORC --> SQL
-    API --> SQL
+    ORC --> COS
+    ORC --> ADP
+    API --> COS
+    A2 & A3 --> FS
+    FS -. indexes .-> BLOB
+    ADP -->|portal / X12 / FHIR / fax| PAYER[payer]
     ORC -. managed identity .-> AI
-    ORC -. managed identity .-> SQL
+    ORC -. data-plane RBAC .-> COS
     Compute -. @Microsoft.KeyVault refs .-> KV
 ```
 
 - **Provisioning:** `azd` + Bicep (subscription-scope `main.bicep` +
   `modules/foundry · data · keyvault · apps`). **New resource group**, separate
   from any prior work.
-- **Identity-first:** SQL (`Active Directory Default`), Foundry (Cognitive
-  Services User), storage (managed identity) — no static secrets in config; the
-  two unavoidable strings live in Key Vault as `@Microsoft.KeyVault` references.
+- **Identity-first:** Cosmos DB (data-plane RBAC — `Cosmos DB Built-in Data
+  Contributor`), Foundry (Cognitive Services User), Blob (`Storage Blob Data
+  Contributor`) — no static secrets in config; the two unavoidable strings live
+  in Key Vault as `@Microsoft.KeyVault` references.
+- **Async without a queue:** the Durable HTTP starter returns `202` + a status
+  URL; Durable's own control queues run the orchestration. No `Zynara.Intake`
+  function, no Storage Queue (see §17 · TD-3).
 - **Idempotency:** Durable orchestration keyed on request id.
 
 ## 11. Data strategy
@@ -249,7 +260,7 @@ flowchart TB
 | Dataset | How | Size for demo |
 |---|---|---|
 | **Clinical cases** | LLM-generated realistic notes across ~6 procedures, with a hidden "ground truth" of which criteria they meet | ~30 |
-| **Payer policies** | Real public criteria excerpts — Bupa CCSD, a small set of US Medicare LCDs — transcribed into `data/policies/` | ~10 procedures × 2 regions |
+| **Payer policies** | Real public criteria excerpts — Bupa CCSD, a small set of US Medicare LCDs — transcribed into the `policies/` Blob container, File-Search-indexed | ~10 procedures × 2 regions |
 | **Past outcomes** | Synthetic but internally consistent: each has a fact pattern, an outcome, a denial reason where applicable | ~150 |
 | **Policy versions** | Two versions of ~3 policies, to demo Policy Drift | 3 pairs |
 
@@ -263,7 +274,7 @@ live pipeline is shown separately on one fresh case.
 - **Evaluation:** `eval/Zynara.Eval` replays the labelled case set through the
   Evidence Gap agent, gates CI on classification accuracy; the Foundry portal
   runs Coherence/Fluency over the same set (Challenge 3).
-- **Cost:** every agent call records tokens → `AgentCalls` table → a real
+- **Cost:** every agent call records tokens → `agentCalls` container → a real
   £/$ figure on the dashboard's governance view.
 
 ## 13. Impact model (built into the product)
@@ -301,4 +312,17 @@ Turns the headline statistic into a number specific to the clinic's own book.
   specialist referral, physiotherapy course, cataract surgery, sleep study).
 - Which agents are Foundry-hosted vs. deterministic-only for v1.
 - Portal workflow node count (2 vs 3) — same reasoning as the prior project's D14.
-- Whether Intake accepts a FHIR bundle or a simplified request DTO for v1.
+- Whether the HTTP starter accepts a FHIR bundle or a simplified request DTO for v1.
+
+## 17. Technology decisions
+
+Recorded with rationale and rejected alternative. The TDD (`Care-Approval-IQ-TDD.md` §12)
+carries the implementation-level detail.
+
+| # | Decision | Why (short) | Rejected |
+|---|---|---|---|
+| **TD-1** | Deterministic **Durable Functions orchestrator** sequences the pipeline and owns every decision value | The Gate, the readiness threshold, the pipeline order and the audit trail must be repeatable; an LLM must never own them. Durable also earns its keep on its own: durable timers for expiry-watch, durable wait/replay for the slow payer round-trip. | A single generalist agent orchestrating via connected agents — non-deterministic order, no auditable Gate |
+| **TD-2** | The 5 deterministic checks are **separate Durable Activity Functions**, not orchestrator helper methods | (1) per-step retry isolation — a failed agent/File-Search call is retried at that step, the other four are not re-run or re-billed; (2) the prose→typed-value conversion lives in one named unit, out of the decision rule; (3) a stub twin per step → the whole pipeline runs in CI with zero live inference (Challenge 1); (4) replay-safe resume — a crash mid-pipeline resumes at the next step, no duplicate submissions | Five helper methods inside the orchestrator — simpler, but loses all four properties above |
+| **TD-3** | **No explicit Requests Queue** — the Durable HTTP starter is the async boundary (`202` + status URL) | Request/response at low volume (tens–low-hundreds/day); no burst to absorb. The only real need is *don't block the caller for a multi-minute pipeline*, which Durable already provides via its own control queues. | A Storage Queue copied from the prior streaming-ingest project — an extra component and failure mode with no load to justify it |
+| **TD-4** | **Azure Cosmos DB** serverless (Core/NoSQL) for operational state | A request/submission/outcome is a nested JSON aggregate, not a set of normalised rows; partition by `/requestId` makes "everything for one case" a single-partition read; serverless suits spiky low volume; team has prior Cosmos experience. Session consistency suffices — one orchestration owns a request id. | Azure SQL — a relational schema and migrations for data that is document-shaped |
+| **TD-5** | **Blob Storage + Foundry File Search** for the unstructured corpus, separate from Cosmos | Retrieval over policy docs / denial letters / precedent narratives is semantic (vector search), not a query; File Search builds and owns that index for the agents natively. Cosmos keeps only the structured metadata (`{caseId, payerPlan, procedure, outcome, wonOnAppeal, blobRef, …}`); `AppealMatch` filters that first, the agent then reasons over the File-Search-retrieved narratives for the shortlist. | Forcing the corpus into Cosmos — running our own chunk / embed / index pipeline for no gain; or Azure AI Search — more capable but one more service to provision |
