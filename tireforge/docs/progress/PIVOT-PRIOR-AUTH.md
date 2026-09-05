@@ -5,13 +5,21 @@
 **⚠ Hard constraint, explicitly stated by the user (2026-09-05): TireForge/Meridian
 is NOT touched, modified, or torn down.** It stays exactly as-is — live, deployed,
 completed — as the proof-of-concept and evidence of the full challenge lifecycle.
-This new work is **a brand-new GitHub repo and brand-new Azure resources**,
-nothing shared, nothing reused infrastructurally. What carries forward is
-**learnings only**: the architectural patterns (hybrid deterministic+agent
-split, Gate/human-approval, citation-based grounding, cost metering, the
-Durable Functions shape, managed-identity-first security) and staying aligned
-with the **same Challenge 0–4 structure and judging criteria** this whole
-program is built around — not any code, repo, or resource.
+
+**Location (revised 2026-09-05):** the new project lives in **`claria/` alongside
+`tireforge/` in the same GitHub repo** (`dkay2017/FrontierWeekHack`) — the
+Codespace token can't create a new repo, and a sibling folder is functionally
+the same isolation. It gets **brand-new Azure resources / its own resource
+group**, nothing shared. What carries forward is **learnings only**: the
+architectural patterns (hybrid deterministic+agent split, Gate/human-approval,
+citation-based grounding, cost metering, the Durable Functions shape,
+managed-identity-first security) and staying aligned with the **same Challenge
+0–4 structure and judging criteria** — not any code or resource.
+
+**Kickoff done (2026-09-05):** `claria/` scaffolded, branding locked (Claria
+Health — Care Approval IQ — "Proof beats paperwork" — logo), architecture
+design doc written. See `claria/docs/progress/STATUS.md` for live state going
+forward.
 
 Deadline: **2026-09-24** (19 days from decision).
 

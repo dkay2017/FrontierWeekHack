@@ -1,0 +1,22 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+
+# azd / Azure
+.azure/
+*.env
+local.settings.json
+
+# secrets / data
+data/**/*.local.*
+*.pem
+*.key
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# node (dashboard)
+node_modules/
