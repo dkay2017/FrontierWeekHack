@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 832" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 920" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif">
   <title>Zynara Health · Care Approval IQ — Technical Architecture</title>
   <defs>
     <linearGradient id="seal" x1="0" y1="0" x2="1" y2="1">
@@ -7,22 +7,25 @@
     <marker id="ab" viewBox="0 0 8 8" refX="6.6" refY="4" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8 z" fill="#2563EB"/></marker>
     <marker id="av" viewBox="0 0 8 8" refX="6.6" refY="4" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8 z" fill="#7C3AED"/></marker>
     <marker id="ag" viewBox="0 0 8 8" refX="6.6" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8 z" fill="#5C7C84"/></marker>
+    <marker id="am" viewBox="0 0 8 8" refX="6.6" refY="4" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8 z" fill="#047857"/></marker>
+    <marker id="at" viewBox="0 0 8 8" refX="6.6" refY="4" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8 z" fill="#0891B2"/></marker>
     <style>
       text{ fill:#0B3B45; }
       .sub{ fill:#3D5B62; }
       .tag{ fill:#0E8F84; }
-      .num{ fill:#FDE047; font-weight:800; }
-      .sect{ font-size:12px; font-weight:700; letter-spacing:.1em; }
+      .num{ fill:#FFFFFF; font-weight:800; }
+      .sect{ font-size:12px; font-weight:700; letter-spacing:.09em; }
       .cn{ font-size:11px; font-weight:700; }
       .bd{ font-size:9px; }
       .sm{ font-size:8.2px; }
+      .lbl{ font-style:italic; font-size:7.6px; fill:#5B6B72; }
       .ico{ fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
       .gl{ fill:none; stroke:#FFFFFF; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
       .card{ fill:#FFFFFF; }
     </style>
   </defs>
 
-  <rect width="1300" height="832" fill="#FFFFFF"/>
+  <rect width="1300" height="920" fill="#FFFFFF"/>
   <rect width="1300" height="6" fill="url(#seal)"/>
 
   <!-- ============================ HEADER ============================ -->
@@ -44,157 +47,245 @@
   <line x1="40" y1="74" x2="1260" y2="74" stroke="#0FA3A0" stroke-opacity=".25"/>
 
 
-  <!-- ==================== ROW 1 · INTAKE + AI FOUNDRY ==================== -->
-  <rect x="40" y="88" width="252" height="150" rx="13" fill="#EEF4D6" stroke="#4D7C0F" stroke-opacity=".45" stroke-width="1.3"/>
-  <circle cx="61" cy="112" r="13" fill="#4D7C0F"/><text x="61" y="117" text-anchor="middle" class="num" font-size="13">1</text>
-  <g transform="translate(84,105)" class="ico" stroke="#3F660A"><path d="M0 10 v4 h15 v-4 M7.5 0 v8 M4 5 l3.5 3.5 3.5 -3.5"/></g>
-  <text x="108" y="117" class="sect" fill="#3F660A">INTAKE</text>
-  <text x="46" y="140" class="sub" font-size="7.6">receives the request and queues it — nothing more</text>
-  <circle cx="52" cy="161" r="2.6" fill="#4D7C0F"/><text x="64" y="164" class="cn">Clinician request</text><text x="64" y="177" class="sub bd">procedure · plan · clinical note · region</text>
-  <circle cx="52" cy="195" r="2.6" fill="#4D7C0F"/><text x="64" y="198" class="cn">Zynara.Intake</text><text x="64" y="211" class="sub bd">Azure Function · POST /api/requests</text>
-  <circle cx="52" cy="224" r="2.6" fill="#4D7C0F"/><text x="64" y="227" class="cn">Requests Queue</text><text x="64" y="240" class="sub bd">Azure Storage Queue</text>
+  <!-- ==================== ROW 1 · INTAKE (amber) + AI FOUNDRY ==================== -->
+  <rect x="40" y="88" width="252" height="210" rx="13" fill="#FDF3E4" stroke="#B45309" stroke-opacity=".38" stroke-width="1.2"/>
+  <path d="M53 88 Q40 88 40 101 L40 285 Q40 298 53 298" fill="none" stroke="#D97706" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="61" cy="112" r="13" fill="#D97706"/><text x="61" y="117" text-anchor="middle" class="num" font-size="13">1</text>
+  <g transform="translate(84,105)" class="ico" stroke="#B45309"><path d="M0 10 v4 h15 v-4 M7.5 0 v8 M4 5 l3.5 3.5 3.5 -3.5"/></g>
+  <text x="108" y="117" class="sect" fill="#B45309">INTAKE</text>
+  <text x="46" y="136" class="sub" font-size="7.6">one HTTP entry point — receives the request, then queues it</text>
 
-  <rect x="304" y="88" width="956" height="150" rx="13" fill="#EDE4FC" stroke="#7C3AED" stroke-opacity=".42" stroke-width="1.3"/>
+  <g transform="translate(52,146)">
+    <rect width="228" height="46" rx="9" class="card" stroke="#B45309" stroke-opacity=".28"/>
+    <path d="M9 0 Q0 0 0 9 L0 37 Q0 46 9 46" fill="none" stroke="#D97706" stroke-width="3.4" stroke-linecap="round"/>
+    <rect x="12" y="12" width="20" height="20" rx="5" fill="#D97706"/><g transform="translate(18,17)" class="gl"><circle cx="4" cy="3.5" r="2.6"/><path d="M0 11c0-3 8-3 8 0"/></g>
+    <text x="40" y="19" class="cn" font-size="10">Clinician request</text>
+    <text x="40" y="32" class="sub" font-size="7.4">procedure · plan · note · region</text>
+    <text x="40" y="41" class="sub" font-size="7.4">— the only input to the system</text>
+  </g>
+  <g transform="translate(52,200)">
+    <rect width="228" height="40" rx="9" class="card" stroke="#B45309" stroke-opacity=".28"/>
+    <path d="M9 0 Q0 0 0 9 L0 31 Q0 40 9 40" fill="none" stroke="#D97706" stroke-width="3.4" stroke-linecap="round"/>
+    <rect x="12" y="10" width="20" height="20" rx="5" fill="#D97706"/><g transform="translate(18,15)" class="gl"><path d="M5 0 L1 8 h3.5 L3.5 15 L9 6 H5.5 z"/></g>
+    <text x="40" y="17" class="cn" font-size="10">Zynara.Intake</text>
+    <text x="40" y="31" class="sub" font-size="7.4">Azure Function · POST /api/requests</text>
+  </g>
+  <g transform="translate(52,248)">
+    <rect width="228" height="46" rx="9" class="card" stroke="#B45309" stroke-opacity=".28"/>
+    <path d="M9 0 Q0 0 0 9 L0 37 Q0 46 9 46" fill="none" stroke="#D97706" stroke-width="3.4" stroke-linecap="round"/>
+    <rect x="12" y="13" width="20" height="20" rx="5" fill="#D97706"/><g transform="translate(17,18)" class="gl"><path d="M6 0 L12 3 L6 6 L0 3 z M0 7 L6 10 L12 7 M0 11 L6 14 L12 11"/></g>
+    <text x="40" y="20" class="cn" font-size="10">Requests Queue</text>
+    <text x="40" y="33" class="sub" font-size="7.4">Azure Storage Queue</text>
+    <text x="40" y="42" class="sub" font-size="7.4">— decouples intake from compute</text>
+  </g>
+
+  <rect x="304" y="88" width="956" height="210" rx="13" fill="#EDE4FC" stroke="#7C3AED" stroke-opacity=".4" stroke-width="1.2"/>
+  <path d="M317 88 Q304 88 304 101 L304 285 Q304 298 317 298" fill="none" stroke="#7C3AED" stroke-width="5" stroke-linecap="round"/>
   <circle cx="325" cy="112" r="13" fill="#7C3AED"/><text x="325" y="117" text-anchor="middle" class="num" font-size="13">3</text>
   <g transform="translate(347,105)" class="ico" stroke="#7C3AED"><path d="M7 0 l1.6 4.4 4.4 1.6 -4.4 1.6 -1.6 4.4 -1.6 -4.4 -4.4 -1.6 4.4 -1.6 z"/></g>
-  <text x="371" y="116" class="sect" font-size="11" fill="#6D28D9">AI FOUNDRY · AGENT SERVICE</text>
-  <text x="640" y="116" class="sub" font-size="7.6">persistent · gpt-4.1 class · prose &amp; judgement only · File Search grounded · deterministic stub twin per agent (CI)</text>
+  <text x="371" y="116" class="sect" fill="#6D28D9">AI FOUNDRY · AGENT SERVICE</text>
+  <text x="642" y="116" class="sub" font-size="7.6">persistent · GPT-5.4 class · prose &amp; judgement only · File Search grounded · deterministic stub twin per agent (CI)</text>
   <g>
-    <g transform="translate(316,128)">
-      <rect width="180" height="100" rx="10" class="card" stroke="#7C3AED" stroke-opacity=".24"/>
-      <rect x="12" y="12" width="22" height="22" rx="6" fill="#7C3AED"/><g transform="translate(17,16)" class="gl"><circle cx="3.5" cy="4.5" r="3"/><path d="M5.6 6.6 L11 12 M9.4 12 h1.6 M11 12 v-1.6"/></g>
-      <text x="42" y="27" class="cn" font-size="10">needs-auth</text>
-      <text x="14" y="48" class="sm">Auth required? this plan,</text>
-      <text x="14" y="59" class="sm">this procedure code, today.</text>
-      <line x1="14" y1="70" x2="166" y2="70" stroke="#7C3AED" stroke-opacity=".14"/>
-      <text x="14" y="86" class="sm" font-size="7.7"><tspan fill="#6E8C93">reads </tspan>payer rule-set KB</text>
+    <g transform="translate(316,138)">
+      <rect width="180" height="128" rx="10" class="card" stroke="#7C3AED" stroke-opacity=".24"/>
+      <path d="M10 0 Q0 0 0 10 L0 118 Q0 128 10 128" fill="none" stroke="#7C3AED" stroke-width="3.4" stroke-linecap="round"/>
+      <rect x="14" y="13" width="22" height="22" rx="6" fill="#7C3AED"/><g transform="translate(19,17)" class="gl"><circle cx="3.5" cy="4.5" r="3"/><path d="M5.6 6.6 L11 12 M9.4 12 h1.6 M11 12 v-1.6"/></g>
+      <text x="44" y="28" class="cn" font-size="10">needs-auth</text>
+      <text x="16" y="56" class="sm">Auth required? this plan,</text>
+      <text x="16" y="68" class="sm">this procedure code, today.</text>
+      <line x1="16" y1="94" x2="164" y2="94" stroke="#7C3AED" stroke-opacity=".14"/>
+      <text x="16" y="112" class="sm" font-size="7.7"><tspan fill="#6E8C93">reads </tspan>payer rule-set KB</text>
     </g>
-    <g transform="translate(502,128)">
-      <rect width="180" height="100" rx="10" class="card" stroke="#7C3AED" stroke-opacity=".24"/>
-      <rect x="12" y="12" width="22" height="22" rx="6" fill="#7C3AED"/><g transform="translate(17,16)" class="gl"><circle cx="4.5" cy="4.5" r="3.6"/><path d="M7.5 7.5 L11.5 11.5"/></g>
-      <text x="42" y="27" class="cn" font-size="10">evidence-gap</text>
-      <text x="14" y="48" class="sm">Note vs the written criteria</text>
-      <text x="14" y="59" class="sm">— met · missing · contradictory</text>
-      <line x1="14" y1="70" x2="166" y2="70" stroke="#7C3AED" stroke-opacity=".14"/>
-      <text x="14" y="86" class="sm" font-size="7.7"><tspan fill="#6E8C93">reads </tspan>the criteria (File Search)</text>
+    <g transform="translate(502,138)">
+      <rect width="180" height="128" rx="10" class="card" stroke="#7C3AED" stroke-opacity=".24"/>
+      <path d="M10 0 Q0 0 0 10 L0 118 Q0 128 10 128" fill="none" stroke="#7C3AED" stroke-width="3.4" stroke-linecap="round"/>
+      <rect x="14" y="13" width="22" height="22" rx="6" fill="#7C3AED"/><g transform="translate(19,17)" class="gl"><circle cx="4.5" cy="4.5" r="3.6"/><path d="M7.5 7.5 L11.5 11.5"/></g>
+      <text x="44" y="28" class="cn" font-size="10">evidence-gap</text>
+      <text x="16" y="56" class="sm">Note vs the written criteria</text>
+      <text x="16" y="68" class="sm">— met · missing · contradictory</text>
+      <line x1="16" y1="94" x2="164" y2="94" stroke="#7C3AED" stroke-opacity=".14"/>
+      <text x="16" y="112" class="sm" font-size="7.7"><tspan fill="#6E8C93">reads </tspan>the criteria (File Search)</text>
     </g>
-    <g transform="translate(688,128)">
-      <rect width="180" height="100" rx="10" class="card" stroke="#7C3AED" stroke-opacity=".5" stroke-width="1.4"/>
-      <rect x="12" y="12" width="22" height="22" rx="6" fill="#7C3AED"/><g transform="translate(17,15)" class="gl"><path d="M1 0 h7 v14 h-7 z"/><path d="M3 4 h3 M3 7 h3 M3 10 h2"/></g>
-      <text x="166" y="17" text-anchor="end" font-size="6.8" font-weight="700" fill="#7C3AED">★ THE DIFFERENTIATOR</text>
-      <text x="42" y="31" class="cn" font-size="10">appeal-builder</text>
-      <text x="14" y="50" class="sm">Matches the case to appeals that</text>
-      <text x="14" y="61" class="sm">won before — and drafts this one.</text>
-      <line x1="14" y1="71" x2="166" y2="71" stroke="#7C3AED" stroke-opacity=".2"/>
-      <text x="14" y="87" class="sm" font-size="7.7"><tspan fill="#6E8C93">reads </tspan>past Submissions + Outcomes</text>
+    <g transform="translate(688,138)">
+      <rect width="180" height="128" rx="10" class="card" stroke="#7C3AED" stroke-opacity=".5" stroke-width="1.4"/>
+      <path d="M10 0 Q0 0 0 10 L0 118 Q0 128 10 128" fill="none" stroke="#7C3AED" stroke-width="3.8" stroke-linecap="round"/>
+      <rect x="14" y="13" width="22" height="22" rx="6" fill="#7C3AED"/><g transform="translate(19,16)" class="gl"><path d="M1 0 h7 v14 h-7 z"/><path d="M3 4 h3 M3 7 h3 M3 10 h2"/></g>
+      <text x="164" y="17" text-anchor="end" font-size="6.8" font-weight="700" fill="#7C3AED">★ THE DIFFERENTIATOR</text>
+      <text x="44" y="32" class="cn" font-size="10">appeal-builder</text>
+      <text x="16" y="58" class="sm">Matches the case to appeals that</text>
+      <text x="16" y="70" class="sm">won before — and drafts this one.</text>
+      <line x1="16" y1="96" x2="164" y2="96" stroke="#7C3AED" stroke-opacity=".2"/>
+      <text x="16" y="114" class="sm" font-size="7.7"><tspan fill="#6E8C93">reads </tspan>past Submissions + Outcomes</text>
     </g>
-    <g transform="translate(874,128)">
-      <rect width="180" height="100" rx="10" class="card" stroke="#7C3AED" stroke-opacity=".24"/>
-      <rect x="12" y="12" width="22" height="22" rx="6" fill="#7C3AED"/><g transform="translate(17,16)" class="gl"><path d="M1 0 h9 M1 12 h9 M2 0 c0 4 6 4 6 0 M2 12 c0 -4 6 -4 6 0"/></g>
-      <text x="42" y="27" class="cn" font-size="10">expiry-watch</text>
-      <text x="14" y="48" class="sm">An approved auth will lapse</text>
-      <text x="14" y="59" class="sm">before the procedure date.</text>
-      <line x1="14" y1="70" x2="166" y2="70" stroke="#7C3AED" stroke-opacity=".14"/>
-      <text x="14" y="86" class="sm" font-size="7.7"><tspan fill="#6E8C93">reads </tspan>auth record + calendar</text>
+    <g transform="translate(874,138)">
+      <rect width="180" height="128" rx="10" class="card" stroke="#7C3AED" stroke-opacity=".24"/>
+      <path d="M10 0 Q0 0 0 10 L0 118 Q0 128 10 128" fill="none" stroke="#7C3AED" stroke-width="3.4" stroke-linecap="round"/>
+      <rect x="14" y="13" width="22" height="22" rx="6" fill="#7C3AED"/><g transform="translate(19,17)" class="gl"><path d="M1 0 h9 M1 12 h9 M2 0 c0 4 6 4 6 0 M2 12 c0 -4 6 -4 6 0"/></g>
+      <text x="44" y="28" class="cn" font-size="10">expiry-watch</text>
+      <text x="16" y="56" class="sm">An approved auth will lapse</text>
+      <text x="16" y="68" class="sm">before the procedure date.</text>
+      <line x1="16" y1="94" x2="164" y2="94" stroke="#7C3AED" stroke-opacity=".14"/>
+      <text x="16" y="112" class="sm" font-size="7.7"><tspan fill="#6E8C93">reads </tspan>auth record + calendar</text>
     </g>
-    <g transform="translate(1060,128)">
-      <rect width="180" height="100" rx="10" class="card" stroke="#7C3AED" stroke-opacity=".24"/>
-      <rect x="12" y="12" width="22" height="22" rx="6" fill="#7C3AED"/><g transform="translate(18,15)" class="gl"><path d="M0 1 h5 v10 h-5 z"/><path d="M8 3 v9 h-3.5"/><path d="M1.6 4 h2 M1.6 6.5 h2"/></g>
-      <text x="42" y="27" class="cn" font-size="10">policy-drift</text>
-      <text x="14" y="48" class="sm">A silent criteria change just</text>
-      <text x="14" y="59" class="sm">broke this request template.</text>
-      <line x1="14" y1="70" x2="166" y2="70" stroke="#7C3AED" stroke-opacity=".14"/>
-      <text x="14" y="86" class="sm" font-size="7.7"><tspan fill="#6E8C93">reads </tspan>versioned policy docs</text>
+    <g transform="translate(1060,138)">
+      <rect width="180" height="128" rx="10" class="card" stroke="#7C3AED" stroke-opacity=".24"/>
+      <path d="M10 0 Q0 0 0 10 L0 118 Q0 128 10 128" fill="none" stroke="#7C3AED" stroke-width="3.4" stroke-linecap="round"/>
+      <rect x="14" y="13" width="22" height="22" rx="6" fill="#7C3AED"/><g transform="translate(20,16)" class="gl"><path d="M0 1 h5 v10 h-5 z"/><path d="M8 3 v9 h-3.5"/><path d="M1.6 4 h2 M1.6 6.5 h2"/></g>
+      <text x="44" y="28" class="cn" font-size="10">policy-drift</text>
+      <text x="16" y="56" class="sm">A silent criteria change just</text>
+      <text x="16" y="68" class="sm">broke this request template.</text>
+      <line x1="16" y1="94" x2="164" y2="94" stroke="#7C3AED" stroke-opacity=".14"/>
+      <text x="16" y="112" class="sm" font-size="7.7"><tspan fill="#6E8C93">reads </tspan>versioned policy docs</text>
     </g>
   </g>
 
   <!-- ==================== ROW 2 · COMPUTE · HUB & SPOKES ==================== -->
-  <rect x="40" y="250" width="1220" height="148" rx="13" fill="#E3EBFD" stroke="#2563EB" stroke-opacity=".42" stroke-width="1.3"/>
-  <circle cx="61" cy="276" r="13" fill="#2563EB"/><text x="61" y="281" text-anchor="middle" class="num" font-size="13">2</text>
-  <g transform="translate(84,269)" class="ico" stroke="#2563EB"><rect x="2.5" y="2.5" width="11" height="11" rx="2"/><rect x="5.5" y="5.5" width="5" height="5"/><path d="M2.5 6H1 M2.5 10H1 M13.5 6H15 M13.5 10H15 M6 2.5V1 M10 2.5V1 M6 13.5V15 M10 13.5V15"/></g>
-  <text x="108" y="272" class="sect" fill="#1D4ED8">COMPUTE</text>
-  <text x="108" y="285" class="sub" font-size="7.6">Azure Durable Functions</text>
-  <text x="108" y="295" class="sub" font-size="7.6">hub-and-spoke · no LLM</text>
-  <g font-size="8" text-anchor="middle">
-    <g transform="translate(316,262)"><rect width="180" height="30" rx="8" class="card" stroke="#2563EB" stroke-opacity=".34"/><text x="10" y="12" text-anchor="start" font-size="6" font-weight="700" fill="#2563EB" letter-spacing=".12em">SPOKE</text><text x="90" y="23" font-weight="600">NeedsAuthCheck</text></g>
-    <g transform="translate(502,262)"><rect width="180" height="30" rx="8" class="card" stroke="#2563EB" stroke-opacity=".34"/><text x="10" y="12" text-anchor="start" font-size="6" font-weight="700" fill="#2563EB" letter-spacing=".12em">SPOKE</text><text x="90" y="23" font-weight="600">EvidenceGapMatch</text></g>
-    <g transform="translate(688,262)"><rect width="180" height="30" rx="8" class="card" stroke="#2563EB" stroke-opacity=".34"/><text x="10" y="12" text-anchor="start" font-size="6" font-weight="700" fill="#2563EB" letter-spacing=".12em">SPOKE</text><text x="90" y="23" font-weight="600">AppealMatch</text></g>
-    <g transform="translate(874,262)"><rect width="180" height="30" rx="8" class="card" stroke="#2563EB" stroke-opacity=".34"/><text x="10" y="12" text-anchor="start" font-size="6" font-weight="700" fill="#2563EB" letter-spacing=".12em">SPOKE</text><text x="90" y="23" font-weight="600">ExpiryMath</text></g>
-    <g transform="translate(1060,262)"><rect width="180" height="30" rx="8" class="card" stroke="#2563EB" stroke-opacity=".34"/><text x="10" y="12" text-anchor="start" font-size="6" font-weight="700" fill="#2563EB" letter-spacing=".12em">SPOKE</text><text x="90" y="23" font-weight="600">PolicyDiff</text></g>
-  </g>
-  <g transform="translate(56,306)">
-    <rect width="1188" height="76" rx="10" class="card" stroke="#2563EB" stroke-opacity=".4" stroke-width="1.3"/>
-    <rect x="14" y="16" width="26" height="26" rx="7" fill="#2563EB"/><g transform="translate(21,23)" class="gl"><circle cx="6" cy="6" r="2.4"/><path d="M6 3.6V0 M6 8.4V12 M3.6 6H0 M8.4 6H12"/></g>
-    <rect x="50" y="17" width="32" height="14" rx="7" fill="#2563EB"/><text x="66" y="27" text-anchor="middle" fill="#FFFFFF" font-size="7.5" font-weight="700">HUB</text>
-    <text x="90" y="28" class="cn">Zynara.Orchestrator</text>
-    <text x="50" y="48" class="sub bd">Durable Functions · sequences all 5 deterministic checks · keyed on request id (idempotent)</text>
-    <text x="50" y="63" class="sub bd"><tspan fill="#0B3B45" font-weight="700">Owns every value that drives a decision</tspan> — auto-submit vs. Reviewer is decided here; the Gate reads its output</text>
-  </g>
-  <g stroke="#2563EB" stroke-width="1.4" fill="none">
-    <path d="M406 306 V296" marker-end="url(#ab)"/><path d="M592 306 V296" marker-end="url(#ab)"/><path d="M778 306 V296" marker-end="url(#ab)"/><path d="M964 306 V296" marker-end="url(#ab)"/><path d="M1150 306 V296" marker-end="url(#ab)"/>
-  </g>
-  <g stroke="#7C3AED" stroke-width="1.3" fill="none" stroke-dasharray="4 3">
-    <path d="M406 262 V230" marker-end="url(#av)"/><path d="M592 262 V230" marker-end="url(#av)"/><path d="M778 262 V230" marker-end="url(#av)"/><path d="M964 262 V230" marker-end="url(#av)"/><path d="M1150 262 V230" marker-end="url(#av)"/>
-  </g>
-  
-  <path d="M52 232 V252" stroke="#5C7C84" stroke-width="1.5" fill="none" marker-end="url(#ag)"/>
-  <!-- ==================== ROW 3 · DATA ==================== -->
-  <rect x="40" y="408" width="1220" height="122" rx="13" fill="#D5EFE2" stroke="#047857" stroke-opacity=".42" stroke-width="1.3"/>
-  <circle cx="61" cy="433" r="13" fill="#047857"/><text x="61" y="438" text-anchor="middle" class="num" font-size="13">4</text>
-  <g transform="translate(84,426)" class="ico" stroke="#047857"><path d="M1.5 3.5c0-1.6 3-2.6 6.5-2.6s6.5 1 6.5 2.6v8c0 1.6-3 2.6-6.5 2.6s-6.5-1-6.5-2.6z"/><path d="M1.5 3.5c0 1.6 3 2.6 6.5 2.6s6.5-1 6.5-2.6"/></g>
-  <text x="108" y="438" class="sect" fill="#047857">DATA</text>
-  <text x="1244" y="438" text-anchor="end" font-size="8.5" font-weight="700" fill="#047857">✓ every submit &amp; every appeal is human-approved</text>
-  <g transform="translate(56,450)"><rect width="386" height="70" rx="10" class="card" stroke="#047857" stroke-opacity=".3"/><rect x="12" y="12" width="22" height="22" rx="6" fill="#047857"/><g transform="translate(16,17)" class="gl"><path d="M0 1 h13 l-4.5 5.5 v5 l-4 -2 v-3.5 z"/></g><text x="44" y="23" class="cn">Gate</text><text x="44" y="39" class="sub bd">readiness ≥ θ  ∧  no missing criteria  ∧  value ≤ auto-limit</text><text x="44" y="52" class="sub bd">→ auto-submit the draft, else route to the Reviewer</text></g>
-  <g transform="translate(458,450)"><rect width="386" height="70" rx="10" class="card" stroke="#047857" stroke-opacity=".3"/><rect x="12" y="12" width="22" height="22" rx="6" fill="#047857"/><g transform="translate(16,17)" class="gl"><path d="M0 0 h8 v16 h-8 z M8 8 h7 M12 5 l3 3 -3 3"/></g><text x="44" y="23" class="cn">Submission Adapter</text><text x="44" y="39" class="sub bd">the ONLY actor that touches a payer</text><text x="44" y="52" class="sub bd">portal · X12 278 · FHIR · fax</text></g>
-  <g transform="translate(860,450)"><rect width="384" height="70" rx="10" class="card" stroke="#047857" stroke-opacity=".3"/><rect x="12" y="12" width="22" height="22" rx="6" fill="#047857"/><g transform="translate(16,16)" class="gl"><path d="M1.5 2.5c0-1.4 2.5-2.2 5.5-2.2s5.5 .8 5.5 2.2v7c0 1.4-2.5 2.2-5.5 2.2s-5.5-.8-5.5-2.2z"/><path d="M1.5 2.5c0 1.4 2.5 2.2 5.5 2.2s5.5-.8 5.5-2.2"/></g><text x="44" y="23" class="cn">Azure SQL <tspan class="sub" font-weight="400" font-size="8">· serverless</tspan></text><text x="44" y="39" class="sub bd">Requests · Submissions · Outcomes · Auths</text><text x="44" y="52" class="sub bd">Policies · Precedents · EarlyWarnings · AgentCalls</text></g>
+  <rect x="40" y="312" width="1220" height="192" rx="13" fill="#E3EBFD" stroke="#2563EB" stroke-opacity=".4" stroke-width="1.2"/>
+  <path d="M53 312 Q40 312 40 325 L40 491 Q40 504 53 504" fill="none" stroke="#2563EB" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="61" cy="336" r="13" fill="#2563EB"/><text x="61" y="341" text-anchor="middle" class="num" font-size="13">2</text>
+  <g transform="translate(84,329)" class="ico" stroke="#2563EB"><rect x="2.5" y="2.5" width="11" height="11" rx="2"/><rect x="5.5" y="5.5" width="5" height="5"/><path d="M2.5 6H1 M2.5 10H1 M13.5 6H15 M13.5 10H15 M6 2.5V1 M10 2.5V1 M6 13.5V15 M10 13.5V15"/></g>
+  <text x="108" y="333" class="sect" fill="#1D4ED8">COMPUTE · HUB &amp; SPOKES</text>
+  <text x="108" y="346" class="sub" font-size="7.6">Azure Durable Functions · deterministic · no LLM</text>
 
-  <!-- ==================== ROW 4 · EXPERIENCE ==================== -->
-  <rect x="40" y="546" width="1220" height="88" rx="13" fill="#E5E6FB" stroke="#4338CA" stroke-opacity=".42" stroke-width="1.3"/>
-  <circle cx="61" cy="571" r="13" fill="#4338CA"/><text x="61" y="576" text-anchor="middle" class="num" font-size="13">5</text>
-  <g transform="translate(84,564)" class="ico" stroke="#4338CA"><rect x="0.5" y="1" width="15" height="10" rx="1.5"/><path d="M5.5 15h5 M8 11v4"/></g>
-  <text x="108" y="576" class="sect" fill="#3730A3">EXPERIENCE</text>
-  <text x="234" y="576" class="sub" font-size="8.3">the region switch flips the payer rule-set &amp; appeal path — shown live in the demo</text>
-  <g transform="translate(56,586)"><rect width="360" height="42" rx="10" class="card" stroke="#4338CA" stroke-opacity=".3"/><rect x="12" y="10" width="22" height="22" rx="6" fill="#4338CA"/><g transform="translate(17,15)" class="gl"><circle cx="5" cy="4" r="3"/><path d="M0 12c0-3.5 8-3.5 9 0 M9 8l2 2 4-4.5"/></g><text x="44" y="19" class="cn">Reviewer</text><text x="44" y="33" class="sub bd">approves &amp; edits every submit + appeal</text></g>
-  <g transform="translate(432,586)"><rect width="540" height="42" rx="10" class="card" stroke="#4338CA" stroke-opacity=".3"/><rect x="12" y="10" width="22" height="22" rx="6" fill="#4338CA"/><g transform="translate(16,15)" class="gl"><rect x="0" y="0" width="6" height="6"/><rect x="9" y="0" width="6" height="6"/><rect x="0" y="9" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/></g><text x="44" y="19" class="cn">Dashboard <tspan class="sub" font-weight="400" font-size="8">· Static Web App</tspan></text><text x="44" y="33" class="sub bd">Queue · Appeals · Early Warnings · Recovery £/$</text><rect x="416" y="10" width="112" height="22" rx="11" fill="#4338CA"/><text x="472" y="24.5" text-anchor="middle" fill="#FFFFFF" font-size="8" font-weight="700">UK ⇄ US</text></g>
-  <g transform="translate(988,586)"><rect width="256" height="42" rx="10" class="card" stroke="#4338CA" stroke-opacity=".3"/><rect x="12" y="10" width="22" height="22" rx="6" fill="#4338CA"/><g transform="translate(17,15)" class="gl"><path d="M5 0 C2 0 4 6 1 7.5 C4 9 2 15 5 15 M11 0 C14 0 12 6 15 7.5 C12 9 14 15 11 15"/></g><text x="44" y="19" class="cn">Zynara.ApiProxy</text><text x="44" y="33" class="sub bd">read models + reviewer actions</text></g>
+  <!-- spoke cards · rectangle + icon + Activity Fn + SPOKE tag -->
+  <g>
+    <g transform="translate(316,356)">
+      <rect width="180" height="46" rx="8" class="card" stroke="#2563EB" stroke-opacity=".34"/>
+      <path d="M8 0 Q0 0 0 8 L0 38 Q0 46 8 46" fill="none" stroke="#2563EB" stroke-width="3.2" stroke-linecap="round"/>
+      <rect x="126" y="5" width="46" height="12" rx="6" fill="#EDF1FD"/><text x="149" y="13.6" text-anchor="middle" font-size="6" font-weight="700" fill="#2563EB" letter-spacing=".1em">SPOKE</text>
+      <rect x="12" y="13" width="20" height="20" rx="5" fill="#2563EB"/><g transform="translate(17,18)" class="gl"><path d="M0 5 l3.5 3.5 L11 1"/></g>
+      <text x="40" y="24" font-size="9.5" font-weight="700">NeedsAuthCheck</text><text x="40" y="35" class="sub" font-size="7.3">Activity Fn</text>
+    </g>
+    <g transform="translate(502,356)">
+      <rect width="180" height="46" rx="8" class="card" stroke="#2563EB" stroke-opacity=".34"/>
+      <path d="M8 0 Q0 0 0 8 L0 38 Q0 46 8 46" fill="none" stroke="#2563EB" stroke-width="3.2" stroke-linecap="round"/>
+      <rect x="126" y="5" width="46" height="12" rx="6" fill="#EDF1FD"/><text x="149" y="13.6" text-anchor="middle" font-size="6" font-weight="700" fill="#2563EB" letter-spacing=".1em">SPOKE</text>
+      <rect x="12" y="13" width="20" height="20" rx="5" fill="#2563EB"/><g transform="translate(17,18)" class="gl"><circle cx="4.5" cy="4.5" r="3.6"/><path d="M7.5 7.5 L11 11"/></g>
+      <text x="40" y="24" font-size="9.5" font-weight="700">EvidenceGapMatch</text><text x="40" y="35" class="sub" font-size="7.3">Activity Fn</text>
+    </g>
+    <g transform="translate(688,356)">
+      <rect width="180" height="46" rx="8" class="card" stroke="#2563EB" stroke-opacity=".34"/>
+      <path d="M8 0 Q0 0 0 8 L0 38 Q0 46 8 46" fill="none" stroke="#2563EB" stroke-width="3.2" stroke-linecap="round"/>
+      <rect x="126" y="5" width="46" height="12" rx="6" fill="#EDF1FD"/><text x="149" y="13.6" text-anchor="middle" font-size="6" font-weight="700" fill="#2563EB" letter-spacing=".1em">SPOKE</text>
+      <rect x="12" y="13" width="20" height="20" rx="5" fill="#2563EB"/><g transform="translate(17,18)" class="gl"><path d="M1 0 h8 v12 h-8 z"/><path d="M3 3.5 h4 M3 6.5 h4 M3 9.5 h2.5"/></g>
+      <text x="40" y="24" font-size="9.5" font-weight="700">AppealMatch</text><text x="40" y="35" class="sub" font-size="7.3">Activity Fn</text>
+    </g>
+    <g transform="translate(874,356)">
+      <rect width="180" height="46" rx="8" class="card" stroke="#2563EB" stroke-opacity=".34"/>
+      <path d="M8 0 Q0 0 0 8 L0 38 Q0 46 8 46" fill="none" stroke="#2563EB" stroke-width="3.2" stroke-linecap="round"/>
+      <rect x="126" y="5" width="46" height="12" rx="6" fill="#EDF1FD"/><text x="149" y="13.6" text-anchor="middle" font-size="6" font-weight="700" fill="#2563EB" letter-spacing=".1em">SPOKE</text>
+      <rect x="12" y="13" width="20" height="20" rx="5" fill="#2563EB"/><g transform="translate(17,18)" class="gl"><circle cx="5.5" cy="5.5" r="4.8"/><path d="M5.5 2.5 v3.2 l2.2 1.3"/></g>
+      <text x="40" y="24" font-size="9.5" font-weight="700">ExpiryMath</text><text x="40" y="35" class="sub" font-size="7.3">Activity Fn</text>
+    </g>
+    <g transform="translate(1060,356)">
+      <rect width="180" height="46" rx="8" class="card" stroke="#2563EB" stroke-opacity=".34"/>
+      <path d="M8 0 Q0 0 0 8 L0 38 Q0 46 8 46" fill="none" stroke="#2563EB" stroke-width="3.2" stroke-linecap="round"/>
+      <rect x="126" y="5" width="46" height="12" rx="6" fill="#EDF1FD"/><text x="149" y="13.6" text-anchor="middle" font-size="6" font-weight="700" fill="#2563EB" letter-spacing=".1em">SPOKE</text>
+      <rect x="12" y="13" width="20" height="20" rx="5" fill="#2563EB"/><g transform="translate(17,18)" class="gl"><path d="M2.5 4 h6 M5.5 1 v6 M2.5 10.5 h6"/></g>
+      <text x="40" y="24" font-size="9.5" font-weight="700">PolicyDiff</text><text x="40" y="35" class="sub" font-size="7.3">Activity Fn</text>
+    </g>
+  </g>
+
+  <!-- hub -->
+  <g transform="translate(56,420)">
+    <rect width="1188" height="76" rx="10" class="card" stroke="#2563EB" stroke-opacity=".4" stroke-width="1.3"/>
+    <path d="M10 0 Q0 0 0 10 L0 66 Q0 76 10 76" fill="none" stroke="#2563EB" stroke-width="3.8" stroke-linecap="round"/>
+    <rect x="16" y="14" width="26" height="26" rx="7" fill="#2563EB"/><g transform="translate(23,21)" class="gl"><circle cx="6" cy="6" r="2.4"/><path d="M6 3.6V0 M6 8.4V12 M3.6 6H0 M8.4 6H12"/></g>
+    <rect x="52" y="15" width="32" height="14" rx="7" fill="#2563EB"/><text x="68" y="25" text-anchor="middle" fill="#FFFFFF" font-size="7.5" font-weight="700">HUB</text>
+    <text x="92" y="26" class="cn">Zynara.Orchestrator</text>
+    <text x="52" y="44" class="sub bd">Durable Functions · sequences all 5 deterministic checks · keyed on request id (idempotent)</text>
+    <text x="52" y="59" class="sub bd"><tspan fill="#0B3B45" font-weight="700">Owns every value that drives a decision</tspan> — auto-submit vs. Reviewer is decided here; the Gate reads its output</text>
+  </g>
+
+  <!-- intake → compute -->
+  <path d="M96 298 V314" fill="none" stroke="#5C7C84" stroke-width="1.5" marker-end="url(#ag)"/>
+  <text x="102" y="310" class="lbl">trigger</text>
+
+  <!-- hub → spoke calls (verb-labelled) -->
+  <g stroke="#2563EB" stroke-width="1.4" fill="none">
+    <path d="M406 420 V406" marker-end="url(#ab)"/><path d="M592 420 V406" marker-end="url(#ab)"/><path d="M778 420 V406" marker-end="url(#ab)"/><path d="M964 420 V406" marker-end="url(#ab)"/><path d="M1150 420 V406" marker-end="url(#ab)"/>
+  </g>
+  <g class="lbl" fill="#3B62A0">
+    <text x="412" y="418">check</text><text x="598" y="418">match</text><text x="784" y="418">recall</text><text x="970" y="418">compute</text><text x="1156" y="418">diff</text>
+  </g>
+
+  <!-- spoke → agent · deterministic code calls the agent for prose only -->
+  <g stroke="#7C3AED" stroke-width="1.3" fill="none" stroke-dasharray="4 3">
+    <path d="M406 356 V270" marker-end="url(#av)"/><path d="M592 356 V270" marker-end="url(#av)"/><path d="M778 356 V270" marker-end="url(#av)"/><path d="M964 356 V270" marker-end="url(#av)"/><path d="M1150 356 V270" marker-end="url(#av)"/>
+  </g>
+  <text x="1156" y="300" class="lbl" fill="#7C3AED">grounds</text>
+
+  <!-- ==================== ROW 3 · DATA  +  EXPERIENCE (side by side) ==================== -->
+  <rect x="40" y="518" width="602" height="212" rx="13" fill="#D5EFE2" stroke="#047857" stroke-opacity=".4" stroke-width="1.2"/>
+  <path d="M53 518 Q40 518 40 531 L40 717 Q40 730 53 730" fill="none" stroke="#047857" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="61" cy="542" r="13" fill="#047857"/><text x="61" y="547" text-anchor="middle" class="num" font-size="13">4</text>
+  <g transform="translate(84,535)" class="ico" stroke="#047857"><path d="M1.5 3.5c0-1.6 3-2.6 6.5-2.6s6.5 1 6.5 2.6v8c0 1.6-3 2.6-6.5 2.6s-6.5-1-6.5-2.6z"/><path d="M1.5 3.5c0 1.6 3 2.6 6.5 2.6s6.5-1 6.5-2.6"/></g>
+  <text x="108" y="546" class="sect" fill="#047857">DATA · GATE &amp; ADAPTER</text>
+  <text x="108" y="559" font-size="7.4" font-weight="700" fill="#047857">✓ every submit &amp; every appeal is human-approved</text>
+  <g transform="translate(52,570)"><rect width="578" height="46" rx="10" class="card" stroke="#047857" stroke-opacity=".3"/><path d="M10 0 Q0 0 0 10 L0 36 Q0 46 10 46" fill="none" stroke="#047857" stroke-width="3.4" stroke-linecap="round"/><rect x="14" y="12" width="22" height="22" rx="6" fill="#047857"/><g transform="translate(18,17)" class="gl"><path d="M0 1 h13 l-4.5 5.5 v5 l-4 -2 v-3.5 z"/></g><text x="44" y="20" class="cn">Gate</text><text x="44" y="33" class="sub bd">readiness ≥ θ  ∧  no missing criteria  ∧  value ≤ auto-limit</text><text x="44" y="43" class="sub bd">→ auto-submit the draft, else route to the Reviewer</text></g>
+  <g transform="translate(52,624)"><rect width="578" height="46" rx="10" class="card" stroke="#047857" stroke-opacity=".3"/><path d="M10 0 Q0 0 0 10 L0 36 Q0 46 10 46" fill="none" stroke="#047857" stroke-width="3.4" stroke-linecap="round"/><rect x="14" y="12" width="22" height="22" rx="6" fill="#047857"/><g transform="translate(18,17)" class="gl"><path d="M0 0 h8 v16 h-8 z M8 8 h7 M12 5 l3 3 -3 3"/></g><text x="44" y="20" class="cn">Submission Adapter</text><text x="44" y="33" class="sub bd">the ONLY actor that touches a payer</text><text x="44" y="43" class="sub bd">portal · X12 278 · FHIR · fax</text></g>
+  <g transform="translate(52,678)"><rect width="578" height="46" rx="10" class="card" stroke="#047857" stroke-opacity=".3"/><path d="M10 0 Q0 0 0 10 L0 36 Q0 46 10 46" fill="none" stroke="#047857" stroke-width="3.4" stroke-linecap="round"/><rect x="14" y="12" width="22" height="22" rx="6" fill="#047857"/><g transform="translate(18,16)" class="gl"><path d="M1.5 2.5c0-1.4 2.5-2.2 5.5-2.2s5.5 .8 5.5 2.2v7c0 1.4-2.5 2.2-5.5 2.2s-5.5-.8-5.5-2.2z"/><path d="M1.5 2.5c0 1.4 2.5 2.2 5.5 2.2s5.5-.8 5.5-2.2"/></g><text x="44" y="20" class="cn">Azure SQL <tspan class="sub" font-weight="400" font-size="8">· serverless</tspan></text><text x="44" y="33" class="sub bd">Requests · Submissions · Outcomes · Auths</text><text x="44" y="43" class="sub bd">Policies · Precedents · EarlyWarnings · AgentCalls</text></g>
+
+  <rect x="658" y="518" width="602" height="212" rx="13" fill="#DBF1F4" stroke="#0891B2" stroke-opacity=".42" stroke-width="1.2"/>
+  <path d="M671 518 Q658 518 658 531 L658 717 Q658 730 671 730" fill="none" stroke="#0891B2" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="679" cy="542" r="13" fill="#0891B2"/><text x="679" y="547" text-anchor="middle" class="num" font-size="13">5</text>
+  <g transform="translate(702,535)" class="ico" stroke="#0E7490"><rect x="0.5" y="1" width="15" height="10" rx="1.5"/><path d="M5.5 15h5 M8 11v4"/></g>
+  <text x="726" y="546" class="sect" fill="#0E7490">EXPERIENCE</text>
+  <text x="726" y="559" class="sub" font-size="7.4">the region switch flips the payer rule-set &amp; appeal path — shown live in the demo</text>
+  <g transform="translate(670,570)"><rect width="270" height="46" rx="10" class="card" stroke="#0891B2" stroke-opacity=".3"/><path d="M10 0 Q0 0 0 10 L0 36 Q0 46 10 46" fill="none" stroke="#0891B2" stroke-width="3.4" stroke-linecap="round"/><rect x="14" y="12" width="22" height="22" rx="6" fill="#0891B2"/><g transform="translate(19,16)" class="gl"><circle cx="5" cy="4" r="3"/><path d="M0 12c0-3.5 8-3.5 9 0 M9 8l2 2 4-4.5"/></g><text x="44" y="20" class="cn">Reviewer</text><text x="44" y="34" class="sub bd">approves &amp; edits every submit + appeal</text></g>
+  <g transform="translate(670,632)"><rect width="270" height="44" rx="10" class="card" stroke="#0891B2" stroke-opacity=".3"/><path d="M10 0 Q0 0 0 10 L0 34 Q0 44 10 44" fill="none" stroke="#0891B2" stroke-width="3.4" stroke-linecap="round"/><rect x="14" y="11" width="22" height="22" rx="6" fill="#0891B2"/><g transform="translate(19,15)" class="gl"><path d="M5 0 C2 0 4 6 1 7.5 C4 9 2 15 5 15 M11 0 C14 0 12 6 15 7.5 C12 9 14 15 11 15"/></g><text x="44" y="19" class="cn">Zynara.ApiProxy</text><text x="44" y="32" class="sub bd">read models + reviewer actions</text></g>
+  <g transform="translate(958,570)"><rect width="288" height="140" rx="10" class="card" stroke="#0891B2" stroke-opacity=".3"/><path d="M10 0 Q0 0 0 10 L0 130 Q0 140 10 140" fill="none" stroke="#0891B2" stroke-width="3.4" stroke-linecap="round"/><rect x="14" y="12" width="22" height="22" rx="6" fill="#0891B2"/><g transform="translate(18,16)" class="gl"><rect x="0" y="0" width="6" height="6"/><rect x="9" y="0" width="6" height="6"/><rect x="0" y="9" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/></g><text x="44" y="20" class="cn">Dashboard <tspan class="sub" font-weight="400" font-size="8">· Static Web App</tspan></text><rect x="196" y="9" width="80" height="18" rx="9" fill="#0891B2"/><text x="236" y="21" text-anchor="middle" fill="#FFFFFF" font-size="7.5" font-weight="700">UK ⇄ US</text><text x="16" y="46" class="sub bd" font-weight="700">Tabs</text><g class="sub" font-size="8"><circle cx="20" cy="62" r="1.7" fill="#0891B2"/><text x="29" y="65">Approval Queue</text><circle cx="150" cy="62" r="1.7" fill="#0891B2"/><text x="159" y="65">Early Warnings</text><circle cx="20" cy="82" r="1.7" fill="#0891B2"/><text x="29" y="85">Appeals</text><circle cx="150" cy="82" r="1.7" fill="#0891B2"/><text x="159" y="85">Recovery £/$</text><circle cx="20" cy="102" r="1.7" fill="#0891B2"/><text x="29" y="105">Precedent library</text><circle cx="150" cy="102" r="1.7" fill="#0891B2"/><text x="159" y="105">Cost meter</text><circle cx="20" cy="122" r="1.7" fill="#0891B2"/><text x="29" y="125">Region toggle</text></g></g>
+
+  <!-- cross-section connectors -->
+  <path d="M320 496 V518" fill="none" stroke="#2563EB" stroke-width="1.6" marker-end="url(#am)"/>
+  <text x="326" y="512" class="lbl" fill="#3B62A0">the decision</text>
+  <path d="M632 593 H666" fill="none" stroke="#0891B2" stroke-width="1.6" marker-end="url(#at)"/>
+  <text x="649" y="586" class="lbl" fill="#0E7490" text-anchor="middle">route</text>
+  <path d="M805 616 V632" fill="none" stroke="#0891B2" stroke-width="1.5" marker-end="url(#at)"/>
+  <text x="811" y="628" class="lbl" fill="#0E7490">actions</text>
+  <path d="M942 651 H956" fill="none" stroke="#0891B2" stroke-width="1.5" marker-end="url(#at)"/>
+  <text x="940" y="645" class="lbl" fill="#0E7490" text-anchor="end">reads</text>
 
   <!-- ==================== CROSS-CUTTING ==================== -->
-  <line x1="40" y1="652" x2="1260" y2="652" stroke="#0FA3A0" stroke-opacity=".5" stroke-width="1.2" stroke-dasharray="2 4"/>
-  <circle cx="46" cy="670" r="4" fill="#0FA3A0"/>
-  <text x="58" y="674" class="sect">CROSS-CUTTING</text>
-  <text x="190" y="674" class="sub" font-size="9">applies across every layer above, not just one</text>
+  <line x1="40" y1="746" x2="1260" y2="746" stroke="#0FA3A0" stroke-opacity=".5" stroke-width="1.2" stroke-dasharray="2 4"/>
+  <circle cx="46" cy="762" r="4" fill="#0FA3A0"/>
+  <text x="58" y="766" class="sect">CROSS-CUTTING</text>
+  <text x="190" y="766" class="sub" font-size="9">applies across every layer above, not just one</text>
 
-  <g transform="translate(40,682)">
+  <g transform="translate(40,774)">
     <rect width="394" height="112" rx="11" fill="#DDF2E9" stroke="#059669" stroke-opacity=".35"/>
-    <circle cx="18" cy="21" r="4" fill="#059669"/><text x="31" y="25" class="sect" font-size="10" fill="#047857">IDENTITY &amp; SECURITY</text>
-    <g transform="translate(18,42)" class="ico" stroke="#059669" stroke-width="1.5"><path d="M6 0.6 L11 2.4 V6.5 C11 9 8.5 11 6 12 C3.5 11 1 9 1 6.5 V2.4 Z"/></g>
-    <text x="40" y="48" class="bd" font-weight="700">Managed identity</text><text x="40" y="60" class="sub sm">SQL · Foundry · Storage — no stored secrets</text>
-    <g transform="translate(18,76)" class="ico" stroke="#059669" stroke-width="1.5"><rect x="1" y="5" width="10" height="7" rx="1.5"/><path d="M3 5 V3.2 a3 3 0 0 1 6 0 V5"/></g>
-    <text x="40" y="82" class="bd" font-weight="700">Key Vault</text><text x="40" y="94" class="sub sm">holds only the App Insights + content-share strings</text>
+    <path d="M11 0 Q0 0 0 11 L0 101 Q0 112 11 112" fill="none" stroke="#059669" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="20" cy="21" r="4" fill="#059669"/><text x="33" y="25" class="sect" font-size="10" fill="#047857">IDENTITY &amp; SECURITY</text>
+    <g transform="translate(20,42)" class="ico" stroke="#059669" stroke-width="1.5"><path d="M6 0.6 L11 2.4 V6.5 C11 9 8.5 11 6 12 C3.5 11 1 9 1 6.5 V2.4 Z"/></g>
+    <text x="42" y="48" class="bd" font-weight="700">Managed identity</text><text x="42" y="60" class="sub sm">SQL · Foundry · Storage — no stored secrets</text>
+    <g transform="translate(20,76)" class="ico" stroke="#059669" stroke-width="1.5"><rect x="1" y="5" width="10" height="7" rx="1.5"/><path d="M3 5 V3.2 a3 3 0 0 1 6 0 V5"/></g>
+    <text x="42" y="82" class="bd" font-weight="700">Key Vault</text><text x="42" y="94" class="sub sm">holds only the App Insights + content-share strings</text>
   </g>
-  <g transform="translate(453,682)">
-    <rect width="394" height="112" rx="11" fill="#DAF0F6" stroke="#0891B2" stroke-opacity=".35"/>
-    <circle cx="18" cy="21" r="4" fill="#0891B2"/><text x="31" y="25" class="sect" font-size="10" fill="#0E7490">OBSERVABILITY</text>
-    <g transform="translate(18,35)" class="ico" stroke="#0891B2" stroke-width="1.5"><path d="M0 12 H2.5 L4.5 3 L7.5 13 L9.5 8 H12"/></g>
-    <text x="40" y="41" class="bd" font-weight="700">App Insights</text><text x="40" y="52" class="sub sm">one correlated trace id per request id, every hop</text>
-    <g transform="translate(18,59)" class="ico" stroke="#0891B2" stroke-width="1.5"><circle cx="6" cy="6" r="5.5"/><path d="M6 3 v6 M4 4.5 h4 M4 7.5 h4"/></g>
-    <text x="40" y="65" class="bd" font-weight="700">Cost meter</text><text x="40" y="76" class="sub sm">every agent call metered → £/$ on the dashboard</text>
-    <g transform="translate(18,83)" class="ico" stroke="#0891B2" stroke-width="1.5"><path d="M1 6 l3.5 3.5 L11 1.5"/></g>
-    <text x="40" y="89" class="bd" font-weight="700">Eval harness</text><text x="40" y="100" class="sub sm">scripted scenarios scored offline, gated in CI</text>
+  <g transform="translate(453,774)">
+    <rect width="394" height="112" rx="11" fill="#E6E7FB" stroke="#4338CA" stroke-opacity=".35"/>
+    <path d="M11 0 Q0 0 0 11 L0 101 Q0 112 11 112" fill="none" stroke="#4338CA" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="20" cy="21" r="4" fill="#4338CA"/><text x="33" y="25" class="sect" font-size="10" fill="#3730A3">OBSERVABILITY</text>
+    <g transform="translate(20,35)" class="ico" stroke="#4338CA" stroke-width="1.5"><path d="M0 12 H2.5 L4.5 3 L7.5 13 L9.5 8 H12"/></g>
+    <text x="42" y="41" class="bd" font-weight="700">App Insights</text><text x="42" y="52" class="sub sm">one correlated trace id per request id, every hop</text>
+    <g transform="translate(20,59)" class="ico" stroke="#4338CA" stroke-width="1.5"><circle cx="6" cy="6" r="5.5"/><path d="M6 3 v6 M4 4.5 h4 M4 7.5 h4"/></g>
+    <text x="42" y="65" class="bd" font-weight="700">Cost meter</text><text x="42" y="76" class="sub sm">every agent call metered → £/$ on the dashboard</text>
+    <g transform="translate(20,83)" class="ico" stroke="#4338CA" stroke-width="1.5"><path d="M1 6 l3.5 3.5 L11 1.5"/></g>
+    <text x="42" y="89" class="bd" font-weight="700">Eval harness</text><text x="42" y="100" class="sub sm">scripted scenarios scored offline, gated in CI</text>
   </g>
-  <g transform="translate(866,682)">
+  <g transform="translate(866,774)">
     <rect width="394" height="112" rx="11" fill="#ECE3FB" stroke="#6D28D9" stroke-opacity=".35"/>
-    <circle cx="18" cy="21" r="4" fill="#6D28D9"/><text x="31" y="25" class="sect" font-size="10" fill="#6D28D9">RESPONSIBLE AI</text>
-    <g transform="translate(18,35)" class="ico" stroke="#6D28D9" stroke-width="1.5"><path d="M6 0.6 L11 2.4 V6.5 C11 9 8.5 11 6 12 C3.5 11 1 9 1 6.5 V2.4 Z"/><path d="M3.8 6 l1.6 1.6 3 -3.4"/></g>
-    <text x="40" y="41" class="bd" font-weight="700">Human in the loop</text><text x="40" y="52" class="sub sm">a person approves every outbound action</text>
-    <g transform="translate(18,59)" class="ico" stroke="#6D28D9" stroke-width="1.5"><rect x="1" y="5" width="10" height="7" rx="1.5"/><path d="M3 5 V3.2 a3 3 0 0 1 6 0 V5"/></g>
-    <text x="40" y="65" class="bd" font-weight="700">Bounded agents</text><text x="40" y="76" class="sub sm">never set a value, code or date — deterministic code does</text>
-    <g transform="translate(18,83)" class="ico" stroke="#6D28D9" stroke-width="1.5"><path d="M0.5 6 S3 1.5 6 1.5 S11.5 6 11.5 6 S9 10.5 6 10.5 S0.5 6 0.5 6 M1 1.2 L11 10.8"/></g>
-    <text x="40" y="89" class="bd" font-weight="700">No PHI in scope</text><text x="40" y="100" class="sub sm">request ids + procedure codes only</text>
+    <path d="M11 0 Q0 0 0 11 L0 101 Q0 112 11 112" fill="none" stroke="#6D28D9" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="20" cy="21" r="4" fill="#6D28D9"/><text x="33" y="25" class="sect" font-size="10" fill="#6D28D9">RESPONSIBLE AI</text>
+    <g transform="translate(20,35)" class="ico" stroke="#6D28D9" stroke-width="1.5"><path d="M6 0.6 L11 2.4 V6.5 C11 9 8.5 11 6 12 C3.5 11 1 9 1 6.5 V2.4 Z"/><path d="M3.8 6 l1.6 1.6 3 -3.4"/></g>
+    <text x="42" y="41" class="bd" font-weight="700">Human in the loop</text><text x="42" y="52" class="sub sm">a person approves every outbound action</text>
+    <g transform="translate(20,59)" class="ico" stroke="#6D28D9" stroke-width="1.5"><rect x="1" y="5" width="10" height="7" rx="1.5"/><path d="M3 5 V3.2 a3 3 0 0 1 6 0 V5"/></g>
+    <text x="42" y="65" class="bd" font-weight="700">Bounded agents</text><text x="42" y="76" class="sub sm">never set a value, code or date — deterministic code does</text>
+    <g transform="translate(20,83)" class="ico" stroke="#6D28D9" stroke-width="1.5"><path d="M0.5 6 S3 1.5 6 1.5 S11.5 6 11.5 6 S9 10.5 6 10.5 S0.5 6 0.5 6 M1 1.2 L11 10.8"/></g>
+    <text x="42" y="89" class="bd" font-weight="700">No PHI in scope</text><text x="42" y="100" class="sub sm">request ids + procedure codes only</text>
   </g>
 
   <!-- ==================== FOOTER ==================== -->
-  <line x1="40" y1="806" x2="1260" y2="806" stroke="#0FA3A0" stroke-opacity=".25"/>
-  <text x="40" y="820" font-size="9.5" font-weight="700" letter-spacing=".05em">DEEPAK KUMAR · ARCHITECT TRACK SUBMISSION</text>
-  <text x="1260" y="820" text-anchor="end" class="sub" font-size="9">Zynara Health (fictional) · Care Approval IQ · Proof beats paperwork.</text>
+  <line x1="40" y1="900" x2="1260" y2="900" stroke="#0FA3A0" stroke-opacity=".25"/>
+  <text x="40" y="914" font-size="9.5" font-weight="700" letter-spacing=".05em">DEEPAK KUMAR · ARCHITECT TRACK SUBMISSION</text>
+  <text x="1260" y="914" text-anchor="end" class="sub" font-size="9">Zynara Health (fictional) · Care Approval IQ · Proof beats paperwork.</text>
 </svg>
