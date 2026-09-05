@@ -274,17 +274,23 @@ In scope — built and demonstrated:
 - **Disclaimer, shown in-product:** *Care Approval IQ is decision support, not
   coverage or medical advice. A person makes every decision.*
 
-### 7.1 Broader AI governance — a consideration, not in the demo scope
+### 7.1 Production hardening — considerations, not in the demo scope
 
 A production deployment would add, on top of the cost metering and citation
 trail above:
 
+- **Private networking.** Cosmos DB, Blob Storage and Foundry reached only over
+  a VNet via private endpoints; no public data-plane exposure.
+- **An AI-governance layer.** Per-agent Foundry **quota and rate limits**, a
+  model allow-list, and spend caps — enforced at the platform, not just metered.
 - **Model / prompt version pinning and change log.** Each agent version and its
   system prompt recorded against the outcomes it produced.
 - **Continuous drift / quality monitoring.** The `Zynara.Eval` harness (§12) is
   CI-only here; in production it runs against live de-identified traffic with
   alerting on accuracy regression.
 - **Access and retention policy** for the corpus and the outcomes store.
+
+The architecture SVG carries a one-line note to this effect under CROSS-CUTTING.
 
 ### 7.2 Region abstraction as compliance surface
 
