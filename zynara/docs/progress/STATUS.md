@@ -10,13 +10,13 @@ dashboard UI._
 
 ## What this is
 
-**Claria Health — Care Approval IQ.** "Proof beats paperwork." A 5-agent prior
+**Zynara Health — Care Approval IQ.** "Proof beats paperwork." A 5-agent prior
 authorisation & appeals system for the Microsoft Agent-a-thon 2026 (Architect
 track, EMEA region). C#/.NET 8, Azure AI Foundry, Durable Functions, Azure SQL.
 Full design: `docs/design/ARCHITECTURE.md`.
 
 Separate from the team's prior project (TireForge/Meridian — untouched, kept as
-proof-of-concept). Lives in `claria/` alongside `tireforge/` in the **same
+proof-of-concept). Lives in `zynara/` alongside `tireforge/` in the **same
 GitHub repo** (`dkay2017/FrontierWeekHack`); **new Azure resource group**;
 patterns reused, not code. (The Codespace token can't create a new repo — the
 sibling-folder approach is functionally the same isolation.)
@@ -28,9 +28,9 @@ Policy Drift. Payer-agnostic; **UK ⇄ US region switch** in the UI.
 
 ## Done — session 1 (2026-09-05)
 
-- Branding locked: Claria Health / Care Approval IQ / "Proof beats paperwork" /
-  logo (`docs/design/Claria-Health-logo.svg`).
-- `claria/` folder created (sibling to `tireforge/`), structure mirrors it
+- Branding locked: Zynara Health / Care Approval IQ / "Proof beats paperwork" /
+  logo (`docs/design/Zynara-Health-logo.svg`).
+- `zynara/` folder created (sibling to `tireforge/`), structure mirrors it
   (`docs · eval · infra/modules · src · tests · tools` + `data · brand`).
 - `docs/design/ARCHITECTURE.md` written (design of record).
 - `README.md`, `.gitignore`, `global.json`.
@@ -42,20 +42,30 @@ Policy Drift. Payer-agnostic; **UK ⇄ US region switch** in the UI.
   5-layer architecture table, end-to-end flow, components service-by-service, AI
   governance & responsible AI, deployment/scope decisions, roadmap, challenge
   mapping, judging-criteria mapping).
-- **Catchy logo** — `docs/design/Claria-Health-logo.svg`: an approval-seal mark
+- **Catchy logo** — `docs/design/Zynara-Health-logo.svg`: an approval-seal mark
   whose tick rises out of a shrinking paper stack, wordmark, product name and
   tagline. Old `brand/` folder removed; README + this file repointed.
 - **Architecture SVG** — `docs/design/Care-Approval-IQ-Architecture_Design.svg`:
-  hand-authored, same visual language as the prior project's architecture
-  diagram (cream canvas, colour-coded layer lanes, white cards, flow arrows,
-  legend). Logo + the 5 agents across the top, then the 5-layer pipeline with
-  Gate, single Submission Adapter, human reviewer, and the on-denial appeals
-  loop.
+  hand-authored. v2 after review — vibrant colour-blocked panels in a 2-D grouped
+  layout (not stacked bands), section icons, terse bullets, numbered read order
+  instead of flow arrows, brand top-bar + filled Precedent card + impact ribbon
+  as the wow. Logo + the 5 agents across the top. (v1 flow-diagram version
+  dropped.)
+
+## Renamed — session 1 (2026-09-05, late)
+
+- **Company renamed Claria Health → Zynara Health.** "Claria" collided with
+  Claria Mental Health (same sector) + claria.com; "Nuviora" and "Zuiora" also
+  rejected on collisions. "Zynara" web-verified clean. Product name
+  (Care Approval IQ) and tagline (Proof beats paperwork.) unchanged.
+- Full rename applied: `claria/` → `zynara/`, all `Claria.*` projects →
+  `Zynara.*`, logo file, all docs, the TireForge PIVOT doc, and memory. No repo
+  or Azure resources existed yet, so cost was text-only.
 
 ## Next — session 2
 
 1. **`docs/design/DECISIONS.md`** — start the delta log (D1…).
-3. **C# solution scaffold** — `Claria.sln` + the 7 src projects + test projects,
+3. **C# solution scaffold** — `Zynara.sln` + the 7 src projects + test projects,
    per-project README stubs.
 4. **`infra/` skeleton** — `main.bicep` + module stubs (foundry / data / keyvault
    / apps), `azure.yaml`, `main.parameters.json`.

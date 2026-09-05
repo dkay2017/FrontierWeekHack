@@ -1,6 +1,6 @@
 <!-- markdownlint-disable MD033 MD041 -->
 <p align="center">
-  <img src="docs/design/Claria-Health-logo.svg" width="480" alt="Claria Health — Care Approval IQ — Proof beats paperwork">
+  <img src="docs/design/Zynara-Health-logo.svg" width="480" alt="Zynara Health — Care Approval IQ — Proof beats paperwork">
 </p>
 
 <h1 align="center">Care Approval IQ</h1>
@@ -11,10 +11,10 @@
 **A multi-agent system that gets medical treatment approved by insurers — first
 time, and won on appeal when it isn't.**
 
-Built by **Claria Health** (fictional) for the **Microsoft Agent-a-thon 2026**
+Built by **Zynara Health** (fictional) for the **Microsoft Agent-a-thon 2026**
 (Architect track). C#/.NET 8 on Azure AI Foundry, Durable Functions, Azure SQL.
 
-_Standalone project in `claria/`, alongside `tireforge/` in the same repository.
+_Standalone project in `zynara/`, alongside `tireforge/` in the same repository.
 Shares no code and no Azure resources with `tireforge/` — that project is
 untouched and complete. Only architectural patterns are reused._
 
@@ -56,11 +56,11 @@ appeal-escalation path. Same agents, proven across markets, live in the demo.
 ## Repository layout
 
 ```
-src/            Claria.Core · Agents · Data · Intake · Orchestrator · ApiProxy · Dashboard
+src/            Zynara.Core · Agents · Data · Intake · Orchestrator · ApiProxy · Dashboard
 tests/          xUnit, one project per src assembly + shared TestSupport
 infra/          Bicep — main.bicep + modules (foundry · data · keyvault · apps)
-eval/           Claria.Eval — CI-gated agent evaluation harness
-tools/          Claria.DbDeploy — azd post-provision migrate + seed + grant
+eval/           Zynara.Eval — CI-gated agent evaluation harness
+tools/          Zynara.DbDeploy — azd post-provision migrate + seed + grant
 docs/design/    ARCHITECTURE.md · Care-Approval-IQ-TDD.md · DECISIONS.md · logo · architecture SVG
 docs/progress/  STATUS.md — session context / resume point
 data/           policies (payer criteria) · cases (synthetic clinical scenarios)

@@ -1,4 +1,4 @@
-# Claria Health · Care Approval IQ — Technical Design Document
+# Zynara Health · Care Approval IQ — Technical Design Document
 
 > *Proof beats paperwork.*
 > Microsoft Agent-a-thon 2026 · Architect Track Submission · Healthcare Prior Authorisation · Deepak Kumar · Original Work
@@ -94,11 +94,11 @@ Five layers, left to right along the request path, plus three cross-cutting conc
 
 | # | Layer | Components |
 |---|-------|-----------|
-| 1 | **Intake** | `Claria.Intake` (Azure Function · HTTP `POST /api/requests` + queue output) → Requests Queue (Azure Storage Queue) |
-| 2 | **Compute · Orchestration** (Azure Durable Functions) | `Claria.Orchestrator` (hub, keyed on request id) → NeedsAuthCheck / EvidenceGapMatch / PrecedentMatch / ExpiryMath / PolicyDiff (activity functions / deterministic spokes) |
-| 3 | **AI Foundry · Agent Service** | `needs-auth-agent` · `evidence-gap-agent` · `precedent-agent` · `expiry-watch-agent` · `policy-drift-agent` (persistent Foundry agents; each behind a `Claria.Core` interface with a stub twin for offline tests) |
+| 1 | **Intake** | `Zynara.Intake` (Azure Function · HTTP `POST /api/requests` + queue output) → Requests Queue (Azure Storage Queue) |
+| 2 | **Compute · Orchestration** (Azure Durable Functions) | `Zynara.Orchestrator` (hub, keyed on request id) → NeedsAuthCheck / EvidenceGapMatch / PrecedentMatch / ExpiryMath / PolicyDiff (activity functions / deterministic spokes) |
+| 3 | **AI Foundry · Agent Service** | `needs-auth-agent` · `evidence-gap-agent` · `precedent-agent` · `expiry-watch-agent` · `policy-drift-agent` (persistent Foundry agents; each behind a `Zynara.Core` interface with a stub twin for offline tests) |
 | 4 | **Data** | Submission Adapter (Azure Function · the only path to payer portal / X12 / FHIR / fax) → Azure SQL serverless: `Requests · Submissions · Outcomes · Auths · Policies · Precedents · EarlyWarnings · AgentCalls` |
-| 5 | **Experience** | Reviewer (human) → Dashboard (`Claria.Dashboard`, Static Web App Standard + linked backend) → `Claria.ApiProxy` (Azure Function; read models + reviewer approve/reject actions) |
+| 5 | **Experience** | Reviewer (human) → Dashboard (`Zynara.Dashboard`, Static Web App Standard + linked backend) → `Zynara.ApiProxy` (Azure Function; read models + reviewer approve/reject actions) |
 
 **Cross-cutting (applies to every layer):**
 - **Security & Identity** — managed identity first: SQL (`Active Directory
@@ -120,7 +120,7 @@ Five layers, left to right along the request path, plus three cross-cutting conc
 
 `Submit → Buffer → Trigger → NeedsAuth → Gap → Precedent → Gate → Review → Send → Decision → Appeal → Review → Track`
 
-1. **Submit** — `Claria.Intake` receives a request (procedure, coverage ref,
+1. **Submit** — `Zynara.Intake` receives a request (procedure, coverage ref,
    clinical note, payer+plan, region), drops it on the Requests Queue.
 2. **Buffer** — the queue decouples intake from processing.
 3. **Trigger** — a new queue message starts the Orchestrator (Durable hub, keyed
@@ -160,18 +160,18 @@ to `AgentCalls`; no agent performs an outbound action.
 
 ## 6. Components, Service by Service
 
-**Intake** — `Claria.Intake` (Function · HTTP trigger `POST /api/requests` + a
+**Intake** — `Zynara.Intake` (Function · HTTP trigger `POST /api/requests` + a
 simplified request DTO for v1; a FHIR bundle adapter is a roadmap item);
 Requests Queue (Storage Queue).
 
-**Compute · Orchestration (Durable Functions)** — `Claria.Orchestrator` (hub,
+**Compute · Orchestration (Durable Functions)** — `Zynara.Orchestrator` (hub,
 sequences the five agents and drives every deterministic spoke, keyed on request
 id); NeedsAuthCheck, EvidenceGapMatch, PrecedentMatch, ExpiryMath, PolicyDiff
 (activity functions — all arithmetic and matching, no LLM).
 
 **AI Foundry · Agent Service** — five persistent agents provisioned via
 `Azure.AI.Projects` (`AgentAdministrationClient.CreateAgentVersion`), each wired
-behind a `Claria.Core` interface:
+behind a `Zynara.Core` interface:
 | Agent | Reasoning job | Tools / grounding |
 |---|---|---|
 | `needs-auth-agent` | Plain-language reading of ambiguous plan text | payer rule-set KB, procedure-code lookup |
@@ -183,20 +183,20 @@ behind a `Claria.Core` interface:
 **Data** — Submission Adapter (Function · Data Source Adapter; the only path to
 payer portal / X12 / FHIR / fax); Azure SQL serverless (`Requests · Submissions ·
 Outcomes · Auths · Policies · Precedents · EarlyWarnings · AgentCalls`). Tests run
-against an in-memory SQLite double via an `AddClariaData(Action<DbContextOptionsBuilder>)`
+against an in-memory SQLite double via an `AddZynaraData(Action<DbContextOptionsBuilder>)`
 overload (pattern carried from the prior project's D4).
 
-**Experience** — Reviewer (human); Dashboard (`Claria.Dashboard`, Static Web App
+**Experience** — Reviewer (human); Dashboard (`Zynara.Dashboard`, Static Web App
 Standard + `linkedBackends` → apiproxy, same-origin `/api`): tabs = **Queue** ·
 **Appeals** · **Early Warnings** · **Recovery** (the £/$ view) · **Cost &
-Governance** · **Region switch (UK ⇄ US)**; `Claria.ApiProxy` (Function; read
+Governance** · **Region switch (UK ⇄ US)**; `Zynara.ApiProxy` (Function; read
 models + reviewer approve/reject).
 
 **Cross-cutting** — managed identity (SQL / Foundry / storage); Key Vault (App
 Insights + content-share strings only, as `@Microsoft.KeyVault` refs); App
-Insights (one trace id per request); `Claria.Eval` (labelled clinical-case set
+Insights (one trace id per request); `Zynara.Eval` (labelled clinical-case set
 replayed through `evidence-gap-agent`, CI-gated on classification accuracy);
-`Claria.DbDeploy` (azd post-provision: migrate + seed + grant Function App
+`Zynara.DbDeploy` (azd post-provision: migrate + seed + grant Function App
 identities).
 
 ## 7. AI Governance & Responsible AI
@@ -255,7 +255,7 @@ midnight US).
   2. Dashboard + Reviewer loop + the Recovery view, on real (synthetic) data
   3. Region switch (UK ⇄ US)
   4. `expiry-watch` + `policy-drift` agents and their Early Warnings tab
-  5. `Claria.Eval` CI gate + portal evaluation (Challenge 3)
+  5. `Zynara.Eval` CI gate + portal evaluation (Challenge 3)
 
 ## 9. Out of Scope · Future Roadmap
 
@@ -275,9 +275,9 @@ midnight US).
 | Challenge | Deliverable here |
 |---|---|
 | **0 — Foundry setup** | `azd provision` — account, project, model, App Insights, **new resource group** |
-| **1 — build agents via SDK** | 5 persistent Foundry agents via `Azure.AI.Projects`, wired behind `Claria.Core` interfaces with stub twins |
+| **1 — build agents via SDK** | 5 persistent Foundry agents via `Azure.AI.Projects`, wired behind `Zynara.Core` interfaces with stub twins |
 | **2 — agent-keyed traces** | nested `invoke_agent <name>` + `chat <model>` spans under one `pipeline.run` trace, trace id on the `Submission` row |
-| **3 — evaluate an agent** | `evidence-gap-agent`, portal Coherence/Fluency + `Claria.Eval` CI gate on classification accuracy over the labelled case set |
+| **3 — evaluate an agent** | `evidence-gap-agent`, portal Coherence/Fluency + `Zynara.Eval` CI gate on classification accuracy over the labelled case set |
 | **4 — persistent assets + portal workflow** | agents visible as assets; a 2–3 node portal workflow, the conditional Gate/appeal steps in the Durable orchestrator |
 
 ## 11. How the Design Targets the Three Judging Criteria

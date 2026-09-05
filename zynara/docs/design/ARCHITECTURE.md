@@ -1,6 +1,6 @@
 # Care Approval IQ — Architecture & Design
 
-**Claria Health** · Microsoft Agent-a-thon 2026 · Architect track
+**Zynara Health** · Microsoft Agent-a-thon 2026 · Architect track
 _Design of record. Companion: `TDD.md` (implementation-level), `DECISIONS.md`
 (deltas), `../progress/STATUS.md` (build state)._
 
@@ -206,12 +206,12 @@ deliberate demo moment — it turns "why a US problem?" into "it isn't; watch."
 ```mermaid
 flowchart TB
     subgraph Experience
-      DASH[Claria.Dashboard<br/>Static Web App, Standard + linked backend]
+      DASH[Zynara.Dashboard<br/>Static Web App, Standard + linked backend]
     end
     subgraph Compute [Function Apps · Consumption Y1 · .NET 8 isolated]
-      ING[Claria.Intake<br/>HTTP + queue]
-      ORC[Claria.Orchestrator<br/>Durable Functions pipeline]
-      API[Claria.ApiProxy<br/>read models + reviewer actions]
+      ING[Zynara.Intake<br/>HTTP + queue]
+      ORC[Zynara.Orchestrator<br/>Durable Functions pipeline]
+      API[Zynara.ApiProxy<br/>read models + reviewer actions]
     end
     subgraph AI [Azure AI Foundry]
       A1[needs-auth-agent]
@@ -260,7 +260,7 @@ live pipeline is shown separately on one fresh case.
 
 - **Tracing:** one W3C trace per request; a child span per agent + per model
   call, nested — visible in the Foundry portal (Challenge 2).
-- **Evaluation:** `eval/Claria.Eval` replays the labelled case set through the
+- **Evaluation:** `eval/Zynara.Eval` replays the labelled case set through the
   Evidence Gap agent, gates CI on classification accuracy; the Foundry portal
   runs Coherence/Fluency over the same set (Challenge 3).
 - **Cost:** every agent call records tokens → `AgentCalls` table → a real
@@ -282,9 +282,9 @@ Turns the headline statistic into a number specific to the clinic's own book.
 | Challenge | Deliverable here |
 |---|---|
 | **0 — Foundry setup** | `azd provision` — account, project, model, App Insights, new RG |
-| **1 — build agents via SDK** | 5 persistent Foundry agents created via `Azure.AI.Projects`, wired behind `Claria.Core` interfaces |
+| **1 — build agents via SDK** | 5 persistent Foundry agents created via `Azure.AI.Projects`, wired behind `Zynara.Core` interfaces |
 | **2 — agent-keyed traces** | nested `invoke_agent` + `chat` spans under one `pipeline.run` trace |
-| **3 — evaluate an agent** | Evidence Gap agent, portal Coherence/Fluency + `Claria.Eval` CI gate |
+| **3 — evaluate an agent** | Evidence Gap agent, portal Coherence/Fluency + `Zynara.Eval` CI gate |
 | **4 — persistent assets + portal workflow** | agents visible as assets; a 2–3 node portal workflow, the conditional steps in the orchestrator |
 
 ## 15. How the design targets the three criteria

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 300" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
-  <title>Claria Health — Care Approval IQ — Proof beats paperwork.</title>
+  <title>Zynara Health — Care Approval IQ — Proof beats paperwork.</title>
   <defs>
     <linearGradient id="seal" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0FA3A0"/>
@@ -34,7 +34,7 @@
 
   <!-- ============ WORDMARK ============ -->
   <g transform="translate(300,120)">
-    <text class="name" font-size="86" font-weight="800" letter-spacing="-.01em">claria</text>
+    <text class="name" font-size="86" font-weight="800" letter-spacing="-.01em">zynara</text>
     <text class="sub"  x="4" y="40" font-size="21" font-weight="600">H E A L T H</text>
   </g>
 
