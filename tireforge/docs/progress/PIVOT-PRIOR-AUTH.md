@@ -75,6 +75,21 @@ agents below trigger, not agents in their own right.
    standard template now fails criterion 3" before a doctor submits a
    doomed request on stale assumptions.
 
+## Geography — build payer-agnostic, lead with UK (2026-09-05)
+
+Submission is EMEA-region judged; the US prior-auth framing risked reading as
+irrelevant to UK/EMEA judges. **Resolved:** a UK equivalent is real and the same
+shape — Bupa/AXA require pre-authorisation codes before treatment; denials come
+from missing codes, expired membership, incomplete clinical info; appeals
+escalate to the **Financial Ombudsman Service**
+([goingprivateuk.co.uk](https://goingprivateuk.co.uk/preauthorisation-code-health-insurance-uk/),
+[ClaimBack](https://claimback.app/appeal-uk)).
+
+**Decision:** build the system **payer-agnostic** (policy rules as data, not
+hardcoded to CMS). **Demo/pitch against Bupa/AXA as the primary example.** Keep
+CMS-0057-F only as the "why this matters now, regulatorily" data point, not the
+main framing. Same 5 agents, same architecture, either market.
+
 ## Open decisions for next session
 
 - **Confirmed, not open:** new GitHub repo + new Azure resource group, fully
