@@ -211,9 +211,9 @@ flowchart TB
       DASH[Zynara.Dashboard<br/>Static Web App, Standard + linked backend]
     end
     subgraph Compute [Function Apps · Consumption Y1 · .NET 8 isolated]
-      ORC[Zynara.Orchestrator<br/>HTTP starter POST /api/requests<br/>+ Durable Functions pipeline + activities]
+      ORC[Zynara.Orchestrator<br/>Intake API POST /api/requests<br/>+ Durable pipeline + activities · owns the Gate]
       ADP[Zynara.SubmissionAdapter<br/>sole outbound path to payers]
-      API[Zynara.ApiProxy<br/>read models + reviewer actions]
+      API[API Proxy<br/>read models + reviewer actions]
     end
     subgraph AI [Azure AI Foundry]
       A1[needs-auth-agent]
@@ -229,7 +229,7 @@ flowchart TB
       KV[Key Vault]
     end
 
-    U[clinician request] -->|POST /api/requests| ORC
+    U[clinician request<br/>fields + clinical note / denial letter attached] -->|POST /api/requests| ORC
     DASH -->|/api| API
     ORC --> A1 & A2 & A3 & A4 & A5
     ORC --> COS
@@ -267,19 +267,22 @@ flowchart TB
 The demo runs off **pre-computed results** for instant, consistent playback; the
 live pipeline is shown separately on one fresh case.
 
-## 12. Observability · evaluation · cost
+## 12. Observability · evaluation
 
 - **Tracing:** one W3C trace per request; a child span per agent + per model
   call, nested — visible in the Foundry portal (Challenge 2).
 - **Evaluation:** `eval/Zynara.Eval` replays the labelled case set through the
   Evidence Gap agent, gates CI on classification accuracy; the Foundry portal
   runs Coherence/Fluency over the same set (Challenge 3).
-- **Cost:** every agent call records tokens → `agentCalls` container → a real
-  £/$ figure on the dashboard's governance view.
+
+Every agent call's token usage is written to `agentCalls`, but **cost metering /
+AI governance is a production consideration, not in the demo scope** — see
+TDD §7.1.
 
 ## 13. Impact model (built into the product)
 
-The dashboard's **Recovery view** computes, from the live data:
+The dashboard's Review Queue shows a **Recovery £** headline stat computed from
+the live data:
 
 ```
 denied requests × (1 − historical appeal rate) × appeal-win probability × mean claim value
@@ -287,6 +290,7 @@ denied requests × (1 − historical appeal rate) × appeal-win probability × m
 ```
 
 Turns the headline statistic into a number specific to the clinic's own book.
+It is a stat on the Review Queue, not a separate tab.
 
 ## 14. Mapping to the Agent-a-thon challenges
 
@@ -304,7 +308,7 @@ Turns the headline statistic into a number specific to the clinic's own book.
 |---|---|
 | **Innovation** | Precedent-driven appeal recommendation grounded in recorded outcomes — nobody productises the 80%-win-rate insight. The region switch proves generality *live*. |
 | **Usability** | Pre-computed demo data (zero inference lag), one intuitive flow, the region switch, accessibility pass, a recorded 3-min video as the fallback. |
-| **Impact** | The Recovery view converts a national statistic into the clinic's own £ figure — Impact as a number, not a claim. |
+| **Impact** | The Recovery £ stat converts a national statistic into the clinic's own £ figure — Impact as a number, not a claim. |
 
 ## 16. Open decisions (tracked in `DECISIONS.md` as they're made)
 

@@ -51,9 +51,8 @@ free-text clinical note · payer + plan · (post-decision) the denial letter.
   swaps the criteria set, terminology and appeal-escalation path
 - Grounding: every recommendation cites the policy clause and the precedent
   case ids that drove it
-- Cost visibility: per-agent token spend on the governance view
-- An in-product **Recovery view** turning the appeals-gap statistic into the
-  clinic's own £/$ figure
+- The **Recovery £ figure** — the appeals-gap statistic turned into the clinic's
+  own number — shown as a headline stat on the Review Queue (not its own tab)
 
 **Explicitly out of scope (see §8):**
 - Real payer EHR/FHIR integration (synthetic + public-policy-excerpt data for the
@@ -97,16 +96,17 @@ as the safety net, not a bottleneck.
 
 ## 4. Technical Architecture
 
-Four layers along the request path (a clinician request enters the orchestrator's
-HTTP endpoint directly — there is no separate intake tier), plus three
+Five layers along the request path — Intake is the request contract plus the
+orchestrator app's HTTP starter (no separate Function App, no queue) — plus three
 cross-cutting concerns.
 
 | # | Layer | Components |
 |---|-------|-----------|
-| 1 | **Compute · Orchestration** (Azure Durable Functions) | `Zynara.Orchestrator` app: HTTP starter `POST /api/requests` (Durable client — validates, starts the orchestration keyed on request id, returns `202` + status URL) → orchestrator function → NeedsAuthCheck / EvidenceGapMatch / AppealMatch / ExpiryMath / PolicyDiff (**Durable Activity Functions** — deterministic, no LLM; kept as discrete activities for the reasons in §12 · TD-2). No separate intake function, no queue (§12 · TD-3). |
-| 2 | **AI Foundry · Agent Service** | `needs-auth-agent` · `evidence-gap-agent` · `appeal-builder-agent` · `expiry-watch-agent` · `policy-drift-agent` (persistent Foundry agents; each behind a `Zynara.Core` interface with a stub twin for offline tests) |
-| 3 | **Data** | Submission Adapter (Azure Function · the only path to payer portal / X12 / FHIR / fax) → **Azure Cosmos DB** serverless (operational state): `requests · submissions · outcomes · auths · earlyWarnings · agentCalls`, plus `precedents` / `policies` **metadata** → **Azure Blob Storage** (the unstructured corpus: policy docs, denial PDFs, precedent narratives) → **Foundry File Search** (vector index the agents query). Split rationale: §12 · TD-4, TD-5. |
-| 4 | **Experience** | Reviewer (human) → Dashboard (`Zynara.Dashboard`, Static Web App Standard + linked backend; tabs = **Queue** · **Recovery (£/$)** · **Cost & Governance**, with a **UK ⇄ US** header control) → `Zynara.ApiProxy` (Azure Function; read models + reviewer approve/reject actions) |
+| 1 | **Intake** | The request contract (procedure · plan · region · clinical note · prior denial letter — the note and letter as attached files) → **Intake API**: `POST /api/requests`, the orchestrator app's Durable HTTP starter — validates the DTO, starts the orchestration keyed on request id, returns `202` + status URL. Not a separate Function App and not a queue (§12 · TD-3). *Open: portal form vs. API client vs. FHIR bundle for v1 — see §8.* |
+| 2 | **Compute · Orchestration** (Azure Durable Functions) | `Zynara.Orchestrator` (the orchestrator function — sequences the pipeline, keyed on request id) → NeedsAuthCheck / EvidenceGapMatch / AppealMatch / ExpiryMath / PolicyDiff (**Durable Activity Functions** — deterministic, no LLM; kept as discrete activities for the reasons in §12 · TD-2). Owns the Gate. |
+| 3 | **AI Foundry · Agent Service** | `needs-auth-agent` · `evidence-gap-agent` · `appeal-builder-agent` · `expiry-watch-agent` · `policy-drift-agent` (persistent Foundry agents; each behind a `Zynara.Core` interface with a stub twin for offline tests) |
+| 4 | **Data** | Submission Adapter (Azure Function · the only path to payer portal / X12 / FHIR / fax) → **Azure Cosmos DB** serverless (operational state): `requests · submissions · outcomes · auths · earlyWarnings · agentCalls`, plus `precedents` / `policies` **metadata** → **Azure Blob Storage** (the unstructured corpus: policy docs, denial PDFs, precedent narratives) → **Foundry File Search** (vector index the agents query). Split rationale: §12 · TD-4, TD-5. |
+| 5 | **Experience** | Reviewer (human) → Dashboard (`Zynara.Dashboard`, Static Web App Standard + linked backend; tabs = **Review Queue** (drafts · appeals · HITL) · **Early Warnings** (expiry-watch · policy-drift), with a **UK ⇄ US** header control) → **API Proxy** (Azure Function; read models + reviewer approve/reject actions) |
 
 **Cross-cutting (applies to every layer):**
 - **Security & Identity** — managed identity first: Cosmos DB (data-plane RBAC —
@@ -118,12 +118,11 @@ cross-cutting concerns.
   per agent (`invoke_agent <name>`) and per model call (`chat <model>`), nested
   under one `pipeline.run`. Trace id persisted on the `submissions` document.
 - **Responsible AI** — the Gate routes every gap or low-confidence case to a
-  human; the Submission Adapter is the sole actor that touches a payer; an
-  in-product disclaimer states *decision support, not coverage or medical
-  advice*.
-- **AI Governance** — every agent call records `{promptTokens, completionTokens,
-  model, traceId, requestId}` to the `agentCalls` container → real £/$ on the
-  dashboard's Cost & Governance view.
+  human; the Submission Adapter is the sole actor that touches a payer;
+  deterministic code owns every decision value; an in-product disclaimer states
+  *decision support, not coverage or medical advice*. AI governance (cost
+  metering, version pinning, production drift monitoring) is described as a
+  consideration in §7.1, not built for the demo.
 
 ## 5. End-to-End Flow
 
@@ -168,20 +167,27 @@ cross-cutting concerns.
     `DriftAlert` naming the affected templates. Both are advisory — no Gate, no
     outbound action.
 
-Throughout: one trace id per request across every hop; every agent call metered
-to `agentCalls`; no agent performs an outbound action.
+Throughout: one trace id per request across every hop; every agent call written
+to `agentCalls` (usage fields captured for the §7.1 cost-metering consideration);
+no agent performs an outbound action.
 
 ## 6. Components, Service by Service
 
-**Compute · Orchestration (Durable Functions)** — one Function App,
-`Zynara.Orchestrator`:
-- **HTTP starter** — `POST /api/requests` (Durable client binding). Validates a
-  simplified request DTO for v1 (a FHIR bundle adapter is a roadmap item),
-  starts the orchestration keyed on request id, returns `202` +
-  `statusQueryGetUri`. This *is* the intake — no separate `Zynara.Intake`
-  function, no Requests Queue (§12 · TD-3).
+**Intake** — the request contract: `{ procedure, plan, region, clinicalNote,
+priorDenialLetter? }`, where `clinicalNote` and `priorDenialLetter` are uploaded
+files (PDF / text), the rest structured fields. Delivered to the **Intake API**
+— `POST /api/requests`, the orchestrator app's Durable HTTP-starter function:
+validates the DTO, uploads the attachments to Blob, starts the orchestration
+keyed on request id, returns `202` + `statusQueryGetUri`. It is a function *in
+the orchestrator app*, not a separate Function App, and there is no queue
+(§12 · TD-3). **Open (§8):** whether the caller is a portal SPA form, a REST
+client, or a FHIR R4 bundle for v1.
+
+**Compute · Orchestration (Durable Functions)** — same Function App as the
+Intake API:
 - **Orchestrator function** — sequences the five agents and drives every
-  deterministic activity, keyed on request id for idempotency and replay.
+  deterministic activity, keyed on request id for idempotency and replay; owns
+  the Gate.
 - **Activity functions** — NeedsAuthCheck, EvidenceGapMatch, AppealMatch,
   ExpiryMath, PolicyDiff — all arithmetic and matching, no LLM. Each is a
   discrete Durable activity (not an orchestrator helper method) for per-step
@@ -218,11 +224,12 @@ behind a `Zynara.Core` interface:
   agents query. Split rationale: §12 · TD-5.
 
 **Experience** — Reviewer (human); Dashboard (`Zynara.Dashboard`, Static Web App
-Standard + `linkedBackends` → apiproxy, same-origin `/api`): tabs = **Queue**
-(the HITL review list — pending drafts, appeals, and Early-Warning flags in one
-place) · **Recovery** (the £/$ view) · **Cost & Governance**; the **UK ⇄ US**
-region switch is a header control, not a tab. `Zynara.ApiProxy` (Function; read
-models + reviewer approve/reject).
+Standard + `linkedBackends` → apiproxy, same-origin `/api`): two tabs —
+**Review Queue** (the HITL list: pending draft submissions and appeals to approve
+or edit) and **Early Warnings** (`expiry-watch` + `policy-drift` output); the
+**UK ⇄ US** region switch is a header control, not a tab. **API Proxy**
+(Function; read models + reviewer approve/reject). The Recovery £ figure (§11)
+is a headline stat on the Review Queue, not its own tab.
 
 **Cross-cutting** — managed identity (Cosmos data-plane RBAC / Foundry / Blob);
 Key Vault (App Insights + content-share strings only, as `@Microsoft.KeyVault`
@@ -232,31 +239,50 @@ classification accuracy); `Zynara.Seed` (azd post-provision: create Cosmos
 containers, upload the Blob corpus, register/refresh the File Search index, seed
 synthetic data, grant Function App identities).
 
-## 7. AI Governance & Responsible AI
+## 7. Responsible AI
 
-Governance is a first-class concern, not an afterthought — this is healthcare
-adjacent and every recommendation must be auditable.
+In scope — built and demonstrated:
 
-- **Auditable scoring, not a black-box number.** The Gate's `readiness` and route
-  are deterministic and shown with their working ("readiness 0.82 = 6/7 criteria
-  met, physio-duration criterion missing"). A regulator or the Financial
-  Ombudsman Service can follow the trail: which criterion → which precedent →
-  which clause.
 - **Every outbound action is human-approved.** Submit and appeal both. The
   Submission Adapter is the sole actor with payer reach; nothing else in the
-  system performs an outbound action. This mirrors the prior project's
-  Gate/sole-writer pattern (D14) exactly.
-- **Cost metering.** Each agent response's `Usage` is persisted to `AgentCalls`
-  with the trace id; the Cost & Governance view shows real per-agent tokens and
-  £/$ (never mocked figures presented as real — prior project's invariant 1.5).
+  system performs an outbound action. Mirrors the prior project's
+  Gate/sole-writer pattern (D14).
+- **Bounded agents.** Deterministic code owns every value that drives a decision
+  or an action; agents produce prose and judgement over unstructured text only
+  (§9 — the hybrid principle).
+- **Auditable scoring, not a black-box number.** The Gate's `readiness` and
+  route are deterministic and shown with their working ("readiness 0.82 = 6/7
+  criteria met, physio-duration criterion missing") — which criterion → which
+  precedent → which clause.
 - **No PHI in scope.** Request ids and procedure codes only in telemetry, logs,
-  and the trace tree. Clinical notes are synthetic for the demo.
+  and the trace tree; clinical notes are synthetic for the demo.
 - **Disclaimer, shown in-product:** *Care Approval IQ is decision support, not
   coverage or medical advice. A person makes every decision.*
-- **Region abstraction as governance.** Payer-specific knowledge is data
-  (`data/policies/<region>/<payer>/<procedure>.md` + `config/regions.json`), not
-  code — so a compliance reviewer can see and version exactly what criteria the
-  system applied, per payer, per region.
+
+### 7.1 AI governance — a consideration, not in the demo scope
+
+A production deployment in this domain needs an AI-governance layer; this build
+**names it and explains how it would be done, but does not implement it** —
+scope is a solo 18-day window (§8).
+
+- **Per-agent cost / token metering.** Every agent response carries `Usage`
+  (`promptTokens`, `completionTokens`, `model`); persisting `{usage, model,
+  traceId, requestId}` per call gives a real £/$ figure per agent and per case.
+  Straightforward to add on top of the `agentCalls` container; left out of the
+  demo dashboard.
+- **Model / prompt version pinning and change log.** Each agent version and its
+  system prompt recorded against the outcomes it produced, so a decision can be
+  reproduced.
+- **Drift and quality monitoring in production.** The `Zynara.Eval` harness
+  (§12) is CI-only here; in production it would run continuously against live
+  (de-identified) traffic with alerting on accuracy regression.
+- **Access and retention policy** for the corpus and the outcomes store.
+
+### 7.2 Region abstraction as compliance surface
+
+Payer-specific knowledge is **data, not code** — `policies/<region>/<payer>/<procedure>.md`
+in Blob plus `config/regions.json` — so a compliance reviewer can see and
+version exactly which criteria the system applied, per payer, per region.
 
 ## 8. Deployment & Scope Decisions
 
@@ -287,10 +313,16 @@ midnight US).
   1. HTTP starter → Orchestrator → NeedsAuth + Gap + AppealMatch → Gate →
      Submission Adapter → Cosmos/Blob (the core mission), with `needs-auth` +
      `evidence-gap` + `appeal-builder` agents
-  2. Dashboard + Reviewer loop + the Recovery view, on real (synthetic) data
+  2. Dashboard Review Queue + Reviewer loop + the Recovery £ stat, on real
+     (synthetic) data
   3. Region switch (UK ⇄ US)
-  4. `expiry-watch` + `policy-drift` agents and their Early Warnings tab
+  4. `expiry-watch` + `policy-drift` agents and the Early Warnings tab
   5. `Zynara.Eval` CI gate + portal evaluation (Challenge 3)
+
+- **Open — request intake format for v1.** Portal SPA form, plain REST client, or
+  a FHIR R4 bundle. Default assumption: a simple JSON DTO + file uploads
+  (clinical note, denial letter) posted by a thin portal form; a FHIR bundle
+  adapter is the first production integration (§9).
 
 ## 9. Out of Scope · Future Roadmap
 
@@ -314,6 +346,7 @@ midnight US).
 | **2 — agent-keyed traces** | nested `invoke_agent <name>` + `chat <model>` spans under one `pipeline.run` trace, trace id on the `submissions` document |
 | **3 — evaluate an agent** | `evidence-gap-agent`, portal Coherence/Fluency + `Zynara.Eval` CI gate on classification accuracy over the labelled case set |
 | **4 — persistent assets + portal workflow** | agents visible as assets; a 2–3 node portal workflow, the conditional Gate/appeal steps in the Durable orchestrator |
+| **AI governance** | described as a production consideration in §7.1 (cost metering, version pinning, drift monitoring); not built for the demo |
 
 ## 11. How the Design Targets the Three Judging Criteria
 
@@ -321,7 +354,7 @@ midnight US).
 |---|---|
 | **Innovation** | Precedent-driven appeal recommendation grounded in **recorded outcomes** — nobody productises the "80% of appeals win, 11.5% are filed" gap. The region switch proves generality *live*, not as a claim. |
 | **Usability** | Pre-computed demo playback (zero inference lag), one intuitive queue→review→send flow, the region switch, an accessibility pass, and a recorded 3-minute video as the fallback if a live demo breaks. |
-| **Impact** | The Recovery view computes, from the clinic's own live data, `denied × (1 − appeal rate) × win probability × mean claim value = £ left unclaimed` — Impact as a number, not an assertion. |
+| **Impact** | The Recovery £ stat computes, from the clinic's own live data, `denied × (1 − appeal rate) × win probability × mean claim value = £ left unclaimed` — Impact as a number, not an assertion. Shown on the Review Queue. |
 
 ## 12. Technology Decisions
 
