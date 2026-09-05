@@ -45,6 +45,12 @@ Policy Drift. Payer-agnostic; **UK ⇄ US region switch** in the UI.
 - **Catchy logo** — `docs/design/Claria-Health-logo.svg`: an approval-seal mark
   whose tick rises out of a shrinking paper stack, wordmark, product name and
   tagline. Old `brand/` folder removed; README + this file repointed.
+- **Architecture SVG** — `docs/design/Care-Approval-IQ-Architecture_Design.svg`:
+  hand-authored, same visual language as the prior project's architecture
+  diagram (cream canvas, colour-coded layer lanes, white cards, flow arrows,
+  legend). Logo + the 5 agents across the top, then the 5-layer pipeline with
+  Gate, single Submission Adapter, human reviewer, and the on-denial appeals
+  loop.
 
 ## Next — session 2
 
