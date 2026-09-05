@@ -23,7 +23,7 @@ sibling-folder approach is functionally the same isolation.)
 
 ## The 5 agents
 
-Needs-Auth · Evidence Gap · Precedent (drafts the appeal) · Expiry Watch ·
+Needs-Auth · Evidence Gap · Appeal Builder (drafts the appeal) · Expiry Watch ·
 Policy Drift. Payer-agnostic; **UK ⇄ US region switch** in the UI.
 
 ## Done — session 1 (2026-09-05)
@@ -46,11 +46,16 @@ Policy Drift. Payer-agnostic; **UK ⇄ US region switch** in the UI.
   whose tick rises out of a shrinking paper stack, wordmark, product name and
   tagline. Old `brand/` folder removed; README + this file repointed.
 - **Architecture SVG** — `docs/design/Care-Approval-IQ-Architecture_Design.svg`:
-  hand-authored. v2 after review — vibrant colour-blocked panels in a 2-D grouped
-  layout (not stacked bands), section icons, terse bullets, numbered read order
-  instead of flow arrows, brand top-bar + filled Precedent card + impact ribbon
-  as the wow. Logo + the 5 agents across the top. (v1 flow-diagram version
-  dropped.)
+  hand-authored, v3 after two review rounds. TireForge-style: white inner cards
+  with left colour icon-badges, section icons, vibrant colour-blocked panels in a
+  2-D grouped layout, big numbered discs. Hub & spoke made explicit (HUB badge on
+  the orchestrator, SPOKE tags, fan-out arrows); the 5 Foundry agents shown above
+  the spokes, invoked by them (dashed "prose only" arrows). Slim uniform
+  cross-cutting row; no impact ribbon. Logo + 5 agents across the top.
+- **Agent renamed: Precedent → Appeal Builder** (clearer to a human). Spoke
+  `PrecedentMatch` → `AppealMatch`; Foundry `precedent-agent` → `appeal-builder-agent`.
+  "Precedent" kept only as the concept word (a prior winning case) and the SQL
+  table name.
 
 ## Renamed — session 1 (2026-09-05, late)
 

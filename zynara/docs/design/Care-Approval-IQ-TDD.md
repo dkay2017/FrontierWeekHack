@@ -95,8 +95,8 @@ Five layers, left to right along the request path, plus three cross-cutting conc
 | # | Layer | Components |
 |---|-------|-----------|
 | 1 | **Intake** | `Zynara.Intake` (Azure Function · HTTP `POST /api/requests` + queue output) → Requests Queue (Azure Storage Queue) |
-| 2 | **Compute · Orchestration** (Azure Durable Functions) | `Zynara.Orchestrator` (hub, keyed on request id) → NeedsAuthCheck / EvidenceGapMatch / PrecedentMatch / ExpiryMath / PolicyDiff (activity functions / deterministic spokes) |
-| 3 | **AI Foundry · Agent Service** | `needs-auth-agent` · `evidence-gap-agent` · `precedent-agent` · `expiry-watch-agent` · `policy-drift-agent` (persistent Foundry agents; each behind a `Zynara.Core` interface with a stub twin for offline tests) |
+| 2 | **Compute · Orchestration** (Azure Durable Functions) | `Zynara.Orchestrator` (hub, keyed on request id) → NeedsAuthCheck / EvidenceGapMatch / AppealMatch / ExpiryMath / PolicyDiff (activity functions / deterministic spokes) |
+| 3 | **AI Foundry · Agent Service** | `needs-auth-agent` · `evidence-gap-agent` · `appeal-builder-agent` · `expiry-watch-agent` · `policy-drift-agent` (persistent Foundry agents; each behind a `Zynara.Core` interface with a stub twin for offline tests) |
 | 4 | **Data** | Submission Adapter (Azure Function · the only path to payer portal / X12 / FHIR / fax) → Azure SQL serverless: `Requests · Submissions · Outcomes · Auths · Policies · Precedents · EarlyWarnings · AgentCalls` |
 | 5 | **Experience** | Reviewer (human) → Dashboard (`Zynara.Dashboard`, Static Web App Standard + linked backend) → `Zynara.ApiProxy` (Azure Function; read models + reviewer approve/reject actions) |
 
@@ -118,7 +118,7 @@ Five layers, left to right along the request path, plus three cross-cutting conc
 
 ## 5. End-to-End Flow
 
-`Submit → Buffer → Trigger → NeedsAuth → Gap → Precedent → Gate → Review → Send → Decision → Appeal → Review → Track`
+`Submit → Buffer → Trigger → NeedsAuth → Gap → AppealMatch → Gate → Review → Send → Decision → Appeal → Review → Track`
 
 1. **Submit** — `Zynara.Intake` receives a request (procedure, coverage ref,
    clinical note, payer+plan, region), drops it on the Requests Queue.
@@ -133,8 +133,8 @@ Five layers, left to right along the request path, plus three cross-cutting conc
    criteria (File Search over `data/policies/<region>/<payer>/<procedure>`);
    `evidence-gap-agent` reads the clinical note against them and returns
    `{met[], missing[], conflicts[], readiness}`.
-6. **Precedent** — `PrecedentMatch` (deterministic) ranks past `Submissions` +
-   `Outcomes` by fact-pattern similarity; `precedent-agent` reports the recorded
+6. **Appeal Builder** — `AppealMatch` (deterministic) ranks past `Submissions` +
+   `Outcomes` by fact-pattern similarity; `appeal-builder-agent` reports the recorded
    outcomes and recommends **submit / strengthen / appeal**.
 7. **Gate** — `readiness ≥ threshold AND no missing criteria AND value ≤
    auto-limit` → an auto-submit draft; otherwise → the human review queue with
@@ -144,7 +144,7 @@ Five layers, left to right along the request path, plus three cross-cutting conc
    (portal / X12 278 / FHIR / fax) — the only outbound path.
 10. **Decision** — approved → step 13; denied → step 11. The denial letter (PDF)
     is parsed for the reason code and the clause cited.
-11. **Appeal** — `precedent-agent` drafts the appeal citing the specific policy
+11. **Appeal** — `appeal-builder-agent` drafts the appeal citing the specific policy
     clause misapplied and the precedent case ids; deterministic code fills the
     dates and the escalation route (region-specific: state/external review vs.
     Financial Ombudsman Service).
@@ -166,7 +166,7 @@ Requests Queue (Storage Queue).
 
 **Compute · Orchestration (Durable Functions)** — `Zynara.Orchestrator` (hub,
 sequences the five agents and drives every deterministic spoke, keyed on request
-id); NeedsAuthCheck, EvidenceGapMatch, PrecedentMatch, ExpiryMath, PolicyDiff
+id); NeedsAuthCheck, EvidenceGapMatch, AppealMatch, ExpiryMath, PolicyDiff
 (activity functions — all arithmetic and matching, no LLM).
 
 **AI Foundry · Agent Service** — five persistent agents provisioned via
@@ -176,7 +176,7 @@ behind a `Zynara.Core` interface:
 |---|---|---|
 | `needs-auth-agent` | Plain-language reading of ambiguous plan text | payer rule-set KB, procedure-code lookup |
 | `evidence-gap-agent` | Free-text clinical note vs. a structured criteria rubric | File Search over `data/policies/`, the clinical note |
-| `precedent-agent` | Corpus-level fact-pattern match; drafts the appeal argument | `Submissions`+`Outcomes` store, policy clause text |
+| `appeal-builder-agent` | Corpus-level fact-pattern match; drafts the appeal argument | `Submissions`+`Outcomes` store, policy clause text |
 | `expiry-watch-agent` | Narrates a cross-system expiry risk | the auth record + scheduling feed (deterministic date math) |
 | `policy-drift-agent` | Explains the operational impact of a criteria change | versioned payer policy documents (deterministic diff) |
 
@@ -249,7 +249,7 @@ midnight US).
 - **Payer-agnostic, lead with UK (Bupa/AXA)** — EMEA-region judging; CMS-0057-F
   stays as the "why now" data point, not the framing.
 - **Build priority if time runs short (agreed order):**
-  1. Intake → Queue → Orchestrator → NeedsAuth + Gap + Precedent → Gate →
+  1. Intake → Queue → Orchestrator → NeedsAuth + Gap + AppealMatch → Gate →
      Adapter → Data (the core mission), with `needs-auth` + `evidence-gap` +
      `precedent` agents
   2. Dashboard + Reviewer loop + the Recovery view, on real (synthetic) data

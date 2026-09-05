@@ -43,7 +43,7 @@ Five specialised agents, one human-approved pipeline:
 |---|---|
 | **Needs-Auth** | Does this payer + plan require prior auth for this procedure *today*? |
 | **Evidence Gap** | Reads the clinical note against the payer's criteria; flags what's missing *before* submission |
-| **Precedent** | Matches the case to recorded past outcomes; recommends an appeal when the fact pattern historically wins — and drafts it |
+| **Appeal Builder** | Matches the case to recorded past outcomes; recommends an appeal when the fact pattern historically wins — and drafts it |
 | **Expiry Watch** | Catches an approved authorisation expiring before the procedure is scheduled |
 | **Policy Drift** | Catches a payer quietly changing criteria and flags stale request templates |
 

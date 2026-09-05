@@ -62,7 +62,7 @@ flowchart LR
       direction LR
       N[1 · Needs-Auth check] -->|auth required| G[2 · Evidence Gap]
       N -->|not required| STOP1[log · no action]
-      G --> P[3 · Precedent match]
+      G --> P[3 · Appeal Builder]
       P --> GATE{Deterministic Gate<br/>complete? · confidence? · value?}
       GATE -->|clean, high-confidence| AUTO[auto-submit draft]
       GATE -->|gap or low-confidence| REV[human review queue]
@@ -105,7 +105,7 @@ serve every procedure type and both regions.
   `data/policies/`), the patient's clinical note.
 - **In → out:** request + criteria → `{ met[], missing[], conflicts[], readiness }`.
 
-### 5.3 Precedent match  *(the differentiator)*
+### 5.3 Appeal Builder  *(the differentiator)*
 - **Responsibility:** find past submissions with a similar fact pattern; report
   their recorded outcomes; recommend **submit / strengthen / appeal**; when a
   denial has occurred, **draft the appeal** citing the specific policy clause
@@ -145,7 +145,7 @@ serve every procedure type and both regions.
 2. **Independent evaluation.** The Evidence Gap agent is evaluated in isolation
    in the Foundry portal (Challenge 3) against a labelled dataset — impossible if
    its logic is entangled with four other jobs.
-3. **Conditional, cost-aware invocation.** Precedent match and appeal drafting
+3. **Conditional, cost-aware invocation.** Appeal matching and drafting
    are the expensive steps; they run only when the Gate and the flow warrant it,
    not on every request.
 4. **A seam for the human.** The Gate sits *between* reasoning and action. A
@@ -216,7 +216,7 @@ flowchart TB
     subgraph AI [Azure AI Foundry]
       A1[needs-auth-agent]
       A2[evidence-gap-agent]
-      A3[precedent-agent]
+      A3[appeal-builder-agent]
       A4[expiry-watch-agent]
       A5[policy-drift-agent]
     end
