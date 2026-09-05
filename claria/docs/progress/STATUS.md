@@ -29,17 +29,26 @@ Policy Drift. Payer-agnostic; **UK ⇄ US region switch** in the UI.
 ## Done — session 1 (2026-09-05)
 
 - Branding locked: Claria Health / Care Approval IQ / "Proof beats paperwork" /
-  logo (`brand/claria-logo.svg`).
+  logo (`docs/design/Claria-Health-logo.svg`).
 - `claria/` folder created (sibling to `tireforge/`), structure mirrors it
   (`docs · eval · infra/modules · src · tests · tools` + `data · brand`).
 - `docs/design/ARCHITECTURE.md` written (design of record).
 - `README.md`, `.gitignore`, `global.json`.
 
+## Done — session 1 (cont.)
+
+- **`docs/design/Care-Approval-IQ-TDD.md`** written — 11 sections in the same
+  format as the prior project's TDD (problem, mission/scope, solution overview,
+  5-layer architecture table, end-to-end flow, components service-by-service, AI
+  governance & responsible AI, deployment/scope decisions, roadmap, challenge
+  mapping, judging-criteria mapping).
+- **Catchy logo** — `docs/design/Claria-Health-logo.svg`: an approval-seal mark
+  whose tick rises out of a shrinking paper stack, wordmark, product name and
+  tagline. Old `brand/` folder removed; README + this file repointed.
+
 ## Next — session 2
 
-1. **`docs/design/TDD.md`** — implementation-level design (schema, project
-   responsibilities, agent contracts, pipeline, gate, region config).
-2. **`docs/design/DECISIONS.md`** — start the delta log (D1…).
+1. **`docs/design/DECISIONS.md`** — start the delta log (D1…).
 3. **C# solution scaffold** — `Claria.sln` + the 7 src projects + test projects,
    per-project README stubs.
 4. **`infra/` skeleton** — `main.bicep` + module stubs (foundry / data / keyvault

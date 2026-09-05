@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 300" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Claria Health — Care Approval IQ — Proof beats paperwork.</title>
+  <defs>
+    <linearGradient id="seal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0FA3A0"/>
+      <stop offset="1" stop-color="#1FBE6B"/>
+    </linearGradient>
+    <style>
+      .name  { fill:#0B3B45; }
+      .sub   { fill:#5C7C84; letter-spacing:.40em; }
+      .tag   { fill:#0FA3A0; }
+      .paper { fill:none; stroke:#FFFFFF; stroke-linecap:round; }
+      @media (prefers-color-scheme: dark){
+        .name{ fill:#EAF6F6; } .sub{ fill:#8FB4BC; } .tag{ fill:#2FCB8B; }
+      }
+    </style>
+  </defs>
+
+  <!-- ============ MARK: an approval seal whose tick grows out of stacked paper ============ -->
+  <g transform="translate(40,44)">
+    <!-- seal disc -->
+    <circle cx="106" cy="106" r="106" fill="url(#seal)"/>
+    <!-- notched seal ring -->
+    <circle cx="106" cy="106" r="90" fill="none" stroke="#FFFFFF" stroke-opacity=".35"
+            stroke-width="4" stroke-dasharray="2 12"/>
+    <!-- three "paperwork" lines, shortening — the stack being cleared -->
+    <path class="paper" stroke-width="12" opacity=".45" d="M60 78 H150"/>
+    <path class="paper" stroke-width="12" opacity=".6"  d="M60 100 H132"/>
+    <path class="paper" stroke-width="12" opacity=".8"  d="M60 122 H110"/>
+    <!-- the tick: rises up and out of the stack = proof -->
+    <path class="paper" stroke-width="15" stroke-linejoin="round"
+          d="M72 118 L98 146 L156 74"/>
+  </g>
+
+  <!-- ============ WORDMARK ============ -->
+  <g transform="translate(300,120)">
+    <text class="name" font-size="86" font-weight="800" letter-spacing="-.01em">claria</text>
+    <text class="sub"  x="4" y="40" font-size="21" font-weight="600">H E A L T H</text>
+  </g>
+
+  <!-- ============ PRODUCT + TAGLINE ============ -->
+  <g transform="translate(302,196)">
+    <rect x="0" y="0" width="150" height="4" rx="2" fill="url(#seal)"/>
+    <text class="name" x="0" y="34" font-size="27" font-weight="600">Care Approval IQ</text>
+    <text class="tag"  x="0" y="66" font-size="22" font-weight="600" font-style="italic">Proof beats paperwork.</text>
+  </g>
+</svg>

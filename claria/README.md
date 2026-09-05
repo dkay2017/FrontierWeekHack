@@ -1,6 +1,6 @@
 <!-- markdownlint-disable MD033 MD041 -->
 <p align="center">
-  <img src="brand/claria-logo.svg" width="420" alt="Claria Health — Care Approval IQ">
+  <img src="docs/design/Claria-Health-logo.svg" width="480" alt="Claria Health — Care Approval IQ — Proof beats paperwork">
 </p>
 
 <h1 align="center">Care Approval IQ</h1>
@@ -61,10 +61,9 @@ tests/          xUnit, one project per src assembly + shared TestSupport
 infra/          Bicep — main.bicep + modules (foundry · data · keyvault · apps)
 eval/           Claria.Eval — CI-gated agent evaluation harness
 tools/          Claria.DbDeploy — azd post-provision migrate + seed + grant
-docs/design/    ARCHITECTURE.md · TDD · DECISIONS.md · architecture SVG
+docs/design/    ARCHITECTURE.md · Care-Approval-IQ-TDD.md · DECISIONS.md · logo · architecture SVG
 docs/progress/  STATUS.md — session context / resume point
 data/           policies (payer criteria) · cases (synthetic clinical scenarios)
-brand/          logo
 ```
 
 ## Status
