@@ -90,6 +90,15 @@ hardcoded to CMS). **Demo/pitch against Bupa/AXA as the primary example.** Keep
 CMS-0057-F only as the "why this matters now, regulatorily" data point, not the
 main framing. Same 5 agents, same architecture, either market.
 
+**Build a visible region/market switch in the UI** (e.g. UK · US · dropdown).
+Flipping it swaps the payer rule set, the terminology (pre-auth code vs. prior
+auth, FOS vs. state appeal), and the appeal-escalation path — same agents, same
+pipeline, different config. This is a deliberate demo moment: proves the
+solution generalises across regions rather than being hardwired to one, and
+turns the "why a US problem?" question into a strength ("it isn't — watch").
+The switch and the rules-as-data design are the mechanism that makes this true,
+not just a claim.
+
 ## Open decisions for next session
 
 - **Confirmed, not open:** new GitHub repo + new Azure resource group, fully
