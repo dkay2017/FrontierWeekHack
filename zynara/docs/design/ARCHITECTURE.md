@@ -175,13 +175,17 @@ judgement over unstructured text.**
 Stub and Foundry implementations of each agent are interchangeable; they differ
 only in the prose. Tests and CI run against the stubs, offline.
 
-## 8. The human gate & governance
+## 8. The human gate & responsible AI
 
 - **Gate rule:** `readiness ≥ threshold AND no missing criteria AND value ≤ auto-limit`
   → auto-submit draft; otherwise → human review. An exact-threshold case passes.
 - **Sole outbound path:** one adapter submits to payers and files appeals.
   Nothing else in the system performs an outbound action.
 - **Every action is reviewer-approved** — submit and appeal both.
+- **Grounding & citation, retained:** every recommendation records the exact
+  inputs that drove it — policy clause ids, criteria version, precedent case ids
+  — on the `submissions` / `outcomes` document with the Gate's working, so any
+  decision can be replayed. A field on the document, not new infrastructure.
 - **Disclaimer, shown in-product:** *decision support, not coverage or medical
   advice; a person makes every decision.*
 - **No PII in telemetry** — request ids and procedure codes only.
@@ -267,16 +271,21 @@ flowchart TB
 The demo runs off **pre-computed results** for instant, consistent playback; the
 live pipeline is shown separately on one fresh case.
 
-## 12. Observability · evaluation
+## 12. Observability · evaluation · cost
 
 - **Tracing:** one W3C trace per request; a child span per agent + per model
   call, nested — visible in the Foundry portal (Challenge 2).
+- **Cost meter:** every agent call's `Usage` → `agentCalls`; token counts × a
+  model price table, aggregated to **£/$ per request · per agent · per day** on
+  the dashboard's Cost tab. A few lines, carried from the prior project.
+- **Service Health workbook:** an Azure Monitor workbook showing live component
+  status (Functions, Cosmos, Foundry, Blob) — a workbook definition, no code.
 - **Evaluation:** `eval/Zynara.Eval` replays the labelled case set through the
   Evidence Gap agent, gates CI on classification accuracy; the Foundry portal
   runs Coherence/Fluency over the same set (Challenge 3).
 
-Every agent call's token usage is written to `agentCalls`, but **cost metering /
-AI governance is a production consideration, not in the demo scope** — see
+Broader AI governance (model/prompt version pinning, continuous production drift
+monitoring, retention policy) is a consideration, not in the demo scope — see
 TDD §7.1.
 
 ## 13. Impact model (built into the product)

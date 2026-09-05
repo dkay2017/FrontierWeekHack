@@ -106,7 +106,7 @@ cross-cutting concerns.
 | 2 | **Compute · Orchestration** (Azure Durable Functions) | `Zynara.Orchestrator` (the orchestrator function — sequences the pipeline, keyed on request id) → NeedsAuthCheck / EvidenceGapMatch / AppealMatch / ExpiryMath / PolicyDiff (**Durable Activity Functions** — deterministic, no LLM; kept as discrete activities for the reasons in §12 · TD-2). Owns the Gate. |
 | 3 | **AI Foundry · Agent Service** | `needs-auth-agent` · `evidence-gap-agent` · `appeal-builder-agent` · `expiry-watch-agent` · `policy-drift-agent` (persistent Foundry agents; each behind a `Zynara.Core` interface with a stub twin for offline tests) |
 | 4 | **Data** | Submission Adapter (Azure Function · the only path to payer portal / X12 / FHIR / fax) → **Azure Cosmos DB** serverless (operational state): `requests · submissions · outcomes · auths · earlyWarnings · agentCalls`, plus `precedents` / `policies` **metadata** → **Azure Blob Storage** (the unstructured corpus: policy docs, denial PDFs, precedent narratives) → **Foundry File Search** (vector index the agents query). Split rationale: §12 · TD-4, TD-5. |
-| 5 | **Experience** | Reviewer (human) → Dashboard (`Zynara.Dashboard`, Static Web App Standard + linked backend; tabs = **Review Queue** (drafts · appeals · HITL) · **Early Warnings** (expiry-watch · policy-drift), with a **UK ⇄ US** header control) → **API Proxy** (Azure Function; read models + reviewer approve/reject actions) |
+| 5 | **Experience** | Reviewer (human) → Dashboard (`Zynara.Dashboard`, Static Web App Standard + linked backend; tabs = **Review Queue** (drafts · appeals · HITL · Recovery £ stat) · **Early Warnings** (expiry-watch · policy-drift) · **Cost** (£/$ per request · agent · day), with a **UK ⇄ US** header control) → **API Proxy** (Azure Function; read models + reviewer approve/reject actions) |
 
 **Cross-cutting (applies to every layer):**
 - **Security & Identity** — managed identity first: Cosmos DB (data-plane RBAC —
@@ -116,13 +116,17 @@ cross-cutting concerns.
   `@Microsoft.KeyVault` references. No PHI anywhere in scope.
 - **Observability** — App Insights: one W3C trace per request id, a child span
   per agent (`invoke_agent <name>`) and per model call (`chat <model>`), nested
-  under one `pipeline.run`. Trace id persisted on the `submissions` document.
+  under one `pipeline.run`, trace id on the `submissions` document. Per-agent
+  **cost meter** (£/$ per request · agent · day) off `agentCalls`. An Azure
+  Monitor **Service Health workbook** for live component status. The
+  `Zynara.Eval` CI gate (§12).
 - **Responsible AI** — the Gate routes every gap or low-confidence case to a
   human; the Submission Adapter is the sole actor that touches a payer;
-  deterministic code owns every decision value; an in-product disclaimer states
-  *decision support, not coverage or medical advice*. AI governance (cost
-  metering, version pinning, production drift monitoring) is described as a
-  consideration in §7.1, not built for the demo.
+  deterministic code owns every decision value; every recommendation retains its
+  grounding (clause + precedent ids); an in-product disclaimer states *decision
+  support, not coverage or medical advice*. Broader AI governance (version
+  pinning, continuous drift monitoring, retention policy) is a consideration in
+  §7.1, not built for the demo.
 
 ## 5. End-to-End Flow
 
@@ -224,12 +228,13 @@ behind a `Zynara.Core` interface:
   agents query. Split rationale: §12 · TD-5.
 
 **Experience** — Reviewer (human); Dashboard (`Zynara.Dashboard`, Static Web App
-Standard + `linkedBackends` → apiproxy, same-origin `/api`): two tabs —
+Standard + `linkedBackends` → apiproxy, same-origin `/api`): three tabs —
 **Review Queue** (the HITL list: pending draft submissions and appeals to approve
-or edit) and **Early Warnings** (`expiry-watch` + `policy-drift` output); the
-**UK ⇄ US** region switch is a header control, not a tab. **API Proxy**
-(Function; read models + reviewer approve/reject). The Recovery £ figure (§11)
-is a headline stat on the Review Queue, not its own tab.
+or edit, with the Recovery £ stat as a headline number), **Early Warnings**
+(`expiry-watch` + `policy-drift` output), and **Cost** (£/$ per request · per
+agent · per day, off `agentCalls`); the **UK ⇄ US** region switch is a header
+control, not a tab. **API Proxy** (Function; read models + reviewer
+approve/reject).
 
 **Cross-cutting** — managed identity (Cosmos data-plane RBAC / Foundry / Blob);
 Key Vault (App Insights + content-share strings only, as `@Microsoft.KeyVault`
@@ -250,32 +255,35 @@ In scope — built and demonstrated:
 - **Bounded agents.** Deterministic code owns every value that drives a decision
   or an action; agents produce prose and judgement over unstructured text only
   (§9 — the hybrid principle).
+- **Grounding & citation, retained.** Every recommendation records the exact
+  inputs it used — the policy clause ids, the criteria version, the precedent
+  case ids — persisted on the `submissions` / `outcomes` document alongside the
+  Gate's working. Any decision can be replayed: which criterion → which
+  precedent → which clause. This is a field on the document, not new
+  infrastructure.
 - **Auditable scoring, not a black-box number.** The Gate's `readiness` and
   route are deterministic and shown with their working ("readiness 0.82 = 6/7
-  criteria met, physio-duration criterion missing") — which criterion → which
-  precedent → which clause.
+  criteria met, physio-duration criterion missing").
+- **Per-agent cost metering.** Every agent response carries `Usage`
+  (`promptTokens`, `completionTokens`, `model`); `{usage, model, traceId,
+  requestId, agent}` is persisted per call to `agentCalls`, aggregated to £/$
+  **per request · per agent · per day** on the dashboard's Cost tab. (Token
+  usage → price table → sum; a few lines, carried from the prior project.)
 - **No PHI in scope.** Request ids and procedure codes only in telemetry, logs,
   and the trace tree; clinical notes are synthetic for the demo.
 - **Disclaimer, shown in-product:** *Care Approval IQ is decision support, not
   coverage or medical advice. A person makes every decision.*
 
-### 7.1 AI governance — a consideration, not in the demo scope
+### 7.1 Broader AI governance — a consideration, not in the demo scope
 
-A production deployment in this domain needs an AI-governance layer; this build
-**names it and explains how it would be done, but does not implement it** —
-scope is a solo 18-day window (§8).
+A production deployment would add, on top of the cost metering and citation
+trail above:
 
-- **Per-agent cost / token metering.** Every agent response carries `Usage`
-  (`promptTokens`, `completionTokens`, `model`); persisting `{usage, model,
-  traceId, requestId}` per call gives a real £/$ figure per agent and per case.
-  Straightforward to add on top of the `agentCalls` container; left out of the
-  demo dashboard.
 - **Model / prompt version pinning and change log.** Each agent version and its
-  system prompt recorded against the outcomes it produced, so a decision can be
-  reproduced.
-- **Drift and quality monitoring in production.** The `Zynara.Eval` harness
-  (§12) is CI-only here; in production it would run continuously against live
-  (de-identified) traffic with alerting on accuracy regression.
+  system prompt recorded against the outcomes it produced.
+- **Continuous drift / quality monitoring.** The `Zynara.Eval` harness (§12) is
+  CI-only here; in production it runs against live de-identified traffic with
+  alerting on accuracy regression.
 - **Access and retention policy** for the corpus and the outcomes store.
 
 ### 7.2 Region abstraction as compliance surface
