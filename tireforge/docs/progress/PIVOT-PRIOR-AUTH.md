@@ -1,9 +1,19 @@
 # Pivot exploration — Prior Authorization Copilot
 
-**Status:** decided in principle (2026-09-05), not yet scoped/built. Meridian
-(TireForge) stays live as the completed proof-of-concept; this may become a
-**new repo / new resource group** for the actual Agent-a-thon + course
-submission if we proceed. Deadline: **2026-09-24** (19 days from decision).
+**Status:** decided in principle (2026-09-05), not yet scoped/built.
+
+**⚠ Hard constraint, explicitly stated by the user (2026-09-05): TireForge/Meridian
+is NOT touched, modified, or torn down.** It stays exactly as-is — live, deployed,
+completed — as the proof-of-concept and evidence of the full challenge lifecycle.
+This new work is **a brand-new GitHub repo and brand-new Azure resources**,
+nothing shared, nothing reused infrastructurally. What carries forward is
+**learnings only**: the architectural patterns (hybrid deterministic+agent
+split, Gate/human-approval, citation-based grounding, cost metering, the
+Durable Functions shape, managed-identity-first security) and staying aligned
+with the **same Challenge 0–4 structure and judging criteria** this whole
+program is built around — not any code, repo, or resource.
+
+Deadline: **2026-09-24** (19 days from decision).
 
 ## How we got here
 
@@ -67,8 +77,8 @@ agents below trigger, not agents in their own right.
 
 ## Open decisions for next session
 
-- New repo + new Azure resource group, or extend inside `FrontierWeekHack`?
-  User's stated preference: **new repo**, Meridian kept as the completed PoC.
+- **Confirmed, not open:** new GitHub repo + new Azure resource group, fully
+  separate from TireForge/Meridian's repo and resources. TireForge is untouched.
 - Data: synthetic clinical notes + a handful of real public payer policy docs
   (CMS/Medicare policies are public) — needs scoping.
 - Which agents are Foundry-hosted vs. deterministic — likely mirrors D12's
