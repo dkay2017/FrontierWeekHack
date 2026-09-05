@@ -4,10 +4,20 @@
 Keep this file current at every checkpoint and **commit + push it** — a Codespace
 rebuild loses anything uncommitted (see the `codespace-data-loss` memory).
 
-_Last updated: 2026-09-04 (session 6). **T0 predictive early warning is now LIVE**
-— provisioned + redeployed + verified end-to-end on real sensor traffic. Resume
-point: session 6 remaining items, below (re-run Ch3 eval, 4th agent fast-follow,
-doc pass, judging-score backlog)._
+_Last updated: 2026-09-05. **⚠ Possible pivot under consideration** — see
+`PIVOT-PRIOR-AUTH.md`. Decided in principle: a new multi-agent concept (Prior
+Authorization Copilot, healthcare) scored higher on Innovation/Impact than
+Meridian's ceiling allows, after rejecting 4 other candidates. Not yet scoped
+or built. Meridian would become the completed PoC; the new idea likely gets
+its **own repo + resource group**. Deadline 2026-09-24. **Resume point: read
+`PIVOT-PRIOR-AUTH.md` first**, then decide with the user whether to proceed,
+before touching either codebase._
+
+_Below this line is Meridian/TireForge's own history, current as of session 6
+(2026-09-04): **T0 predictive early warning is LIVE** — provisioned +
+redeployed + verified end-to-end on real sensor traffic. Its own remaining
+items (re-run Ch3 eval, 4th agent fast-follow, doc pass, judging-score
+backlog) are unblocked but paused pending the pivot decision above._
 
 ### Session 6 — done
 
