@@ -1,27 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 832" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 806" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif">
   <title>Zynara Health · Care Approval IQ — Technical Architecture</title>
   <defs>
     <linearGradient id="seal" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0FA3A0"/><stop offset="1" stop-color="#1FBE6B"/>
     </linearGradient>
+    <marker id="ag" viewBox="0 0 8 8" refX="6.6" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8 z" fill="#5C7C84"/></marker>
+    <marker id="ab" viewBox="0 0 8 8" refX="6.6" refY="4" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8 z" fill="#2563EB"/></marker>
+    <marker id="av" viewBox="0 0 8 8" refX="6.6" refY="4" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8 z" fill="#7C3AED"/></marker>
     <style>
       text{ fill:#0B3B45; }
       .sub{ fill:#3D5B62; }
       .tag{ fill:#0E8F84; }
-      .sect{ font-size:12px; font-weight:700; letter-spacing:.11em; }
-      .cn{ font-size:11.5px; font-weight:700; }
-      .bd{ font-size:9.2px; }
-      .sm{ font-size:8.5px; }
+      .sect{ font-size:12px; font-weight:700; letter-spacing:.1em; }
+      .cn{ font-size:11px; font-weight:700; }
+      .bd{ font-size:9px; }
+      .sm{ font-size:8.3px; }
       .ico{ fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
-      .gl{ fill:none; stroke:#FFFFFF; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+      .gl{ fill:none; stroke:#FFFFFF; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+      .card{ fill:#FFFFFF; }
     </style>
   </defs>
 
-  <rect width="1300" height="832" fill="#FFFFFF"/>
+  <rect width="1300" height="806" fill="#FFFFFF"/>
   <rect width="1300" height="6" fill="url(#seal)"/>
 
   <!-- ============================ HEADER ============================ -->
-  <g transform="translate(40,20)">
+  <g transform="translate(40,18)">
     <circle cx="26" cy="26" r="26" fill="url(#seal)"/>
     <circle cx="26" cy="26" r="21" fill="none" stroke="#FFFFFF" stroke-opacity=".35" stroke-width="2.4" stroke-dasharray="1 5"/>
     <path class="gl" stroke-width="4.5" opacity=".45" d="M13 19 H40"/>
@@ -29,183 +33,197 @@
     <path class="gl" stroke-width="4.5" opacity=".82" d="M13 33 H30"/>
     <path class="gl" stroke-width="5.4" d="M16 32 L24 41 L40 18"/>
   </g>
-  <text x="106" y="43" font-size="30" font-weight="800" letter-spacing="-.01em">zynara</text>
-  <text x="108" y="57" class="sub" font-size="9" font-weight="600" letter-spacing=".34em">H E A L T H</text>
-  <text x="270" y="37" font-size="15" font-weight="600">Care Approval IQ</text>
-  <text x="270" y="55" class="tag" font-size="13" font-weight="600" font-style="italic">Proof beats paperwork.</text>
-  <text x="1260" y="31" text-anchor="end" class="sub" font-size="10.5" font-weight="700" letter-spacing=".17em">TECHNICAL ARCHITECTURE</text>
-  <text x="1260" y="47" text-anchor="end" class="sub" font-size="10">Microsoft Agent-a-thon 2026 · Architect Track</text>
-  <text x="1260" y="62" text-anchor="end" class="sub" font-size="10">Deepak Kumar · Original Work</text>
-  <line x1="40" y1="76" x2="1260" y2="76" stroke="#0FA3A0" stroke-opacity=".25"/>
+  <text x="110" y="40" font-size="30" font-weight="800" letter-spacing="-.01em">zynara</text>
+  <text x="112" y="61" class="sub" font-size="9" font-weight="600" letter-spacing=".34em">H E A L T H</text>
+  <text x="274" y="34" font-size="15" font-weight="600">Care Approval IQ</text>
+  <text x="274" y="52" class="tag" font-size="13" font-weight="600" font-style="italic">Proof beats paperwork.</text>
+  <text x="1260" y="29" text-anchor="end" class="sub" font-size="10.5" font-weight="700" letter-spacing=".16em">TECHNICAL ARCHITECTURE</text>
+  <text x="1260" y="45" text-anchor="end" class="sub" font-size="10">Microsoft Agent-a-thon 2026 · Architect Track</text>
+  <text x="1260" y="60" text-anchor="end" class="sub" font-size="10">Deepak Kumar · Original Work</text>
+  <line x1="40" y1="74" x2="1260" y2="74" stroke="#0FA3A0" stroke-opacity=".25"/>
 
   <!-- ======================= THE FIVE AGENTS ======================= -->
-  <g transform="translate(40,86)" class="ico" stroke="#7C3AED">
-    <path d="M7 0 l1.6 4.4 4.4 1.6 -4.4 1.6 -1.6 4.4 -1.6 -4.4 -4.4 -1.6 4.4 -1.6 z"/>
-  </g>
+  <g transform="translate(40,86)" class="ico" stroke="#7C3AED"><path d="M7 0 l1.6 4.4 4.4 1.6 -4.4 1.6 -1.6 4.4 -1.6 -4.4 -4.4 -1.6 4.4 -1.6 z"/></g>
   <text x="62" y="97" class="sect" fill="#7C3AED">THE FIVE SPECIALISED AGENTS</text>
   <text x="366" y="97" class="sub" font-size="10.5">distinct kinds of reasoning — one pipeline</text>
 
-  <!-- agent cards -->
   <g font-size="9">
     <!-- 1 Needs-Auth -->
-    <g transform="translate(40,108)">
-      <rect width="232" height="120" rx="12" fill="#FFFFFF" stroke="#7C3AED" stroke-opacity=".28"/>
-      <rect x="14" y="14" width="28" height="28" rx="8" fill="#7C3AED"/>
-      <g transform="translate(20,20)" class="gl"><circle cx="5" cy="6" r="4"/><path d="M8 9 L15 16 M12.5 16 h2.6 M15.5 16 v-2.6"/></g>
-      <text x="14" y="62" class="cn">Needs-Auth</text>
-      <text x="14" y="80" class="sub">Auth required? This plan, this</text>
-      <text x="14" y="91" class="sub">procedure code, today.</text>
-      <line x1="14" y1="100" x2="218" y2="100" stroke="#7C3AED" stroke-opacity=".14"/>
-      <text x="14" y="114" class="sm"><tspan fill="#6E8C93">reads  </tspan><tspan fill="#2C4A52">payer rule-set KB</tspan></text>
+    <g transform="translate(40,104)">
+      <rect width="232" height="120" rx="12" class="card" stroke="#7C3AED" stroke-opacity=".24"/>
+      <rect x="14" y="14" width="26" height="26" rx="7" fill="#7C3AED"/>
+      <g transform="translate(20,19)" class="gl"><circle cx="4" cy="5" r="3.4"/><path d="M6.4 7.4 L13 14 M11 14 h2 M13 14 v-2"/></g>
+      <text x="14" y="57" class="cn">Needs-Auth</text>
+      <text x="14" y="75" class="sub">Auth required? This plan, this</text>
+      <text x="14" y="86" class="sub">procedure code, today.</text>
+      <line x1="14" y1="97" x2="218" y2="97" stroke="#7C3AED" stroke-opacity=".14"/>
+      <text x="14" y="112" class="sm"><tspan fill="#6E8C93">reads  </tspan><tspan fill="#2C4A52">payer rule-set KB</tspan></text>
     </g>
     <!-- 2 Evidence Gap -->
-    <g transform="translate(287,108)">
-      <rect width="232" height="120" rx="12" fill="#FFFFFF" stroke="#7C3AED" stroke-opacity=".28"/>
-      <rect x="14" y="14" width="28" height="28" rx="8" fill="#7C3AED"/>
-      <g transform="translate(20,20)" class="gl"><circle cx="6.5" cy="6.5" r="5"/><path d="M10 10 L16 16"/></g>
-      <text x="14" y="62" class="cn">Evidence Gap</text>
-      <text x="14" y="80" class="sub">Clinical note vs written criteria</text>
-      <text x="14" y="91" class="sub">— met · missing · contradictory</text>
-      <line x1="14" y1="100" x2="218" y2="100" stroke="#7C3AED" stroke-opacity=".14"/>
-      <text x="14" y="114" class="sm"><tspan fill="#6E8C93">reads  </tspan><tspan fill="#2C4A52">the written criteria</tspan></text>
+    <g transform="translate(287,104)">
+      <rect width="232" height="120" rx="12" class="card" stroke="#7C3AED" stroke-opacity=".24"/>
+      <rect x="14" y="14" width="26" height="26" rx="7" fill="#7C3AED"/>
+      <g transform="translate(20,19)" class="gl"><circle cx="5.5" cy="5.5" r="4.4"/><path d="M9 9 L14 14"/></g>
+      <text x="14" y="57" class="cn">Evidence Gap</text>
+      <text x="14" y="75" class="sub">Clinical note vs written criteria</text>
+      <text x="14" y="86" class="sub">— met · missing · contradictory</text>
+      <line x1="14" y1="97" x2="218" y2="97" stroke="#7C3AED" stroke-opacity=".14"/>
+      <text x="14" y="112" class="sm"><tspan fill="#6E8C93">reads  </tspan><tspan fill="#2C4A52">the written criteria</tspan></text>
     </g>
-    <!-- 3 Precedent (accent) -->
-    <g transform="translate(534,108)">
-      <rect width="232" height="120" rx="12" fill="#7C3AED"/>
-      <rect x="14" y="14" width="28" height="28" rx="8" fill="#FFFFFF"/>
-      <g transform="translate(20,20)" class="ico" stroke="#7C3AED"><path d="M2.5 6 A6 6 0 1 1 3 9.6"/><path d="M2.5 2.5 v3.5 h3.5"/><path d="M8 5 v4 l3 2"/></g>
-      <text x="214" y="30" text-anchor="end" font-size="13" fill="#FFFFFF">✦</text>
-      <text x="14" y="62" class="cn" fill="#FFFFFF">Precedent</text>
-      <text x="14" y="80" font-size="9.2" fill="#EDE6FB">Finds the winning fact-pattern,</text>
-      <text x="14" y="91" font-size="9.2" fill="#EDE6FB">then drafts the appeal.</text>
-      <line x1="14" y1="100" x2="218" y2="100" stroke="#FFFFFF" stroke-opacity=".3"/>
-      <text x="14" y="114" class="sm"><tspan fill="#C9BAEE">reads  </tspan><tspan fill="#FFFFFF">past Submissions + Outcomes</tspan></text>
+    <!-- 3 Appeal Builder -->
+    <g transform="translate(534,104)">
+      <rect width="232" height="120" rx="12" class="card" stroke="#7C3AED" stroke-opacity=".45" stroke-width="1.5"/>
+      <rect x="14" y="14" width="26" height="26" rx="7" fill="#7C3AED"/>
+      <g transform="translate(20,19)" class="gl"><path d="M1 0 h9 v16 h-9 z"/><path d="M3.5 5 h5 M3.5 8 h5 M3.5 11 h3"/></g>
+      <text x="218" y="24" text-anchor="end" font-size="7.5" font-weight="700" fill="#7C3AED" letter-spacing=".05em">★ DIFFERENTIATOR</text>
+      <text x="14" y="57" class="cn">Appeal Builder</text>
+      <text x="14" y="75" class="sub">Matches the case to appeals</text>
+      <text x="14" y="86" class="sub">that won — and drafts this one.</text>
+      <line x1="14" y1="97" x2="218" y2="97" stroke="#7C3AED" stroke-opacity=".2"/>
+      <text x="14" y="112" class="sm"><tspan fill="#6E8C93">reads  </tspan><tspan fill="#2C4A52">recorded past appeal outcomes</tspan></text>
     </g>
     <!-- 4 Expiry Watch -->
-    <g transform="translate(781,108)">
-      <rect width="232" height="120" rx="12" fill="#FFFFFF" stroke="#7C3AED" stroke-opacity=".28"/>
-      <rect x="14" y="14" width="28" height="28" rx="8" fill="#7C3AED"/>
-      <g transform="translate(21,20)" class="gl"><path d="M2 1 h10 M2 15 h10 M3 1 c0 5 8 5 8 0 M3 15 c0 -5 8 -5 8 0"/></g>
-      <text x="14" y="62" class="cn">Expiry Watch</text>
-      <text x="14" y="80" class="sub">An approved auth will lapse</text>
-      <text x="14" y="91" class="sub">before the procedure date.</text>
-      <line x1="14" y1="100" x2="218" y2="100" stroke="#7C3AED" stroke-opacity=".14"/>
-      <text x="14" y="114" class="sm"><tspan fill="#6E8C93">reads  </tspan><tspan fill="#2C4A52">auth record + calendar</tspan></text>
+    <g transform="translate(781,104)">
+      <rect width="232" height="120" rx="12" class="card" stroke="#7C3AED" stroke-opacity=".24"/>
+      <rect x="14" y="14" width="26" height="26" rx="7" fill="#7C3AED"/>
+      <g transform="translate(20,20)" class="gl"><path d="M1 0 h11 M1 14 h11 M2 0 c0 5 9 5 9 0 M2 14 c0 -5 9 -5 9 0"/></g>
+      <text x="14" y="57" class="cn">Expiry Watch</text>
+      <text x="14" y="75" class="sub">An approved auth will lapse</text>
+      <text x="14" y="86" class="sub">before the procedure date.</text>
+      <line x1="14" y1="97" x2="218" y2="97" stroke="#7C3AED" stroke-opacity=".14"/>
+      <text x="14" y="112" class="sm"><tspan fill="#6E8C93">reads  </tspan><tspan fill="#2C4A52">auth record + calendar</tspan></text>
     </g>
     <!-- 5 Policy Drift -->
-    <g transform="translate(1028,108)">
-      <rect width="232" height="120" rx="12" fill="#FFFFFF" stroke="#7C3AED" stroke-opacity=".28"/>
-      <rect x="14" y="14" width="28" height="28" rx="8" fill="#7C3AED"/>
-      <g transform="translate(21,20)" class="gl"><path d="M1 2 h8 v12 h-8 z"/><path d="M4 8 h4 M4 11 h4"/><path d="M11 5 v9 h-4"/></g>
-      <text x="14" y="62" class="cn">Policy Drift</text>
-      <text x="14" y="80" class="sub">A silent criteria change just</text>
-      <text x="14" y="91" class="sub">broke this request template.</text>
-      <line x1="14" y1="100" x2="218" y2="100" stroke="#7C3AED" stroke-opacity=".14"/>
-      <text x="14" y="114" class="sm"><tspan fill="#6E8C93">reads  </tspan><tspan fill="#2C4A52">versioned policy docs</tspan></text>
+    <g transform="translate(1028,104)">
+      <rect width="232" height="120" rx="12" class="card" stroke="#7C3AED" stroke-opacity=".24"/>
+      <rect x="14" y="14" width="26" height="26" rx="7" fill="#7C3AED"/>
+      <g transform="translate(21,19)" class="gl"><path d="M0 1 h8 v13 h-8 z"/><path d="M11 4 v11 h-5"/><path d="M3 6 h3 M3 9 h3"/></g>
+      <text x="14" y="57" class="cn">Policy Drift</text>
+      <text x="14" y="75" class="sub">A silent criteria change just</text>
+      <text x="14" y="86" class="sub">broke this request template.</text>
+      <line x1="14" y1="97" x2="218" y2="97" stroke="#7C3AED" stroke-opacity=".14"/>
+      <text x="14" y="112" class="sm"><tspan fill="#6E8C93">reads  </tspan><tspan fill="#2C4A52">versioned policy docs</tspan></text>
     </g>
   </g>
-  <text x="40" y="248" class="sub" font-size="9">Persistent Azure AI Foundry agents behind <tspan fill="#0B3B45">Zynara.Core</tspan> interfaces — each with a deterministic stub twin, so every test runs offline.</text>
+  <text x="40" y="242" class="sub" font-size="9">Persistent Azure AI Foundry agents behind <tspan fill="#0B3B45">Zynara.Core</tspan> interfaces — each with a deterministic stub twin, so every test runs offline.</text>
 
-  <!-- ===================== PIPELINE ARCHITECTURE ===================== -->
-  <!-- numbers show the request path; layout is grouped by platform, not drawn as a flow -->
 
-  <!-- Panel 1 · INTAKE -->
-  <rect x="40" y="262" width="300" height="210" rx="13" fill="#FBE8C8" stroke="#F59E0B" stroke-opacity=".4" stroke-width="1.3"/>
-  <circle cx="58" cy="286" r="9" fill="#F59E0B"/><text x="58" y="289.5" text-anchor="middle" fill="#FFFFFF" font-size="10.5" font-weight="700">1</text>
-  <g transform="translate(74,279)" class="ico" stroke="#F59E0B"><path d="M0 9 v4 h14 v-4 M7 0 v8 M4 5 l3 3 3 -3"/></g>
-  <text x="98" y="290" class="sect" fill="#C2740B">INTAKE</text>
-  <g transform="translate(58,0)">
-    <circle cx="0" cy="322.5" r="2.4" fill="#F59E0B"/><text x="13" y="326" class="cn">Clinician request</text><text x="13" y="339" class="sub bd">procedure · plan · note · region</text>
-    <circle cx="0" cy="372.5" r="2.4" fill="#F59E0B"/><text x="13" y="376" class="cn">Zynara.Intake</text><text x="13" y="389" class="sub bd">Azure Function · POST /api/requests</text>
-    <circle cx="0" cy="422.5" r="2.4" fill="#F59E0B"/><text x="13" y="426" class="cn">Requests Queue</text><text x="13" y="439" class="sub bd">Azure Storage Queue — decouples intake</text>
+  <!-- ============ PANEL 3 · AI FOUNDRY (agents, invoked by the spokes below) ============ -->
+  <rect x="292" y="258" width="714" height="110" rx="13" fill="#EDE4FC" stroke="#7C3AED" stroke-opacity=".42" stroke-width="1.3"/>
+  <circle cx="312" cy="282" r="12" fill="#7C3AED"/><text x="312" y="286.5" text-anchor="middle" fill="#FFFFFF" font-size="12" font-weight="800">3</text>
+  <g transform="translate(330,275)" class="ico" stroke="#7C3AED"><path d="M7 0 l1.6 4.4 4.4 1.6 -4.4 1.6 -1.6 4.4 -1.6 -4.4 -4.4 -1.6 4.4 -1.6 z"/></g>
+  <text x="352" y="281" class="sect" font-size="11" fill="#6D28D9">AI FOUNDRY</text>
+  <text x="306" y="298" class="sect" font-size="9" fill="#6D28D9">AGENT SERVICE</text>
+  <text x="306" y="316" class="sub" font-size="7.6">gpt-4.1 class · prose only</text>
+  <text x="306" y="327" class="sub" font-size="7.6">File Search grounded</text>
+  <g font-size="8" text-anchor="middle">
+    <g transform="translate(440,300)"><rect width="108" height="52" rx="9" class="card" stroke="#7C3AED" stroke-opacity=".24"/><rect x="8" y="9" width="18" height="18" rx="6" fill="#7C3AED"/><g transform="translate(12,13)" class="gl"><circle cx="3" cy="4" r="2.6"/><path d="M5 6 L9.5 10.5 M8 10.5h1.5 M9.5 10.5v-1.5"/></g><text x="66" y="23" font-weight="700">needs-auth</text><text x="66" y="35" font-weight="700">agent</text></g>
+    <g transform="translate(552,300)"><rect width="108" height="52" rx="9" class="card" stroke="#7C3AED" stroke-opacity=".24"/><rect x="8" y="9" width="18" height="18" rx="6" fill="#7C3AED"/><g transform="translate(12,13)" class="gl"><circle cx="4" cy="4" r="3.2"/><path d="M6.5 6.5 L10.5 10.5"/></g><text x="66" y="23" font-weight="700">evidence-gap</text><text x="66" y="35" font-weight="700">agent</text></g>
+    <g transform="translate(662,300)"><rect width="108" height="52" rx="9" class="card" stroke="#7C3AED" stroke-opacity=".45" stroke-width="1.3"/><rect x="8" y="9" width="18" height="18" rx="6" fill="#7C3AED"/><g transform="translate(12,12)" class="gl"><path d="M1 0 h6 v12 h-6 z"/><path d="M2.5 3.5 h3 M2.5 6 h3 M2.5 8.5 h2"/></g><text x="66" y="23" font-weight="700">appeal-builder</text><text x="66" y="35" font-weight="700">agent</text></g>
+    <g transform="translate(772,300)"><rect width="108" height="52" rx="9" class="card" stroke="#7C3AED" stroke-opacity=".24"/><rect x="8" y="9" width="18" height="18" rx="6" fill="#7C3AED"/><g transform="translate(12,13)" class="gl"><path d="M1 0 h8 M1 11 h8 M2 0 c0 4 6 4 6 0 M2 11 c0 -4 6 -4 6 0"/></g><text x="66" y="23" font-weight="700">expiry-watch</text><text x="66" y="35" font-weight="700">agent</text></g>
+    <g transform="translate(882,300)"><rect width="108" height="52" rx="9" class="card" stroke="#7C3AED" stroke-opacity=".24"/><rect x="8" y="9" width="18" height="18" rx="6" fill="#7C3AED"/><g transform="translate(13,12)" class="gl"><path d="M0 1 h5 v10 h-5 z"/><path d="M8 3 v9 h-3.5"/><path d="M1.6 4 h2 M1.6 6.5 h2"/></g><text x="66" y="23" font-weight="700">policy-drift</text><text x="66" y="35" font-weight="700">agent</text></g>
   </g>
 
-  <!-- Panel 2 · COMPUTE · ORCHESTRATION -->
-  <rect x="356" y="262" width="560" height="112" rx="13" fill="#DBE7FD" stroke="#2563EB" stroke-opacity=".4" stroke-width="1.3"/>
-  <circle cx="374" cy="286" r="9" fill="#2563EB"/><text x="374" y="289.5" text-anchor="middle" fill="#FFFFFF" font-size="10.5" font-weight="700">2</text>
-  <g transform="translate(390,279)" class="ico" stroke="#2563EB"><rect x="2.5" y="2.5" width="10" height="10" rx="2"/><rect x="5.5" y="5.5" width="4" height="4"/><path d="M2.5 6 H1 M2.5 9 H1 M12.5 6 H14 M12.5 9 H14 M6 2.5 V1 M9 2.5 V1 M6 12.5 V14 M9 12.5 V14"/></g>
-  <text x="414" y="290" class="sect" fill="#1D4ED8">COMPUTE · ORCHESTRATION</text>
-  <text x="374" y="314" class="bd"><tspan class="cn">Zynara.Orchestrator</tspan><tspan class="sub">  —  Durable Functions · keyed on request id · idempotent</tspan></text>
-  <text x="374" y="330" class="sub bd">5 deterministic checks own every value that drives a decision — no LLM in this layer</text>
-  <g font-size="8.2" text-anchor="middle" fill="#1D4ED8">
-    <rect x="374" y="340" width="98" height="19" rx="9.5" fill="#2563EB" fill-opacity=".1" stroke="#2563EB" stroke-opacity=".3"/><text x="423" y="352.5">NeedsAuthCheck</text>
-    <rect x="481" y="340" width="98" height="19" rx="9.5" fill="#2563EB" fill-opacity=".1" stroke="#2563EB" stroke-opacity=".3"/><text x="530" y="352.5">EvidenceGap</text>
-    <rect x="588" y="340" width="98" height="19" rx="9.5" fill="#2563EB" fill-opacity=".1" stroke="#2563EB" stroke-opacity=".3"/><text x="637" y="352.5">PrecedentMatch</text>
-    <rect x="695" y="340" width="98" height="19" rx="9.5" fill="#2563EB" fill-opacity=".1" stroke="#2563EB" stroke-opacity=".3"/><text x="744" y="352.5">ExpiryMath</text>
-    <rect x="802" y="340" width="98" height="19" rx="9.5" fill="#2563EB" fill-opacity=".1" stroke="#2563EB" stroke-opacity=".3"/><text x="851" y="352.5">PolicyDiff</text>
+  <!-- ============ PANEL 2 · COMPUTE · HUB & SPOKES ============ -->
+  <rect x="292" y="382" width="714" height="168" rx="13" fill="#E4EDFD" stroke="#2563EB" stroke-opacity=".42" stroke-width="1.3"/>
+  <circle cx="312" cy="406" r="12" fill="#2563EB"/><text x="312" y="410.5" text-anchor="middle" fill="#FFFFFF" font-size="12" font-weight="800">2</text>
+  <g transform="translate(330,399)" class="ico" stroke="#2563EB"><rect x="2.5" y="2.5" width="11" height="11" rx="2"/><rect x="5.5" y="5.5" width="5" height="5"/><path d="M2.5 6H1 M2.5 10H1 M13.5 6H15 M13.5 10H15 M6 2.5V1 M10 2.5V1 M6 13.5V15 M10 13.5V15"/></g>
+  <text x="352" y="405" class="sect" font-size="11" fill="#1D4ED8">COMPUTE</text>
+  <text x="306" y="422" class="sect" font-size="9" fill="#1D4ED8">HUB &amp; SPOKES</text>
+  <text x="306" y="440" class="sub" font-size="7.6">Durable Functions</text>
+  <text x="306" y="451" class="sub" font-size="7.6">deterministic · no LLM</text>
+  <g font-size="8" text-anchor="middle">
+    <g transform="translate(440,400)"><rect width="108" height="40" rx="8" class="card" stroke="#2563EB" stroke-opacity=".34"/><text x="8" y="12" text-anchor="start" font-size="6" font-weight="700" fill="#2563EB" letter-spacing=".12em">SPOKE</text><text x="54" y="29" font-weight="600">NeedsAuthCheck</text></g>
+    <g transform="translate(552,400)"><rect width="108" height="40" rx="8" class="card" stroke="#2563EB" stroke-opacity=".34"/><text x="8" y="12" text-anchor="start" font-size="6" font-weight="700" fill="#2563EB" letter-spacing=".12em">SPOKE</text><text x="54" y="29" font-weight="600">EvidenceGapMatch</text></g>
+    <g transform="translate(662,400)"><rect width="108" height="40" rx="8" class="card" stroke="#2563EB" stroke-opacity=".34"/><text x="8" y="12" text-anchor="start" font-size="6" font-weight="700" fill="#2563EB" letter-spacing=".12em">SPOKE</text><text x="54" y="29" font-weight="600">AppealMatch</text></g>
+    <g transform="translate(772,400)"><rect width="108" height="40" rx="8" class="card" stroke="#2563EB" stroke-opacity=".34"/><text x="8" y="12" text-anchor="start" font-size="6" font-weight="700" fill="#2563EB" letter-spacing=".12em">SPOKE</text><text x="54" y="29" font-weight="600">ExpiryMath</text></g>
+    <g transform="translate(882,400)"><rect width="108" height="40" rx="8" class="card" stroke="#2563EB" stroke-opacity=".34"/><text x="8" y="12" text-anchor="start" font-size="6" font-weight="700" fill="#2563EB" letter-spacing=".12em">SPOKE</text><text x="54" y="29" font-weight="600">PolicyDiff</text></g>
+  </g>
+  <g transform="translate(306,466)">
+    <rect width="686" height="72" rx="10" class="card" stroke="#2563EB" stroke-opacity=".4" stroke-width="1.3"/>
+    <rect x="14" y="15" width="26" height="26" rx="7" fill="#2563EB"/>
+    <g transform="translate(21,22)" class="gl"><circle cx="6" cy="6" r="2.4"/><path d="M6 3.6V0 M6 8.4V12 M3.6 6H0 M8.4 6H12"/></g>
+    <rect x="50" y="16" width="30" height="14" rx="7" fill="#2563EB"/><text x="65" y="26" text-anchor="middle" fill="#FFFFFF" font-size="7.5" font-weight="700">HUB</text>
+    <text x="88" y="27" class="cn">Zynara.Orchestrator</text>
+    <text x="50" y="47" class="sub bd">Durable Functions · sequences all 5 deterministic checks · keyed on request id (idempotent)</text>
+    <text x="50" y="61" class="sub bd"><tspan fill="#0B3B45" font-weight="700">Owns every value that drives a decision</tspan> — the Gate reads its output</text>
+  </g>
+  <g stroke="#2563EB" stroke-width="1.4" fill="none">
+    <path d="M494 466 V442" marker-end="url(#ab)"/><path d="M604 466 V442" marker-end="url(#ab)"/><path d="M714 466 V442" marker-end="url(#ab)"/><path d="M824 466 V442" marker-end="url(#ab)"/><path d="M934 466 V442" marker-end="url(#ab)"/>
+  </g>
+  <g stroke="#7C3AED" stroke-width="1.3" fill="none" stroke-dasharray="4 3">
+    <path d="M494 400 V354" marker-end="url(#av)"/><path d="M604 400 V354" marker-end="url(#av)"/><path d="M714 400 V354" marker-end="url(#av)"/><path d="M824 400 V354" marker-end="url(#av)"/><path d="M934 400 V354" marker-end="url(#av)"/>
+  </g>
+  <text x="306" y="462" class="sub" font-size="7.4">→ each check invokes its agent (prose only)</text>
+
+  <!-- ==================== PANEL 1 · INTAKE ==================== -->
+  <rect x="40" y="258" width="240" height="292" rx="13" fill="#F3F7D7" stroke="#6E9A12" stroke-opacity=".45" stroke-width="1.3"/>
+  <circle cx="58" cy="282" r="12" fill="#8BB817"/><text x="58" y="286.5" text-anchor="middle" fill="#FFFFFF" font-size="12" font-weight="800">1</text>
+  <g transform="translate(78,275)" class="ico" stroke="#5E7F0A"><path d="M0 10 v4 h15 v-4 M7.5 0 v8 M4 5 l3.5 3.5 3.5 -3.5"/></g>
+  <text x="100" y="287" class="sect" fill="#4F6D09">INTAKE</text>
+  <g>
+    <g transform="translate(52,298)"><rect width="216" height="76" rx="10" class="card" stroke="#6E9A12" stroke-opacity=".3"/><rect x="12" y="13" width="22" height="22" rx="6" fill="#8BB817"/><g transform="translate(17,17)" class="gl"><circle cx="6" cy="4" r="3"/><path d="M1 12 c0 -4 10 -4 10 0"/></g><text x="44" y="26" class="cn">Clinician request</text><text x="44" y="42" class="sub bd">procedure · plan · note · region</text><text x="44" y="55" class="sub bd">— the only input to the system</text></g>
+    <g transform="translate(52,382)"><rect width="216" height="76" rx="10" class="card" stroke="#6E9A12" stroke-opacity=".3"/><rect x="12" y="13" width="22" height="22" rx="6" fill="#8BB817"/><g transform="translate(19,17)" class="gl"><path d="M6 0 L1.5 7 h3.5 l-1 6 L10 5 H6 z"/></g><text x="44" y="26" class="cn">Zynara.Intake</text><text x="44" y="42" class="sub bd">Azure Function</text><text x="44" y="55" class="sub bd">POST /api/requests</text></g>
+    <g transform="translate(52,466)"><rect width="216" height="76" rx="10" class="card" stroke="#6E9A12" stroke-opacity=".3"/><rect x="12" y="13" width="22" height="22" rx="6" fill="#8BB817"/><g transform="translate(16,18)" class="gl"><path d="M6 1 L12 4 L6 7 L0 4 z"/><path d="M0 8 L6 11 L12 8"/></g><text x="44" y="26" class="cn">Requests Queue</text><text x="44" y="42" class="sub bd">Azure Storage Queue</text><text x="44" y="55" class="sub bd">— decouples intake</text></g>
+  </g>
+  <path d="M280 502 H304" stroke="#5C7C84" stroke-width="1.4" fill="none" marker-end="url(#ag)"/>
+  <text x="292" y="496" text-anchor="middle" class="sub" font-size="7">dequeue</text>
+
+  <!-- ==================== PANEL 4 · DATA ==================== -->
+  <rect x="1018" y="258" width="242" height="292" rx="13" fill="#D7F2E5" stroke="#059669" stroke-opacity=".42" stroke-width="1.3"/>
+  <circle cx="1036" cy="282" r="12" fill="#059669"/><text x="1036" y="286.5" text-anchor="middle" fill="#FFFFFF" font-size="12" font-weight="800">4</text>
+  <g transform="translate(1056,275)" class="ico" stroke="#059669"><path d="M1.5 3.5c0-1.6 3-2.6 6.5-2.6s6.5 1 6.5 2.6v8c0 1.6-3 2.6-6.5 2.6s-6.5-1-6.5-2.6z"/><path d="M1.5 3.5c0 1.6 3 2.6 6.5 2.6s6.5-1 6.5-2.6"/></g>
+  <text x="1080" y="287" class="sect" fill="#047857">DATA</text>
+  <g>
+    <g transform="translate(1030,298)"><rect width="218" height="62" rx="10" class="card" stroke="#059669" stroke-opacity=".3"/><rect x="12" y="13" width="22" height="22" rx="6" fill="#059669"/><g transform="translate(16,18)" class="gl"><path d="M0 1 h13 l-4.5 5.5 v5 l-4 -2 v-3.5 z"/></g><text x="44" y="25" class="cn">Gate</text><text x="44" y="40" class="sub bd">readiness ≥ θ ∧ no gaps →</text><text x="44" y="52" class="sub bd">auto-submit, else Reviewer</text></g>
+    <g transform="translate(1030,370)"><rect width="218" height="74" rx="10" class="card" stroke="#059669" stroke-opacity=".3"/><rect x="12" y="14" width="22" height="22" rx="6" fill="#059669"/><g transform="translate(16,19)" class="gl"><path d="M0 0 h8 v16 h-8 z M8 8 h7 M12 5 l3 3 -3 3"/></g><text x="44" y="26" class="cn">Submission Adapter</text><text x="44" y="42" class="sub bd">the only outbound door</text><text x="44" y="55" class="sub bd">portal · X12 278 · FHIR · fax</text></g>
+    <g transform="translate(1030,454)"><rect width="218" height="72" rx="10" class="card" stroke="#059669" stroke-opacity=".3"/><rect x="12" y="13" width="22" height="22" rx="6" fill="#059669"/><g transform="translate(16,17)" class="gl"><path d="M1.5 2.5c0-1.4 2.5-2.2 5.5-2.2s5.5 .8 5.5 2.2v7c0 1.4-2.5 2.2-5.5 2.2s-5.5-.8-5.5-2.2z"/><path d="M1.5 2.5c0 1.4 2.5 2.2 5.5 2.2s5.5-.8 5.5-2.2"/></g><text x="44" y="24" class="cn">Azure SQL <tspan class="sub" font-weight="400" font-size="8">· serverless</tspan></text><text x="44" y="39" class="sub bd">Requests · Submissions · Outcomes</text><text x="44" y="51" class="sub bd">Auths · Policies · Precedents</text></g>
+  </g>
+  <rect x="1030" y="532" width="218" height="14" rx="7" fill="#059669"/>
+  <text x="1139" y="542" text-anchor="middle" fill="#FFFFFF" font-size="7.5" font-weight="700">✓ every submit &amp; appeal is human-approved</text>
+
+  <!-- ==================== PANEL 5 · EXPERIENCE ==================== -->
+  <rect x="40" y="566" width="1220" height="92" rx="13" fill="#D2F0EE" stroke="#0D9488" stroke-opacity=".42" stroke-width="1.3"/>
+  <circle cx="58" cy="590" r="12" fill="#0D9488"/><text x="58" y="594.5" text-anchor="middle" fill="#FFFFFF" font-size="12" font-weight="800">5</text>
+  <g transform="translate(78,583)" class="ico" stroke="#0D9488"><rect x="0.5" y="1" width="15" height="10" rx="1.5"/><path d="M5.5 15h5 M8 11v4"/></g>
+  <text x="100" y="595" class="sect" fill="#0B7268">EXPERIENCE</text>
+  <text x="222" y="595" class="sub" font-size="8.5">the region switch flips the payer rule-set &amp; appeal path — shown live in the demo</text>
+  <g transform="translate(54,606)"><rect width="336" height="46" rx="10" class="card" stroke="#0D9488" stroke-opacity=".3"/><rect x="12" y="11" width="22" height="22" rx="6" fill="#0D9488"/><g transform="translate(17,15)" class="gl"><circle cx="5" cy="4" r="3"/><path d="M0 12c0-3.5 8-3.5 9 0 M9 8l2 2 4-4.5"/></g><text x="44" y="21" class="cn">Reviewer</text><text x="44" y="36" class="sub bd">approves &amp; edits every submit + appeal</text></g>
+  <g transform="translate(406,606)"><rect width="506" height="46" rx="10" class="card" stroke="#0D9488" stroke-opacity=".3"/><rect x="12" y="11" width="22" height="22" rx="6" fill="#0D9488"/><g transform="translate(16,16)" class="gl"><rect x="0" y="0" width="6" height="6"/><rect x="9" y="0" width="6" height="6"/><rect x="0" y="9" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/></g><text x="44" y="21" class="cn">Dashboard <tspan class="sub" font-weight="400" font-size="8">· Static Web App</tspan></text><text x="44" y="36" class="sub bd">Queue · Appeals · Early Warnings · Recovery £/$</text><rect x="380" y="12" width="112" height="22" rx="11" fill="#0D9488"/><text x="436" y="26.5" text-anchor="middle" fill="#FFFFFF" font-size="8" font-weight="700">UK ⇄ US</text></g>
+  <g transform="translate(928,606)"><rect width="332" height="46" rx="10" class="card" stroke="#0D9488" stroke-opacity=".3"/><rect x="12" y="11" width="22" height="22" rx="6" fill="#0D9488"/><g transform="translate(17,16)" class="gl"><path d="M5 0 C2 0 4 6 1 7.5 C4 9 2 15 5 15 M11 0 C14 0 12 6 15 7.5 C12 9 14 15 11 15"/></g><text x="44" y="21" class="cn">Zynara.ApiProxy</text><text x="44" y="36" class="sub bd">read models + reviewer actions</text></g>
+
+  <!-- ==================== CROSS-CUTTING ==================== -->
+  <circle cx="46" cy="676" r="4" fill="#0FA3A0"/>
+  <text x="58" y="680" class="sect">CROSS-CUTTING</text>
+  <text x="188" y="680" class="sub" font-size="9.5">spans every layer above</text>
+  <g font-size="8.3">
+    <g transform="translate(40,688)">
+      <rect width="394" height="66" rx="10" fill="#E0F2F0" stroke="#0FA3A0" stroke-opacity=".34"/>
+      <g transform="translate(16,13)" class="ico" stroke="#0C7A73"><path d="M7 0.8 L13 3 V8 C13 11 10 13 7 14 C4 13 1 11 1 8 V3 Z"/></g>
+      <text x="38" y="21" class="sect" font-size="10.5" fill="#0B6E67">IDENTITY &amp; SECURITY</text>
+      <text x="20" y="39" class="sub">Managed identity — SQL · Foundry · Storage, no stored secrets</text>
+      <text x="20" y="54" class="sub">Key Vault holds only App Insights + content-share strings</text>
+    </g>
+    <g transform="translate(453,688)">
+      <rect width="394" height="66" rx="10" fill="#E0F2F0" stroke="#0FA3A0" stroke-opacity=".34"/>
+      <g transform="translate(16,14)" class="ico" stroke="#0C7A73"><path d="M0 8 H3.5 L6 2 L9.5 14 L12 8 H16"/></g>
+      <text x="38" y="21" class="sect" font-size="10.5" fill="#0B6E67">OBSERVABILITY</text>
+      <text x="20" y="37" class="sub">One App Insights trace id per request id, every hop</text>
+      <text x="20" y="50" class="sub">Every agent call metered → £/$ on the dashboard</text>
+      <text x="20" y="63" class="sub">Eval harness — scored offline, gated in CI</text>
+    </g>
+    <g transform="translate(866,688)">
+      <rect width="394" height="66" rx="10" fill="#E0F2F0" stroke="#0FA3A0" stroke-opacity=".34"/>
+      <g transform="translate(16,13)" class="ico" stroke="#0C7A73"><path d="M7 0.8 L13 3 V8 C13 11 10 13 7 14 C4 13 1 11 1 8 V3 Z"/><path d="M4.4 7.5 l1.8 1.8 3.4 -4"/></g>
+      <text x="38" y="21" class="sect" font-size="10.5" fill="#0B6E67">RESPONSIBLE AI</text>
+      <text x="20" y="37" class="sub">A human approves every outbound action</text>
+      <text x="20" y="50" class="sub">Agents never set a value, code or date — deterministic code does</text>
+      <text x="20" y="63" class="sub">No PHI in scope — request ids + procedure codes only</text>
+    </g>
   </g>
 
-  <!-- Panel 3 · AI FOUNDRY · AGENT SERVICE -->
-  <rect x="356" y="386" width="560" height="86" rx="13" fill="#E9DDFB" stroke="#7C3AED" stroke-opacity=".4" stroke-width="1.3"/>
-  <circle cx="374" cy="410" r="9" fill="#7C3AED"/><text x="374" y="413.5" text-anchor="middle" fill="#FFFFFF" font-size="10.5" font-weight="700">3</text>
-  <g transform="translate(390,403)" class="ico" stroke="#7C3AED"><path d="M7 0 l1.7 4.6 4.6 1.7 -4.6 1.7 -1.7 4.6 -1.7 -4.6 -4.6 -1.7 4.6 -1.7 z"/></g>
-  <text x="414" y="414" class="sect" fill="#6D28D9">AI FOUNDRY · AGENT SERVICE</text>
-  <g fill="#4A2E7A" font-size="9.2">
-    <circle cx="374" cy="432.5" r="2.4" fill="#7C3AED"/><text x="387" y="436">Agents produce prose &amp; judgement only — never a number or a date</text>
-    <circle cx="374" cy="448.5" r="2.4" fill="#7C3AED"/><text x="387" y="452">File Search grounded on <tspan font-style="italic">data/policies/&lt;region&gt;/&lt;payer&gt;</tspan></text>
-    <circle cx="374" cy="464.5" r="2.4" fill="#7C3AED"/><text x="387" y="468">gpt-4.1 class · one deterministic stub twin per agent for CI</text>
-  </g>
-
-  <!-- Panel 4 · DATA -->
-  <rect x="932" y="262" width="328" height="210" rx="13" fill="#D3F1E2" stroke="#059669" stroke-opacity=".4" stroke-width="1.3"/>
-  <circle cx="950" cy="286" r="9" fill="#059669"/><text x="950" y="289.5" text-anchor="middle" fill="#FFFFFF" font-size="10.5" font-weight="700">4</text>
-  <g transform="translate(966,279)" class="ico" stroke="#059669"><path d="M1.5 3.5 c0 -1.5 2.7 -2.5 6 -2.5 s6 1 6 2.5 v7 c0 1.5 -2.7 2.5 -6 2.5 s-6 -1 -6 -2.5 z"/><path d="M1.5 3.5 c0 1.5 2.7 2.5 6 2.5 s6 -1 6 -2.5"/></g>
-  <text x="990" y="290" class="sect" fill="#047857">DATA</text>
-  <g transform="translate(950,0)">
-    <circle cx="0" cy="316.5" r="2.4" fill="#059669"/><text x="13" y="320" class="cn">Gate</text><text x="13" y="333" class="sub bd">readiness ≥ θ ∧ no gaps → auto-submit</text>
-    <circle cx="0" cy="355.5" r="2.4" fill="#059669"/><text x="13" y="359" class="cn">Submission Adapter</text><text x="13" y="372" class="sub bd">the only outbound door</text><text x="13" y="384" class="sub bd">portal · X12 278 · FHIR · fax</text>
-    <circle cx="0" cy="406.5" r="2.4" fill="#059669"/><text x="13" y="410" class="cn">Azure SQL <tspan class="sub" font-weight="400">· serverless</tspan></text><text x="13" y="423" class="sub bd">Requests · Outcomes · Precedents ·</text><text x="13" y="435" class="sub bd">Auths · Policies · AgentCalls</text>
-    <circle cx="0" cy="455.5" r="2.4" fill="#059669"/><text x="13" y="459" class="cn" fill="#047857">Every action is human-approved</text>
-  </g>
-
-  <!-- Panel 5 · EXPERIENCE -->
-  <rect x="40" y="488" width="1220" height="94" rx="13" fill="#CFEFF5" stroke="#0891B2" stroke-opacity=".4" stroke-width="1.3"/>
-  <circle cx="58" cy="512" r="9" fill="#0891B2"/><text x="58" y="515.5" text-anchor="middle" fill="#FFFFFF" font-size="10.5" font-weight="700">5</text>
-  <g transform="translate(74,505)" class="ico" stroke="#0891B2"><rect x="0.5" y="1.5" width="13" height="9" rx="1.5"/><path d="M5 13 h4 M7 10.5 v2.5"/></g>
-  <text x="98" y="516" class="sect" fill="#0E7490">EXPERIENCE</text>
-  <text x="58" y="542" class="bd"><tspan class="cn">Reviewer</tspan><tspan class="sub">  —  approves &amp; edits every submit + appeal</tspan></text>
-  <text x="470" y="542" class="bd"><tspan class="cn">Dashboard</tspan><tspan class="sub">  —  Queue · Appeals · Early Warnings · Recovery £/$</tspan></text>
-  <text x="900" y="542" class="bd"><tspan class="cn">Zynara.ApiProxy</tspan><tspan class="sub">  —  read models + reviewer actions</tspan></text>
-  <rect x="58" y="554" width="300" height="22" rx="11" fill="#0891B2"/>
-  <text x="208" y="569" text-anchor="middle" fill="#FFFFFF" font-size="9.5" font-weight="700" letter-spacing=".04em">REGION SWITCH   UK  ⇄  US</text>
-  <text x="374" y="569" class="sub" font-size="9" font-style="italic">same agents · swap the payer rule-set and the appeal path (FOS ⇄ external review)</text>
-  <text x="900" y="569" class="sub" font-size="8.4">Recovery £/$  =  denied × (1 − appeal rate) × win probability × mean claim value</text>
-
-  <!-- ======================= CROSS-CUTTING ======================= -->
-  <circle cx="46" cy="606" r="4" fill="#0FA3A0"/>
-  <text x="58" y="610" class="sect">CROSS-CUTTING</text>
-  <text x="185" y="610" class="sub" font-size="10">spans every layer above</text>
-
-  <g transform="translate(40,618)">
-    <rect width="394" height="134" rx="12" fill="#D3F1E2" stroke="#059669" stroke-opacity=".38"/>
-    <g transform="translate(18,20)" class="ico" stroke="#059669"><path d="M7 0.8 L12.5 2.6 V7 C12.5 10 10 12.4 7 13.4 C4 12.4 1.5 10 1.5 7 V2.6 Z"/></g>
-    <text x="42" y="30" class="sect" fill="#047857">IDENTITY &amp; SECURITY</text>
-    <circle cx="20" cy="58" r="2.3" fill="#059669"/><text x="32" y="61" class="cn">Managed identity</text><text x="32" y="73" class="sub bd">SQL · Foundry · Storage — no stored secrets</text>
-    <circle cx="20" cy="94" r="2.3" fill="#059669"/><text x="32" y="97" class="cn">Key Vault</text><text x="32" y="109" class="sub bd">App Insights + content-share strings only</text>
-  </g>
-  <g transform="translate(453,618)">
-    <rect width="394" height="134" rx="12" fill="#FBE8C8" stroke="#F59E0B" stroke-opacity=".38"/>
-    <g transform="translate(18,20)" class="ico" stroke="#F59E0B"><path d="M0.5 7 H3.5 L5.5 2 L8.5 12 L10.5 7 H13.5"/></g>
-    <text x="42" y="30" class="sect" fill="#C2740B">OBSERVABILITY</text>
-    <circle cx="20" cy="52" r="2.3" fill="#F59E0B"/><text x="32" y="55" class="cn">App Insights <tspan class="sub" font-weight="400">— one trace id per request id</tspan></text>
-    <circle cx="20" cy="80" r="2.3" fill="#F59E0B"/><text x="32" y="83" class="cn">Cost <tspan class="sub" font-weight="400">— every agent call metered → £/$</tspan></text>
-    <circle cx="20" cy="108" r="2.3" fill="#F59E0B"/><text x="32" y="111" class="cn">Eval harness <tspan class="sub" font-weight="400">— scored offline, gated in CI</tspan></text>
-  </g>
-  <g transform="translate(866,618)">
-    <rect width="394" height="134" rx="12" fill="#E9DDFB" stroke="#7C3AED" stroke-opacity=".38"/>
-    <g transform="translate(18,20)" class="ico" stroke="#7C3AED"><path d="M7 0.8 L12.5 2.6 V7 C12.5 10 10 12.4 7 13.4 C4 12.4 1.5 10 1.5 7 V2.6 Z"/><path d="M4.6 7 l1.8 1.8 3.2 -3.6"/></g>
-    <text x="42" y="30" class="sect" fill="#6D28D9">RESPONSIBLE AI</text>
-    <circle cx="20" cy="52" r="2.3" fill="#7C3AED"/><text x="32" y="55" class="sub bd">A human approves every outbound action</text>
-    <circle cx="20" cy="80" r="2.3" fill="#7C3AED"/><text x="32" y="83" class="sub bd">Agents never set a decision value or date</text>
-    <circle cx="20" cy="108" r="2.3" fill="#7C3AED"/><text x="32" y="111" class="sub bd">No PHI in scope — request ids + codes only</text>
-  </g>
-
-  <!-- ======================= IMPACT RIBBON ======================= -->
-  <rect x="40" y="766" width="1220" height="28" rx="8" fill="url(#seal)"/>
-  <text x="650" y="784" text-anchor="middle" fill="#FFFFFF" font-size="10.5" font-weight="600" letter-spacing=".01em">THE APPEALS GAP  —  only 11.5% of denials are appealed, yet 80.7% of appeals succeed.   Care Approval IQ is built to close it.</text>
-
-  <!-- ======================= FOOTER ======================= -->
-  <line x1="40" y1="810" x2="1260" y2="810" stroke="#0FA3A0" stroke-opacity=".25"/>
-  <text x="40" y="826" font-size="9.5" font-weight="700" letter-spacing=".05em">DEEPAK KUMAR · ARCHITECT TRACK SUBMISSION</text>
-  <text x="1260" y="826" text-anchor="end" class="sub" font-size="9">Zynara Health (fictional) · Care Approval IQ · Proof beats paperwork.</text>
+  <!-- ==================== FOOTER ==================== -->
+  <line x1="40" y1="770" x2="1260" y2="770" stroke="#0FA3A0" stroke-opacity=".25"/>
+  <text x="40" y="786" font-size="9.5" font-weight="700" letter-spacing=".05em">DEEPAK KUMAR · ARCHITECT TRACK SUBMISSION</text>
+  <text x="1260" y="786" text-anchor="end" class="sub" font-size="9">Zynara Health (fictional) · Care Approval IQ · Proof beats paperwork.</text>
 </svg>
