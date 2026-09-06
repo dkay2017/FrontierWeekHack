@@ -1,377 +1,1111 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Zynara — Care Approval IQ</title>
+<title>Care Approval IQ</title>
+<meta name="description" content="Zynara Health's prior-authorisation reviewer console — the evidence, the precedents, and the Critic's challenge behind every assembled case." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" />
+
 <style>
-  :root {
-    --bg: #0f1720; --panel: #16212e; --panel-2: #1c2a3a; --line: #2a3b4f;
-    --ink: #e8eef4; --ink-dim: #9fb3c6; --ink-faint: #6f8698;
-    --teal: #2ec4b6; --blue: #4d7cfe; --violet: #9a7cf0;
-    --green: #35c47b; --amber: #e8b23a; --red: #e2584d;
-    --radius: 10px;
+/* ==========================================================================
+   Care Approval IQ — reviewer console. Light-first, with a dark toggle.
+   Shell and component system carried from the Zynara/TireForge house style;
+   accent is the Zynara seal teal→green. Every token is on :root; the second
+   theme redefines only tokens. Body ground is painted, so the page holds on
+   any host.
+   ========================================================================== */
+:root{
+  --ground:#D8DFDE;
+  --surface:#FBFDFC;
+  --surface-2:#EBF1EF;
+  --sunk:#DBE4E2;
+  --ink:#0C1E23;
+  --muted:#33494E;
+  --faint:#5B7B82;
+  --line:#C4D2CF;
+  --line-soft:#D6E0DD;
+  --glass:rgba(255,255,255,.76);
+
+  --mesh1:rgba(15,163,160,.14);
+  --mesh2:rgba(31,190,107,.11);
+  --aurora-op:.40;
+
+  --mast-ink:#EAF3F2;
+  --mast-muted:#9FBEBB;
+  --mast-line:#27403D;
+
+  --accent:#0E8C89; --accent-ink:#0A6B69; --accent-soft:#DCF0EF; --accent-line:#B2DEDB;
+
+  --crit:#BC2E25; --crit-soft:#FBE6E2; --crit-line:#EFC3BB;
+  --warn:#8A5A08; --warn-soft:#F7EACF; --warn-line:#E5CD97;
+  --ok:#1B7638;   --ok-soft:#DEEFE3;   --ok-line:#B6D9C0;
+  --slate:#425763; --slate-soft:#E4E9EB; --slate-line:#C7D2D5;
+
+  --auth:#0E7490; --auth-soft:#D7EBF0;
+  --evid:#1D4ED8; --evid-soft:#DEE9FC;
+  --prec:#6D28D9; --prec-soft:#EAE1F8;
+  --crc:#B45309;  --crc-soft:#F6E7D2;
+  --gate:#334155; --gate-soft:#E1E6EC;
+
+  --grid:#DAE2E0;
+  --shadow:0 1px 2px rgba(12,30,35,.06), 0 12px 28px -14px rgba(12,30,35,.26);
+  --shadow-lg:0 2px 10px rgba(12,30,35,.10), 0 34px 64px -20px rgba(12,30,35,.40);
+  --ease:cubic-bezier(.2,.7,.2,1);
+
+  --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#091316; --surface:#12201F; --surface-2:#1A2A28; --sunk:#0D1918;
+    --ink:#E7F1EF; --muted:#B4C4C1; --faint:#84a09c; --line:#274240; --line-soft:#1E302E;
+    --glass:rgba(18,32,31,.72);
+    --mesh1:rgba(31,190,107,.12); --mesh2:rgba(15,163,160,.08); --aurora-op:.24;
+    --mast-ink:#E7F1EF; --mast-muted:#84a09c; --mast-line:#21322F;
+    --accent:#3ECEC6; --accent-ink:#7CE0DA; --accent-soft:#122C2A; --accent-line:#2C4E4A;
+    --crit:#E88A7D; --crit-soft:#2C1613; --crit-line:#4A2721;
+    --warn:#DBA94E; --warn-soft:#2A1F0C; --warn-line:#453814;
+    --ok:#63C081; --ok-soft:#122419; --ok-line:#244A31;
+    --slate:#9CADB4; --slate-soft:#1B2A2E; --slate-line:#33474C;
+    --auth:#54B4CE; --auth-soft:#10262C;
+    --evid:#7CA2F5; --evid-soft:#15203A;
+    --prec:#B49BF3; --prec-soft:#211A38;
+    --crc:#DFA05A; --crc-soft:#2A1E0E;
+    --gate:#9FB0BE; --gate-soft:#1B252C;
+    --grid:#233432;
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 28px -16px rgba(0,0,0,.8);
+    --shadow-lg:0 2px 10px rgba(0,0,0,.6), 0 34px 64px -22px rgba(0,0,0,.9);
   }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink);
-    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-  a { color: var(--blue); }
-  header {
-    display: flex; align-items: center; gap: 16px; padding: 14px 22px;
-    border-bottom: 1px solid var(--line); background: var(--panel);
-    position: sticky; top: 0; z-index: 5;
-  }
-  .brand { font-weight: 700; letter-spacing: .2px; }
-  .brand small { color: var(--ink-faint); font-weight: 500; margin-left: 8px; }
-  .tag { color: var(--teal); font-style: italic; margin-left: 6px; }
-  header .spacer { flex: 1; }
-  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px;
-    border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
-  .pill.region { background: #123; color: var(--teal); border: 1px solid var(--line); }
-  select, button {
-    font: inherit; color: var(--ink); background: var(--panel-2);
-    border: 1px solid var(--line); border-radius: 8px; padding: 7px 11px;
-  }
-  button { cursor: pointer; }
-  button.primary { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
-  button.ghost { background: transparent; }
-  button:hover { filter: brightness(1.08); }
-  .tabs { display: flex; gap: 4px; padding: 10px 22px 0; border-bottom: 1px solid var(--line); background: var(--panel); }
-  .tab { padding: 9px 14px; border: 1px solid transparent; border-bottom: none;
-    border-radius: 8px 8px 0 0; color: var(--ink-dim); cursor: pointer; }
-  .tab.active { background: var(--bg); color: var(--ink); border-color: var(--line); }
+}
+:root[data-theme="dark"]{
+  --ground:#091316; --surface:#12201F; --surface-2:#1A2A28; --sunk:#0D1918;
+  --ink:#E7F1EF; --muted:#B4C4C1; --faint:#84a09c; --line:#274240; --line-soft:#1E302E;
+  --glass:rgba(18,32,31,.72);
+  --mesh1:rgba(31,190,107,.12); --mesh2:rgba(15,163,160,.08); --aurora-op:.24;
+  --mast-ink:#E7F1EF; --mast-muted:#84a09c; --mast-line:#21322F;
+  --accent:#3ECEC6; --accent-ink:#7CE0DA; --accent-soft:#122C2A; --accent-line:#2C4E4A;
+  --crit:#E88A7D; --crit-soft:#2C1613; --crit-line:#4A2721;
+  --warn:#DBA94E; --warn-soft:#2A1F0C; --warn-line:#453814;
+  --ok:#63C081; --ok-soft:#122419; --ok-line:#244A31;
+  --slate:#9CADB4; --slate-soft:#1B2A2E; --slate-line:#33474C;
+  --auth:#54B4CE; --auth-soft:#10262C;
+  --evid:#7CA2F5; --evid-soft:#15203A;
+  --prec:#B49BF3; --prec-soft:#211A38;
+  --crc:#DFA05A; --crc-soft:#2A1E0E;
+  --gate:#9FB0BE; --gate-soft:#1B252C;
+  --grid:#233432;
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 28px -16px rgba(0,0,0,.8);
+  --shadow-lg:0 2px 10px rgba(0,0,0,.6), 0 34px 64px -22px rgba(0,0,0,.9);
+}
 
-  .layout { display: grid; grid-template-columns: 340px 1fr; gap: 0; min-height: calc(100vh - 108px); }
-  .queue { border-right: 1px solid var(--line); background: var(--panel); overflow-y: auto; }
-  .queue h2, .main h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .8px;
-    color: var(--ink-faint); margin: 18px 18px 8px; }
-  .qitem { padding: 12px 18px; border-bottom: 1px solid var(--line); cursor: pointer; }
-  .qitem:hover { background: var(--panel-2); }
-  .qitem.active { background: var(--panel-2); border-left: 3px solid var(--blue); padding-left: 15px; }
-  .qitem .proc { font-weight: 600; }
-  .qitem .meta { color: var(--ink-faint); font-size: 12px; margin-top: 2px; }
-  .qitem .head { color: var(--ink-dim); font-size: 12.5px; margin-top: 6px; }
+*{box-sizing:border-box;margin:0;padding:0;}
+html{height:100%;}
+body{
+  min-height:100vh; color:var(--ink);
+  display:flex; flex-direction:column;
+  font-family:var(--sans); font-size:13px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(1100px 620px at 4% -8%, var(--mesh1), transparent 60%),
+    radial-gradient(1000px 560px at 100% 0%, var(--mesh2), transparent 56%),
+    var(--ground);
+  background-attachment:fixed;
+}
+.mono{font-family:var(--mono);}
+.tnum{font-variant-numeric:tabular-nums;}
+button{font:inherit;color:inherit;cursor:pointer;border:none;background:none;}
+select{font:inherit;color:inherit;}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+table{border-collapse:collapse;width:100%;}
+h1,h2,h3{font-weight:700;}
+[hidden]{display:none !important;}
 
-  .main { overflow-y: auto; padding-bottom: 80px; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
-    margin: 16px 22px; padding: 18px 20px; }
-  .card h3 { margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: var(--ink-faint); }
-  .why { font-size: 17px; font-weight: 600; margin: 2px 0 10px; }
-  .kv { color: var(--ink-dim); }
-  .kv b { color: var(--ink); font-weight: 600; }
-  .row { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; }
+.aurora{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+.aurora i{position:absolute;border-radius:50%;filter:blur(100px);opacity:var(--aurora-op);will-change:transform;}
+.aurora .a1{width:600px;height:600px;left:-170px;top:-210px;background:#0FA3A0;animation:au1 32s ease-in-out infinite alternate;}
+.aurora .a2{width:520px;height:520px;right:-150px;top:-120px;background:#1FBE6B;animation:au2 36s ease-in-out infinite alternate;}
+.aurora .a3{width:600px;height:600px;left:40%;bottom:-360px;background:#0E7490;animation:au3 40s ease-in-out infinite alternate;}
+@keyframes au1{to{transform:translate(64px,50px) scale(1.1);}}
+@keyframes au2{to{transform:translate(-50px,74px) scale(.94);}}
+@keyframes au3{to{transform:translate(-74px,-50px) scale(1.07);}}
+.grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:radial-gradient(rgba(12,30,35,.055) 1px,transparent 1.4px);background-size:26px 26px;
+  -webkit-mask-image:radial-gradient(ellipse 92% 74% at 50% 0%,#000 26%,transparent 76%);
+          mask-image:radial-gradient(ellipse 92% 74% at 50% 0%,#000 26%,transparent 76%);}
 
-  .s-ready { background: rgba(53,196,123,.15); color: var(--green); }
-  .s-strengthen { background: rgba(232,178,58,.16); color: var(--amber); }
-  .s-review { background: rgba(77,124,254,.16); color: #8fb0ff; }
-  .s-abstain { background: rgba(226,88,77,.16); color: #ff8f85; }
-  .s-none { background: rgba(159,179,198,.16); color: var(--ink-dim); }
+.label{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);}
 
-  table.crit { width: 100%; border-collapse: collapse; margin-top: 6px; }
-  table.crit th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .6px;
-    color: var(--ink-faint); padding: 6px 10px; border-bottom: 1px solid var(--line); }
-  table.crit td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  .badge { font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 5px;
-    background: rgba(46,196,182,.16); color: var(--teal); }
-  .badge.mand { background: rgba(154,124,240,.18); color: #c3b0ff; }
-  .st { font-size: 12px; font-weight: 600; padding: 2px 7px; border-radius: 5px; }
-  .st.Documented { background: rgba(53,196,123,.16); color: var(--green); }
-  .st.Partial { background: rgba(232,178,58,.16); color: var(--amber); }
-  .st.Missing { background: rgba(159,179,198,.14); color: var(--ink-dim); }
-  .st.Contradicted { background: rgba(226,88,77,.18); color: #ff8f85; }
-  .quote { color: var(--ink); border-left: 2px solid var(--line); padding-left: 9px; margin: 4px 0 0; }
-  .src { color: var(--ink-faint); font-size: 12px; margin-top: 3px; }
+/* ============ MASTHEAD ============ */
+.mast{position:sticky;top:0;z-index:30;color:var(--mast-ink);
+  background:linear-gradient(118deg,#0B1D20 0%,#123231 52%,#0C2A2C 100%);
+  border-bottom:2px solid transparent;}
+.mast::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;
+  background:linear-gradient(90deg,#0FA3A0,#16B58C 46%,#1FBE6B);}
+.mast-row{max-width:1360px;margin:0 auto;padding:0 26px;height:56px;display:flex;align-items:center;gap:13px;}
+.logo{width:30px;height:30px;flex:none;}
+.logo svg{width:30px;height:30px;display:block;}
+.wordmark{display:flex;flex-direction:column;line-height:1.12;}
+.wordmark b{font-size:15px;font-weight:700;letter-spacing:.005em;}
+.wordmark b em{font-style:normal;font-weight:600;
+  background:linear-gradient(90deg,#5EEAD4,#7BE8A6);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.wordmark span{font-size:11px;color:var(--mast-muted);font-style:italic;margin-top:2px;}
+.mast-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.rolepick{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mast-muted);}
+.rolepick select{font:inherit;font-size:11.5px;font-weight:600;color:var(--mast-ink);background:rgba(255,255,255,.06);
+  border:1px solid var(--mast-line);border-radius:8px;padding:5px 8px;}
+.rolepick select:focus-visible{outline:2px solid var(--focus);}
+@media (max-width:720px){.rolepick span{display:none;}}
+.audit{list-style:none;display:flex;flex-direction:column;gap:0;}
+.audit li{display:grid;grid-template-columns:64px 1fr;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line-soft);font-size:11px;}
+.audit li:last-child{border-bottom:none;}
+.audit .ic{font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--faint);padding-top:2px;text-align:right;}
+.audit .tx b{font-family:var(--mono);font-weight:600;color:var(--ink);font-size:10.5px;}
+.audit .tx p{color:var(--muted);margin-top:1px;line-height:1.45;}
+.audit .refused .tx b, .audit .refused .tx p{color:var(--crit);}
+.act[disabled]{opacity:.4;cursor:not-allowed;}
+.act.need{font-size:11px;color:var(--warn);border-color:var(--warn-line);background:var(--warn-soft);}
+.region{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:600;color:var(--mast-muted);
+  background:rgba(255,255,255,.06);border:1px solid var(--mast-line);border-radius:9px;padding:6px 11px;white-space:nowrap;}
+.region b{color:var(--mast-ink);font-weight:600;}
+.region .dot{width:6px;height:6px;border-radius:50%;background:#1FBE6B;flex:none;}
+button.region{cursor:pointer;}
+button.region:hover{color:var(--mast-ink);border-color:var(--mast-ink);}
 
-  .precedent { border: 1px solid var(--line); border-radius: 8px; padding: 13px 14px; margin-top: 10px; background: var(--panel-2); }
-  .precedent.drove { border-color: var(--blue); box-shadow: inset 3px 0 0 var(--blue); }
-  .precedent .top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .precedent .id { font-weight: 700; }
-  .sim { flex: 1; min-width: 120px; max-width: 240px; height: 7px; background: #0d1620; border-radius: 999px; overflow: hidden; }
-  .sim > i { display: block; height: 100%; background: linear-gradient(90deg, var(--teal), var(--blue)); }
-  .simn { font-variant-numeric: tabular-nums; color: var(--ink-dim); font-size: 12px; }
-  .chip { display: inline-block; font-size: 11.5px; padding: 2px 7px; border-radius: 999px;
-    background: #0d1620; border: 1px solid var(--line); color: var(--ink-dim); margin: 4px 4px 0 0; }
-  .chip.win { background: rgba(53,196,123,.14); color: var(--green); border-color: transparent; }
-  .chip.deny { background: rgba(226,88,77,.14); color: #ff8f85; border-color: transparent; }
-  .narr { color: var(--ink-dim); margin-top: 8px; font-size: 13px; }
-  .drove-tag { font-size: 11px; font-weight: 700; color: #8fb0ff; }
+/* ============ PROFILE MODAL ============ */
+.pmodal{position:fixed;left:50%;top:50%;transform:translate(-50%,-46%) scale(.98);z-index:42;
+  width:min(520px,94vw);max-height:88vh;overflow-y:auto;background:var(--surface);
+  border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:14px;box-shadow:var(--shadow-lg);
+  opacity:0;pointer-events:none;transition:opacity .2s var(--ease),transform .2s var(--ease);}
+.pmodal.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);}
+.pm-head{padding:15px 18px 13px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.pm-head h2{font-size:14px;line-height:1.3;}
+.pm-head .s{font-size:11px;color:var(--faint);margin-top:4px;}
+.pm-body{padding:14px 18px 18px;}
+.pm-lead{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px;}
+.pm-row{padding:10px 0;border-bottom:1px solid var(--line-soft);}
+.pm-row:last-child{border-bottom:none;}
+.pm-k{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:600;}
+.pm-v{font-size:12.5px;color:var(--ink);margin-top:4px;line-height:1.55;}
+.pm-v ul{margin:3px 0 0;padding-left:16px;}
+.pm-v li{margin-top:2px;}
+.pm-terms{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;}
+.pm-term{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:5px;background:var(--surface-2);color:var(--muted);border:1px solid var(--line-soft);}
+.pm-switch{display:flex;gap:4px;margin-top:2px;}
+.pm-switch button{font-size:11px;font-weight:600;color:var(--faint);border:1px solid var(--line);border-radius:7px;padding:4px 10px;background:var(--surface-2);}
+.pm-switch button[aria-pressed="true"]{color:var(--accent-ink);background:var(--accent-soft);border-color:var(--accent-line);}
+.pm-foot{font-size:10.5px;color:var(--faint);font-style:italic;padding:0 18px 16px;line-height:1.5;}
+.theme{width:32px;height:32px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;
+  color:var(--mast-muted);border:1px solid var(--mast-line);}
+.theme svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;}
+.theme:hover{color:var(--mast-ink);}
 
-  .flag { margin-top: 8px; padding-left: 12px; border-left: 2px solid var(--line); }
-  .flag b { color: var(--ink); }
-  ul.conf { margin: 6px 0 0; padding-left: 18px; color: #ff9f96; }
-  .model { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 16px; margin-top: 10px; }
-  .model div { color: var(--ink-dim); font-size: 12.5px; }
-  .model b { color: var(--ink); }
-  pre.draft { white-space: pre-wrap; background: #0d1620; border: 1px solid var(--line); border-radius: 8px;
-    padding: 13px; color: var(--ink-dim); max-height: 320px; overflow: auto; font-size: 12.5px; }
+/* ============ TAB BAR ============ */
+.tabbar{position:sticky;top:56px;z-index:29;background:var(--glass);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);}
+.tabbar-row{max-width:1360px;margin:0 auto;padding:0 26px;display:flex;align-items:stretch;gap:2px;overflow-x:auto;}
+.tab{padding:11px 14px;margin:0 3px;font-size:12.5px;font-weight:600;color:var(--faint);
+  border:1px solid transparent;border-bottom:3px solid transparent;border-radius:10px 10px 0 0;white-space:nowrap;
+  display:flex;align-items:center;gap:8px;transition:color .15s var(--ease),background .15s var(--ease);}
+.tab:first-child{margin-left:0;}
+.tab svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.9;flex:none;opacity:.5;stroke-linecap:round;stroke-linejoin:round;}
+.tab:hover{color:var(--ink);}
+.tab[aria-selected="true"]{color:var(--accent-ink);background:var(--accent-soft);border-color:var(--accent-line);}
+.tab[aria-selected="true"] svg{opacity:1;stroke:var(--accent);}
 
-  .controls { position: fixed; bottom: 0; left: 340px; right: 0; display: flex; gap: 10px; align-items: center;
-    padding: 12px 22px; background: var(--panel); border-top: 1px solid var(--line); }
-  .controls .note { color: var(--ink-faint); font-size: 12px; }
-  .done { color: var(--green); font-weight: 600; }
-  .empty { color: var(--ink-faint); padding: 40px 22px; }
-  .src-toggle { color: var(--ink-faint); font-size: 12px; padding: 8px 22px; }
-  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } .controls { left: 0; } }
+/* ============ PAGE / PANES ============ */
+.page{position:relative;z-index:1;width:100%;max-width:1360px;margin:0 auto;padding:20px 26px 44px;flex:1 0 auto;}
+.pane{display:none;}
+.pane.on{display:block;animation:fade .22s var(--ease);}
+@keyframes fade{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:none;}}
+
+.phead{display:flex;align-items:stretch;flex-wrap:wrap;margin-bottom:14px;border-radius:16px;overflow:hidden;
+  background:linear-gradient(120deg,var(--pane-soft),var(--glass) 56%);
+  border:1px solid var(--line);border-left:3px solid var(--pane-hue);backdrop-filter:blur(16px);box-shadow:var(--shadow);}
+.phead-id{flex:1 1 340px;display:flex;gap:14px;align-items:center;padding:15px 18px;min-width:0;}
+.phead-ic{width:44px;height:44px;border-radius:13px;flex:none;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--pane-hue),var(--pane-hue2));box-shadow:0 8px 20px -8px var(--pane-hue);}
+.phead-ic svg{width:22px;height:22px;stroke:#fff;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.phead-id h1{font-size:18px;letter-spacing:-.01em;line-height:1.15;}
+.phead-id p{font-size:12px;color:var(--muted);margin-top:3px;max-width:64ch;}
+.phead-stats{display:flex;align-items:stretch;}
+.pstat{padding:12px 20px;display:flex;flex-direction:column;justify-content:center;gap:3px;border-left:1px solid var(--line-soft);min-width:104px;}
+.pstat b{font-size:21px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
+.pstat b.ok{color:var(--ok);} .pstat b.warn{color:var(--warn);} .pstat b.info{color:var(--accent-ink);} .pstat b.slate{color:var(--slate);}
+.pstat .k{font-family:var(--mono);font-size:8.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);}
+@media(max-width:880px){.phead-stats{width:100%;border-top:1px solid var(--line-soft);}.pstat{flex:1;min-width:0;}}
+
+.card{background:linear-gradient(120deg,var(--pane-soft),var(--glass) 56%);backdrop-filter:blur(16px);
+  border:1px solid var(--line);border-left:3px solid var(--pane-hue,var(--accent));border-radius:16px;box-shadow:var(--shadow);overflow:hidden;}
+.card + .card{margin-top:12px;}
+.card-head{padding:13px 16px;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;gap:11px;flex-wrap:wrap;}
+.card-head h2{font-size:14px;display:flex;align-items:center;gap:10px;}
+.ibox{width:30px;height:30px;border-radius:9px;flex:none;display:inline-flex;align-items:center;justify-content:center;
+  background:var(--pane-hue,var(--accent));box-shadow:0 6px 14px -7px var(--pane-hue,var(--accent));}
+.ibox svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.card-head .cap{font-size:11px;color:var(--faint);}
+.card-head .right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+
+/* ============ TABLE ============ */
+.tw{overflow-x:auto;}
+table.t{font-size:12px;min-width:680px;}
+table.t thead th{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:#D7E5E3;text-align:left;padding:10px 12px;background:#12201F;border-bottom:2px solid var(--pane-hue,var(--accent));white-space:nowrap;}
+table.t thead th.r{text-align:right;}
+table.t .sr{width:34px;text-align:right;font-family:var(--mono);font-size:10px;color:var(--faint);padding-right:6px;}
+table.t thead th.sr{color:#9FB6B3;}
+table.t tbody td{padding:9px 12px;border-bottom:1px solid var(--line-soft);vertical-align:middle;white-space:nowrap;}
+table.t tbody tr:nth-child(odd) td{background:rgba(255,255,255,.42);}
+table.t tbody tr:nth-child(even) td{background:var(--surface-2);}
+table.t tbody tr:last-child td{border-bottom:none;}
+table.t tbody tr.click{cursor:pointer;}
+table.t tbody tr.click:hover td{background:var(--accent-soft);}
+:root[data-theme="dark"] table.t tbody tr:nth-child(odd) td{background:rgba(255,255,255,.03);}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) table.t tbody tr:nth-child(odd) td{background:rgba(255,255,255,.03);}}
+.proc-cell{font-weight:600;}
+.proc-cell .sub{display:block;font-weight:400;font-size:10.5px;color:var(--faint);font-family:var(--mono);margin-top:1px;}
+
+/* ============ PILLS / TAGS / BADGES ============ */
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:6px;font-family:var(--mono);font-size:10px;font-weight:600;
+  letter-spacing:.03em;text-transform:uppercase;padding:2px 7px;white-space:nowrap;}
+.pill::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;flex:none;}
+.pill.ok{background:var(--ok-soft);color:var(--ok);box-shadow:inset 0 0 0 1px var(--ok-line);}
+.pill.warn{background:var(--warn-soft);color:var(--warn);box-shadow:inset 0 0 0 1px var(--warn-line);}
+.pill.info{background:var(--accent-soft);color:var(--accent-ink);box-shadow:inset 0 0 0 1px var(--accent-line);}
+.pill.crit{background:var(--crit-soft);color:var(--crit);box-shadow:inset 0 0 0 1px var(--crit-line);}
+.pill.slate{background:var(--slate-soft);color:var(--slate);box-shadow:inset 0 0 0 1px var(--slate-line);}
+.pill.mute{background:var(--sunk);color:var(--faint);}
+.pill.mute::before{background:var(--faint);}
+
+.rid{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10.5px;color:var(--muted);}
+.rid::before{content:"";width:4px;height:4px;border-radius:1px;background:var(--accent);flex:none;}
+
+.conf{display:inline-flex;align-items:center;gap:8px;}
+.conf .bar{width:52px;height:6px;border-radius:3px;background:var(--sunk);overflow:hidden;flex:none;}
+.conf .bar i{display:block;height:100%;border-radius:3px;}
+.conf .n{font-family:var(--mono);font-size:11px;font-variant-numeric:tabular-nums;font-weight:600;}
+
+.evcount{font-family:var(--mono);font-size:11px;font-weight:600;}
+.evcount.full{color:var(--ok);} .evcount.some{color:var(--warn);} .evcount.none{color:var(--faint);}
+
+.empty{padding:38px 20px;text-align:center;color:var(--faint);font-size:12.5px;}
+.empty b{display:block;color:var(--muted);font-size:13.5px;margin-bottom:4px;}
+.panel-note{padding:16px 18px;font-size:12.5px;color:var(--muted);line-height:1.6;max-width:70ch;}
+.panel-note b{color:var(--ink);} .panel-note code{font-family:var(--mono);font-size:11.5px;background:var(--surface-2);padding:1px 5px;border-radius:4px;}
+.panel-note .muted{color:var(--faint);font-style:italic;}
+
+/* ============ RECOVERY ============ */
+.rec-head{padding:18px 20px;display:flex;flex-wrap:wrap;gap:22px 40px;align-items:flex-start;}
+.rec-big{display:flex;flex-direction:column;gap:5px;}
+.rec-big .n{font-size:38px;font-weight:700;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--accent-ink);}
+.rec-big .k{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);}
+.rec-formula{font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.6;
+  background:var(--surface-2);border:1px solid var(--line-soft);border-radius:10px;padding:11px 13px;max-width:52ch;}
+.rec-formula b{color:var(--ink);}
+.rec-inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:11px 20px;flex:1;min-width:220px;}
+.rec-inputs div{font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);}
+.rec-inputs b{display:block;font-family:var(--sans);font-size:15px;font-weight:700;color:var(--ink);text-transform:none;letter-spacing:0;margin-top:2px;font-variant-numeric:tabular-nums;}
+.conf-tag{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:7px;}
+.conf-tag.High{background:var(--ok-soft);color:var(--ok);box-shadow:inset 0 0 0 1px var(--ok-line);}
+.conf-tag.Medium{background:var(--warn-soft);color:var(--warn);box-shadow:inset 0 0 0 1px var(--warn-line);}
+.conf-tag.Low{background:var(--slate-soft);color:var(--slate);box-shadow:inset 0 0 0 1px var(--slate-line);}
+.est{font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  padding:1px 5px;border-radius:4px;background:var(--warn-soft);color:var(--warn);vertical-align:1px;}
+.bench-basis{font-size:10.5px;color:var(--faint);margin-top:3px;line-height:1.45;max-width:44ch;white-space:normal;}
+#benchBody td{white-space:normal;vertical-align:top;}
+
+/* ============ FOOTER ============ */
+.foot{position:relative;z-index:1;margin-top:auto;flex-shrink:0;background:linear-gradient(118deg,#0B1D20 0%,#123231 52%,#0C2A2C 100%);}
+.foot::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,#0FA3A0,#16B58C 46%,#1FBE6B);}
+.foot-in{max-width:1360px;margin:0 auto;padding:16px 26px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--mast-muted);}
+.foot-in span{background:linear-gradient(90deg,#5EEAD4,#7BE8A6);-webkit-background-clip:text;background-clip:text;color:transparent;}
+
+/* ============ DRAWER ============ */
+.scrim{position:fixed;inset:0;background:rgba(6,14,16,.5);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .28s;z-index:40;}
+.scrim.on{opacity:1;pointer-events:auto;}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(720px,96vw);z-index:41;background:var(--surface);
+  border-left:3px solid var(--st-hue,var(--accent));transform:translateX(101%);transition:transform .32s var(--ease);
+  display:flex;flex-direction:column;box-shadow:var(--shadow-lg);}
+.drawer.on{transform:translateX(0);}
+.dr-head{padding:15px 20px 13px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.dr-head h2{font-size:15px;line-height:1.25;letter-spacing:-.005em;}
+.dr-head .s{font-size:10px;color:var(--faint);margin-top:5px;font-family:var(--mono);display:flex;gap:9px;flex-wrap:wrap;align-items:center;}
+.dr-tags{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap;align-items:center;}
+.dr-x{width:29px;height:29px;border-radius:8px;flex:none;background:var(--surface-2);display:flex;align-items:center;justify-content:center;
+  color:var(--muted);border:1px solid var(--line-soft);}
+.dr-x svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;}
+.dr-body{padding:16px 20px 22px;overflow-y:auto;flex:1;}
+
+.dr-why{font-size:15px;font-weight:600;line-height:1.4;letter-spacing:-.005em;text-wrap:balance;margin-bottom:10px;color:var(--ink);}
+.dr-ai{font-size:12px;color:var(--muted);line-height:1.55;}
+.dr-ai b{color:var(--ink);font-weight:600;}
+.dr-ai + .dr-ai{margin-top:4px;}
+
+.dr-gate-banner{display:flex;gap:9px;align-items:flex-start;margin:14px 0 4px;border-radius:11px;padding:11px 13px;line-height:1.5;font-size:12px;
+  background:var(--gb-soft,var(--slate-soft));border:1px solid var(--gb-line,var(--slate-line));color:var(--gb-ink,var(--slate));}
+.dr-gate-banner svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;flex:none;margin-top:2px;}
+.dr-gate-banner b{font-weight:700;}
+.dr-gate-banner .rt{font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;font-size:11px;}
+
+.dr-sec{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);font-weight:600;
+  margin:22px 0 11px;display:flex;align-items:center;gap:7px;}
+.dr-sec::after{content:"";flex:1;height:1px;background:var(--line-soft);}
+.dr-sec .dot{width:7px;height:7px;border-radius:2px;flex:none;background:var(--sec-hue,var(--accent));}
+
+/* evidence list */
+.ev{display:flex;flex-direction:column;gap:9px;}
+.ev-row{border:1px solid var(--line-soft);border-radius:11px;padding:11px 13px;background:var(--surface);}
+.ev-top{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+.ev-name{font-weight:600;font-size:12.5px;flex:1;min-width:160px;}
+.ev-tag{font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  padding:2px 6px;border-radius:5px;background:var(--prec-soft);color:var(--prec);}
+.cstat{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:2px 8px;border-radius:6px;white-space:nowrap;}
+.cstat.Documented{background:var(--ok-soft);color:var(--ok);box-shadow:inset 0 0 0 1px var(--ok-line);}
+.cstat.Partial{background:var(--warn-soft);color:var(--warn);box-shadow:inset 0 0 0 1px var(--warn-line);}
+.cstat.Missing{background:var(--sunk);color:var(--faint);}
+.cstat.Contradicted{background:var(--crit-soft);color:var(--crit);box-shadow:inset 0 0 0 1px var(--crit-line);}
+.ev-quote{font-family:var(--mono);font-size:11px;line-height:1.55;color:var(--ink);border-left:2px solid var(--line);padding-left:10px;margin-top:9px;}
+.ev-meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:7px;font-size:10.5px;color:var(--faint);}
+.ev-meta .mono{color:var(--muted);}
+
+/* precedents */
+.prec{border:1px solid var(--line-soft);border-radius:12px;padding:12px 14px;background:var(--surface);}
+.prec + .prec{margin-top:9px;}
+.prec.drove{border-color:var(--prec);box-shadow:inset 3px 0 0 var(--prec);}
+.prec-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.prec-id{font-family:var(--mono);font-weight:700;font-size:12.5px;}
+.simbar{flex:1;min-width:80px;max-width:190px;height:6px;border-radius:999px;background:var(--sunk);overflow:hidden;}
+.simbar i{display:block;height:100%;background:linear-gradient(90deg,#0FA3A0,#6D28D9);}
+.simpct{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:600;}
+.drove-lbl{font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--prec);}
+.prec-badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;}
+.tagpill{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;padding:2px 7px;border-radius:6px;
+  background:var(--surface-2);color:var(--muted);border:1px solid var(--line-soft);}
+.tagpill.won{background:var(--ok-soft);color:var(--ok);border-color:var(--ok-line);}
+.tagpill.deny{background:var(--crit-soft);color:var(--crit);border-color:var(--crit-line);}
+.facts{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;}
+.fact{font-family:var(--mono);font-size:9.5px;padding:1px 6px;border-radius:4px;background:var(--surface-2);color:var(--faint);}
+.prec-narr{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:9px;}
+
+/* critic */
+.critic-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.verdict{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 10px;border-radius:7px;}
+.verdict.Clear{background:var(--ok-soft);color:var(--ok);box-shadow:inset 0 0 0 1px var(--ok-line);}
+.verdict.Concerns{background:var(--warn-soft);color:var(--warn);box-shadow:inset 0 0 0 1px var(--warn-line);}
+.verdict.Block{background:var(--crit-soft);color:var(--crit);box-shadow:inset 0 0 0 1px var(--crit-line);}
+.verdict.Abstain{background:var(--slate-soft);color:var(--slate);box-shadow:inset 0 0 0 1px var(--slate-line);}
+.critic-sum{font-size:12px;color:var(--muted);}
+.flag{margin-top:10px;border-left:2px solid var(--crc);padding:2px 0 2px 11px;font-size:11.5px;color:var(--muted);line-height:1.5;}
+.flag b{font-family:var(--mono);font-size:10px;color:var(--ink);font-weight:700;}
+
+.conflicts{list-style:none;display:flex;flex-direction:column;gap:6px;}
+.conflicts li{font-size:11.5px;color:var(--ink);padding:9px 12px;border-radius:9px;background:var(--crit-soft);border:1px solid var(--crit-line);line-height:1.5;}
+
+/* gate model */
+.model{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;}
+.model div{font-size:10.5px;color:var(--faint);font-family:var(--mono);letter-spacing:.04em;text-transform:uppercase;}
+.model b{display:block;font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--ink);text-transform:none;letter-spacing:0;margin-top:2px;}
+.model .bad b{color:var(--crit);}
+.gate-reason{font-family:var(--mono);font-size:10.5px;color:var(--muted);line-height:1.55;margin-top:11px;padding:9px 11px;background:var(--surface-2);border-radius:9px;}
+
+/* draft */
+.draft-tabs{display:flex;gap:2px;margin-bottom:9px;}
+.draft-tab{font-size:11px;font-weight:600;color:var(--faint);padding:4px 9px 6px;border-bottom:2px solid transparent;}
+.draft-tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);}
+pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:pre-wrap;color:var(--muted);
+  background:var(--surface-2);border:1px solid var(--line-soft);border-radius:10px;padding:12px 13px;max-height:280px;overflow:auto;}
+
+/* drawer foot */
+.dr-foot{padding:13px 20px;border-top:1px solid var(--line);display:flex;gap:9px;flex-wrap:wrap;align-items:center;background:var(--surface);}
+.dr-foot .lbl{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);margin-right:2px;}
+.act{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:10px;font-size:12px;font-weight:600;
+  border:1px solid var(--line);background:var(--surface-2);color:var(--muted);transition:transform .12s var(--ease),filter .12s;}
+.act:hover{color:var(--ink);border-color:var(--faint);}
+.act.primary{background:linear-gradient(135deg,var(--accent),#1FBE6B);color:#fff;border-color:transparent;box-shadow:0 8px 18px -8px var(--accent);}
+.act.primary:hover{transform:translateY(-1px);filter:brightness(1.05);color:#fff;}
+.dr-foot .done{font-size:11.5px;color:var(--ok);font-weight:600;margin-left:auto;}
+
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,16px);z-index:70;
+  background:#0B1D20;color:#EAF3F2;border-radius:12px;padding:12px 18px;font-size:12px;font-weight:600;
+  box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:opacity .22s,transform .22s var(--ease);display:flex;align-items:center;gap:9px;}
+.toast.on{opacity:1;transform:translate(-50%,0);}
+.toast svg{width:14px;height:14px;stroke:#5EEAD4;fill:none;stroke-width:2.6;}
+
+@media (max-width:720px){
+  .mast-row,.tabbar-row,.page,.foot-in{padding-left:15px;padding-right:15px;}
+  .wordmark span{display:none;}
+  .region{display:none;}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important;}
+}
 </style>
-</head>
-<body>
-<header>
-  <span class="brand">Zynara <small>Care Approval IQ</small><span class="tag">proof beats paperwork</span></span>
-  <span class="spacer"></span>
-  <span class="pill region" id="region">UK · Bupa/Comprehensive</span>
-  <select id="scenario" title="Run a demo scenario"></select>
+
+<div class="aurora"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
+<div class="grid-bg"></div>
+
+<header class="mast">
+  <div class="mast-row">
+    <span class="logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <defs><linearGradient id="zseal" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#12B5B0"/><stop offset="1" stop-color="#28C97C"/>
+        </linearGradient></defs>
+        <circle cx="12" cy="12" r="11" fill="url(#zseal)"/>
+        <circle cx="12" cy="12" r="9" fill="none" stroke="#fff" stroke-opacity=".32" stroke-width=".9" stroke-dasharray=".35 2.3"/>
+        <path d="M6.7 9.1H15" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".42"/>
+        <path d="M6.7 11.4H13.3" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+        <path d="M6.7 13.7H11.3" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".8"/>
+        <path d="M7.6 12.9l2.8 3 5.9-7.5" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
+    <div class="wordmark">
+      <b>Zynara Health <em>· Care Approval IQ</em></b>
+      <span>Proof beats paperwork.</span>
+    </div>
+    <div class="mast-right">
+      <label class="rolepick" title="You are reviewing as (demo — real deployments use Entra ID roles)">
+        <span>as</span>
+        <select id="rolePicker" aria-label="Reviewer role">
+          <option value="Coordinator">Coordinator</option>
+          <option value="Reviewer" selected>Reviewer</option>
+          <option value="SeniorReviewer">Senior reviewer</option>
+          <option value="MedicalDirector">Medical director</option>
+        </select>
+      </label>
+      <button class="region" id="profileBtn" title="Policy + Regulatory Profile">
+        <span class="dot"></span>Profile <b id="regionName">UK</b> · <b id="payerName">Bupa/Comprehensive</b>
+        <svg viewBox="0 0 16 16" width="11" height="11" style="stroke:currentColor;fill:none;stroke-width:1.8;opacity:.6"><path d="M4 6l4 4 4-4"/></svg>
+      </button>
+      <button class="theme" id="themeBtn" title="Switch theme" aria-label="Switch colour theme">
+        <svg viewBox="0 0 20 20"><path d="M10 2.5a7.5 7.5 0 1 0 7.5 7.5A5.8 5.8 0 0 1 10 2.5z"/></svg>
+      </button>
+    </div>
+  </div>
 </header>
 
-<div class="tabs">
-  <div class="tab active" data-tab="queue">Review Queue</div>
-  <div class="tab" data-tab="warnings">Early Warnings</div>
-  <div class="tab" data-tab="cost">Cost</div>
-</div>
+<nav class="tabbar"><div class="tabbar-row" role="tablist">
+  <button class="tab" role="tab" aria-selected="true" data-tab="review">
+    <svg viewBox="0 0 20 20"><path d="M4 3h9l3 3v11H4z"/><path d="M7 9h6M7 12h6"/></svg>Review queue</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="warnings">
+    <svg viewBox="0 0 20 20"><path d="M10 3l7 13H3z"/><path d="M10 8v4M10 14h.01"/></svg>Early warnings</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="cost">
+    <svg viewBox="0 0 20 20"><path d="M3 17V8M9 17V4M15 17v-6"/></svg>Impact</button>
+</div></nav>
 
-<div id="tab-queue" class="layout">
-  <div class="queue">
-    <h2>Cases</h2>
-    <div id="qlist"></div>
-    <div class="src-toggle" id="srcnote"></div>
+<main class="page">
+  <section class="pane on" id="pane-review"
+    style="--pane-hue:var(--accent);--pane-hue2:#1FBE6B;--pane-soft:var(--accent-soft);">
+    <div class="phead">
+      <div class="phead-id">
+        <span class="phead-ic"><svg viewBox="0 0 24 24"><path d="M4 4h11l4 4v12H4z"/><path d="M8 12h8M8 16h5"/><path d="M9 8l2 2 4-4"/></svg></span>
+        <div>
+          <h1>Prior-authorisation review</h1>
+          <p>Every case is assembled by the agents, checked by the deterministic Gate, and waiting for a
+             human. Select a row to see the evidence, the precedents and the Critic's challenge.</p>
+        </div>
+      </div>
+      <div class="phead-stats" id="reviewStats"></div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <h2><span class="ibox"><svg viewBox="0 0 20 20"><path d="M3 4h10l4 4v8H3z"/><path d="M7 10h6M7 13h4"/></svg></span>Assembled cases</h2>
+        <span class="cap" id="reviewCap">—</span>
+      </div>
+      <div class="tw">
+        <table class="t">
+          <thead><tr>
+            <th class="sr">#</th><th>Procedure</th><th>Payer · plan</th>
+            <th>Criteria</th><th>Precedent</th><th>Status</th><th>Confidence</th>
+          </tr></thead>
+          <tbody id="reviewBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="pane" id="pane-warnings"
+    style="--pane-hue:var(--evid);--pane-hue2:var(--auth);--pane-soft:var(--evid-soft);">
+    <div class="phead">
+      <div class="phead-id">
+        <span class="phead-ic"><svg viewBox="0 0 24 24"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 16h.01"/></svg></span>
+        <div>
+          <h1>Early warnings</h1>
+          <p>Deterministic monitors, advisory only — they never gate a decision or trigger an
+             outbound action.</p>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2><span class="ibox"><svg viewBox="0 0 20 20"><path d="M10 3l7 13H3z"/><path d="M10 8v4M10 14h.01"/></svg></span>Monitors</h2></div>
+      <div class="panel-note">
+        <p><b>expiry-watch</b> runs the date arithmetic on approved authorisations; <b>policy-drift</b>
+        diffs successive versions of a payer's criteria. Both are plain deterministic code with an
+        optional thin AI narrator for the alert wording — which is why they are monitors and not
+        reasoning agents.</p>
+        <p class="muted">No warnings in the demo dataset.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="pane" id="pane-cost"
+    style="--pane-hue:var(--prec);--pane-hue2:var(--accent);--pane-soft:var(--prec-soft);">
+    <div class="phead">
+      <div class="phead-id">
+        <span class="phead-ic"><svg viewBox="0 0 24 24"><path d="M12 3v18M7 7h8a3 3 0 0 1 0 6H7M7 13h9a3 3 0 0 1 0 6H6"/></svg></span>
+        <div>
+          <h1>Impact</h1>
+          <p>Two numbers, both with their working shown: the appeal opportunity in the payer's denial
+             history, and a before / after benchmark of the demo pipeline against a labelled manual
+             estimate. No invented improvement figure.</p>
+        </div>
+      </div>
+      <div class="phead-stats" id="recoveryStats"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2><span class="ibox"><svg viewBox="0 0 20 20"><path d="M10 2v16M6 6h6a2 2 0 0 1 0 4H6M6 10h7a2 2 0 0 1 0 4H5"/></svg></span>Estimated recoverable value</h2>
+        <span class="cap" id="recoveryWindow">—</span>
+      </div>
+      <div id="recoveryHead"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2><span class="ibox"><svg viewBox="0 0 20 20"><path d="M3 4h14M3 10h14M3 16h14"/></svg></span>By payer &amp; procedure</h2>
+        <span class="cap">the scopes that sum to the estimate above</span></div>
+      <div class="tw">
+        <table class="t">
+          <thead><tr>
+            <th class="sr">#</th><th>Scope</th><th class="r">Denied</th><th class="r">Not appealed</th>
+            <th class="r">Win rate</th><th class="r">Mean claim</th><th class="r">Recoverable</th><th>Confidence</th>
+          </tr></thead>
+          <tbody id="recoveryBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2><span class="ibox"><svg viewBox="0 0 20 20"><path d="M3 15V9M9 15V4M15 15v-4"/><path d="M2 17h16"/></svg></span>Before / after</h2>
+        <span class="cap" id="benchCap">—</span></div>
+      <div class="tw">
+        <table class="t">
+          <thead><tr><th>Metric</th><th>Manual today</th><th>Care Approval IQ</th></tr></thead>
+          <tbody id="benchBody"></tbody>
+        </table>
+      </div>
+      <div class="panel-note" id="benchNote"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2><span class="ibox"><svg viewBox="0 0 20 20"><path d="M3 5h14v10H3z"/><path d="M3 9h14"/></svg></span>Inference cost</h2></div>
+      <div class="panel-note">
+        <p>Per-case token and tool-call cost is recorded by <code>IAgentCallRecorder</code> when the
+        hosted Foundry agents run (<code>ZYNARA_AGENTS=foundry</code>). This demo runs the
+        deterministic stub agents, so there is no inference cost to show.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <span>Deepak Kumar · Architect Track Submission</span>
+    <span>Agent-a-Thon 2026 · Healthcare · Care Approval IQ · demo dataset</span>
   </div>
-  <div class="main" id="detail"><div class="empty">Select a case.</div></div>
-</div>
+</footer>
 
-<div id="tab-warnings" hidden>
-  <div class="card">
-    <h3>Early warnings — deterministic monitors</h3>
-    <p class="kv"><b>expiry-watch</b> (date math) and <b>policy-drift</b> (text diff) raise advisory
-    warnings only — they never gate a decision or trigger an outbound action.</p>
-    <p class="empty" style="padding:12px 0">No warnings in the demo dataset.</p>
+<div class="scrim" id="scrim"></div>
+
+<div class="pmodal" id="profileModal" role="dialog" aria-modal="true" aria-label="Policy and Regulatory Profile">
+  <div class="pm-head">
+    <div><h2>Policy + Regulatory Profile</h2><div class="s">The "UK ⇄ US switch" is not a document swap — it carries all of this.</div></div>
+    <button class="dr-x" id="pmClose" aria-label="Close"><svg viewBox="0 0 14 14"><path d="M3 3l8 8M11 3l-8 8"/></svg></button>
   </div>
+  <div class="pm-body" id="pmBody"></div>
+  <div class="pm-foot">Reference config, curated per deployment (<code>config/profiles/*.json</code>). Deliberately not a product centrepiece.</div>
 </div>
 
-<div id="tab-cost" hidden>
-  <div class="card">
-    <h3>Cost metering</h3>
-    <p class="kv">Per-case token and tool-call cost is recorded by <b>IAgentCallRecorder</b> when the
-    hosted Foundry agents run (<code>ZYNARA_AGENTS=foundry</code>). The demo runs deterministic stubs,
-    so there is no inference cost to show.</p>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Case detail">
+  <div class="dr-head">
+    <div>
+      <h2 id="drTitle">—</h2>
+      <div class="s" id="drSub">—</div>
+      <div class="dr-tags" id="drTags"></div>
+    </div>
+    <button class="dr-x" id="drClose" aria-label="Close"><svg viewBox="0 0 14 14"><path d="M3 3l8 8M11 3l-8 8"/></svg></button>
   </div>
-</div>
+  <div class="dr-body" id="drBody"></div>
+  <div class="dr-foot" id="drFoot"></div>
+</aside>
 
-<div class="controls" id="controls" hidden></div>
+<div class="toast" id="toast"></div>
+
+<script type="application/json" id="demo-data">
+{"scenarios":[{"id":"demo-ready","label":"Complete record — ready to submit","expectation":"All criteria documented, high-quality evidence → auto-submit on approval."},{"id":"demo-strengthen","label":"One gap — needs strengthening","expectation":"Mandatory met, a supporting criterion undocumented → back to the clinician."},{"id":"demo-review-mandatory","label":"Mandatory criterion missing — human review","expectation":"No physiotherapy evidenced → the Critic blocks and a reviewer must decide."},{"id":"demo-contradiction","label":"The note contradicts itself — human resolves it","expectation":"One sentence says physiotherapy was completed, another that the patient could not attend it. Claims-extraction flags the conflict; the Gate does not pick a side — it routes to a human."},{"id":"demo-appeal","label":"Denied — appeal with winning precedents","expectation":"Denial on record; two comparable cases won on appeal → precedent-backed appeal, human-approved."},{"id":"demo-appeal-critic","label":"Denied — the Critic challenges an over-reaching appeal","expectation":"Comparable cases won, but only one of three criteria is evidenced → the Critic flags that the appeal recommendation is firmer than the record supports; the reviewer is steered to request evidence, not file."},{"id":"demo-abstain","label":"Thin record, no precedent — the system abstains","expectation":"Rarer procedure with no comparable history and low-quality evidence → the system declines to advise."}],"cases":[{"requestId":"demo-ready","procedure":"MRI lumbar spine","payerPlan":"Bupa/Comprehensive","region":"UK","status":"ReadyToSubmit","headline":"The clinical record meets the plan's criteria and the case is ready to submit.","aiAction":"Assembled the submission draft and recommends sending it on approval.","auth":{"authRequired":true,"requiredCode":"CCSD-72148","policyRef":"bupa-mri-ls-v3","ambiguous":false,"note":"Bupa/Comprehensive requires prior authorisation for MRI lumbar spine (code CCSD-72148, bupa-mri-ls-v3)."},"criteria":[{"id":"c1","text":"physiotherapy completed for six weeks","mandatory":true,"status":"Documented","evidenceStatement":"Physiotherapy completed over eight weeks with limited benefit","source":"clinical note","policyRef":"bupa-mri-ls-v3","policyVersion":"v3"},{"id":"c2","text":"radiculopathy documented on examination","mandatory":false,"status":"Documented","evidenceStatement":"Radiculopathy documented on examination in an L5 distribution with reduced reflexes","source":"clinical note","policyRef":"bupa-mri-ls-v3","policyVersion":"v3"},{"id":"c3","text":"imaging changes management","mandatory":false,"status":"Documented","evidenceStatement":"MRI imaging changes management — the findings would determine whether to proceed to decompression surgery","source":"clinical note","policyRef":"bupa-mri-ls-v3","policyVersion":"v3"}],"precedents":[{"caseId":"P-3","similarity":0.65,"matchedFacts":["completed","decompression","determine","documented","eight","examination","physiotherapy","proceed","radiculopathy","weeks","whether","with"],"initiallyDenied":false,"wonOnAppeal":false,"clausesCited":[],"decidedOn":"2026-05-15","narrative":"Eight weeks of physiotherapy completed with the outcome recorded, radiculopathy documented on examination, and the MRI expected to determine whether to proceed to surgical decompression. Approved as submitted — no denial.","droveRecommendation":true},{"caseId":"P-1","similarity":0.567,"matchedFacts":["completed","documented","eight","examination","imaging","management","physiotherapy","radiculopathy","weeks","with"],"initiallyDenied":true,"wonOnAppeal":true,"clausesCited":["2.1"],"decidedOn":"2026-03-01","narrative":"Patient completed eight weeks of physiotherapy with radiculopathy documented on examination and imaging expected to change management. Initially denied under MN-01 (conservative treatment not evidenced); authorised on appeal under clause 2.1.","droveRecommendation":false},{"caseId":"P-2","similarity":0.4,"matchedFacts":["documented","examination","management","physiotherapy","radiculopathy","weeks"],"initiallyDenied":true,"wonOnAppeal":true,"clausesCited":["2.1"],"decidedOn":"2026-04-01","narrative":"Six weeks of physiotherapy, radiculopathy on examination, MRI requested to plan surgical management. Denied MN-01, overturned on appeal citing clause 2.1 and the documented neurological deficit.","droveRecommendation":false}],"critic":{"verdict":"Clear","flags":[],"summary":"No material concern — the recommendation holds up."},"conflicts":[],"confidence":"High","gate":{"route":"AutoSubmit","reason":"gap-checked, Critic-cleared and ready — auto-submit the draft. [mandatory all met; supporting 2 documented / 0 partial / 0 missing; evidence High; contradiction none; note conflicts 0; precedent support Strong]","mandatoryPass":true,"unmetMandatory":[],"supportingDocumented":2,"supportingPartial":0,"supportingMissing":0,"evidenceQuality":"High","contradictionDetected":false,"precedentSupport":"Strong"},"draftBody":"Prior-authorisation request — MRI lumbar spine (CCSD-72148)\nPayer / plan: Bupa/Comprehensive  ·  Region: UK  ·  Policy: bupa-mri-ls-v3\n\nMandatory criteria: all met\nSupporting criteria documented (2/2):\n  - physiotherapy completed for six weeks\n  - radiculopathy documented on examination\n  - imaging changes management\n\nClinical summary:\n  Physiotherapy completed over eight weeks with limited benefit. Radiculopathy documented on examination in an L5 distribution with reduced reflexes. MRI imaging changes management — the findings would determine whether to proceed to decompression surgery.\n\nAppeal analysis: No evidence gaps; 2 comparable case(s) were approved as submitted on this policy — submit. (precedent support: Strong).","controls":[{"action":"approve-send","label":"Approve & send","primary":true},{"action":"edit","label":"Edit the draft","primary":false},{"action":"request-evidence","label":"Request more evidence","primary":false},{"action":"reject","label":"Reject","primary":false}],"approveAuthority":"Coordinator","audit":[{"kind":"assembled","actor":"system","at":"2026-09-06 00:00:00Z","detail":"pipeline ran → AutoSubmit"},{"kind":"agent","actor":"needs-auth · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"evidence-gap · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"claims-extraction · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"precedent-strategist · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"critic · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"}]},{"requestId":"demo-strengthen","procedure":"MRI lumbar spine","payerPlan":"Bupa/Comprehensive","region":"UK","status":"NeedsStrengthening","headline":"The mandatory criteria are met, but 1 supporting criterion(a) need more evidence before this is ready.","aiAction":"Assembled a draft and listed the evidence gaps for the clinician.","auth":{"authRequired":true,"requiredCode":"CCSD-72148","policyRef":"bupa-mri-ls-v3","ambiguous":false,"note":"Bupa/Comprehensive requires prior authorisation for MRI lumbar spine (code CCSD-72148, bupa-mri-ls-v3)."},"criteria":[{"id":"c1","text":"physiotherapy completed for six weeks","mandatory":true,"status":"Documented","evidenceStatement":"Physiotherapy completed for six weeks","source":"clinical note","policyRef":"bupa-mri-ls-v3","policyVersion":"v3"},{"id":"c2","text":"radiculopathy documented on examination","mandatory":false,"status":"Missing","source":"not found in the clinical note","policyRef":"bupa-mri-ls-v3","policyVersion":"v3"},{"id":"c3","text":"imaging changes management","mandatory":false,"status":"Documented","evidenceStatement":"MRI requested; imaging changes management and would alter the planned surgical approach","source":"clinical note","policyRef":"bupa-mri-ls-v3","policyVersion":"v3"}],"precedents":[{"caseId":"P-4","similarity":0.462,"matchedFacts":["imaging","management","physiotherapy","requested","surgical"],"initiallyDenied":false,"wonOnAppeal":false,"clausesCited":[],"decidedOn":"2026-06-20","narrative":"Documented six-week physiotherapy course, dermatomal sensory deficit on examination, imaging requested to plan surgical management. Authorised on first submission.","droveRecommendation":false},{"caseId":"P-2","similarity":0.462,"matchedFacts":["management","physiotherapy","requested","surgical","weeks"],"initiallyDenied":true,"wonOnAppeal":true,"clausesCited":["2.1"],"decidedOn":"2026-04-01","narrative":"Six weeks of physiotherapy, radiculopathy on examination, MRI requested to plan surgical management. Denied MN-01, overturned on appeal citing clause 2.1 and the documented neurological deficit.","droveRecommendation":true},{"caseId":"P-1","similarity":0.377,"matchedFacts":["completed","imaging","management","physiotherapy","weeks"],"initiallyDenied":true,"wonOnAppeal":true,"clausesCited":["2.1"],"decidedOn":"2026-03-01","narrative":"Patient completed eight weeks of physiotherapy with radiculopathy documented on examination and imaging expected to change management. Initially denied under MN-01 (conservative treatment not evidenced); authorised on appeal under clause 2.1.","droveRecommendation":true}],"critic":{"verdict":"Clear","flags":[],"summary":"No material concern — the recommendation holds up."},"conflicts":[],"confidence":"Medium","gate":{"route":"Strengthen","reason":"1 supporting criterion(a) undocumented / evidence Medium — strengthen with the clinician. [mandatory all met; supporting 1 documented / 0 partial / 1 missing; evidence Medium; contradiction none; note conflicts 0; precedent support Strong]","mandatoryPass":true,"unmetMandatory":[],"supportingDocumented":1,"supportingPartial":0,"supportingMissing":1,"evidenceQuality":"Medium","contradictionDetected":false,"precedentSupport":"Strong"},"draftBody":"Prior-authorisation request — MRI lumbar spine (CCSD-72148)\nPayer / plan: Bupa/Comprehensive  ·  Region: UK  ·  Policy: bupa-mri-ls-v3\n\nMandatory criteria: all met\nSupporting criteria documented (1/2):\n  - physiotherapy completed for six weeks\n  - imaging changes management\n\nClinical summary:\n  Physiotherapy completed for six weeks. MRI requested; imaging changes management and would alter the planned surgical approach.\n\nOutstanding for the reviewer: 1 undocumented.\n\nAppeal analysis: 1 criterion(a) undocumented — close the gaps with the clinician before submitting. (precedent support: Strong).","controls":[{"action":"request-evidence","label":"Request more evidence","primary":true},{"action":"edit","label":"Edit the draft","primary":false},{"action":"approve-send","label":"Approve & send anyway","primary":false},{"action":"reject","label":"Reject","primary":false}],"approveAuthority":"Coordinator","audit":[{"kind":"assembled","actor":"system","at":"2026-09-06 00:00:00Z","detail":"pipeline ran → Strengthen"},{"kind":"agent","actor":"needs-auth · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"evidence-gap · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"claims-extraction · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"precedent-strategist · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"critic · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"}]},{"requestId":"demo-review-mandatory","procedure":"MRI lumbar spine","payerPlan":"Bupa/Comprehensive","region":"UK","status":"NeedsHumanReview","headline":"A reviewer must decide: Critic — mandatory criterion not documented: c1","aiAction":"Assembled the case and routed it to a human — it did not act.","auth":{"authRequired":true,"requiredCode":"CCSD-72148","policyRef":"bupa-mri-ls-v3","ambiguous":false,"note":"Bupa/Comprehensive requires prior authorisation for MRI lumbar spine (code CCSD-72148, bupa-mri-ls-v3)."},"criteria":[{"id":"c1","text":"physiotherapy completed for six weeks","mandatory":true,"status":"Missing","source":"not found in the clinical note","policyRef":"bupa-mri-ls-v3","policyVersion":"v3"},{"id":"c2","text":"radiculopathy documented on examination","mandatory":false,"status":"Documented","evidenceStatement":"Radiculopathy documented on examination","source":"clinical note","policyRef":"bupa-mri-ls-v3","policyVersion":"v3"},{"id":"c3","text":"imaging changes management","mandatory":false,"status":"Documented","evidenceStatement":"Imaging changes management and would determine the surgical approach","source":"clinical note","policyRef":"bupa-mri-ls-v3","policyVersion":"v3"}],"precedents":[{"caseId":"P-4","similarity":0.462,"matchedFacts":["documented","examination","imaging","management","surgical"],"initiallyDenied":false,"wonOnAppeal":false,"clausesCited":[],"decidedOn":"2026-06-20","narrative":"Documented six-week physiotherapy course, dermatomal sensory deficit on examination, imaging requested to plan surgical management. Authorised on first submission.","droveRecommendation":false},{"caseId":"P-2","similarity":0.462,"matchedFacts":["documented","examination","management","radiculopathy","surgical"],"initiallyDenied":true,"wonOnAppeal":true,"clausesCited":["2.1"],"decidedOn":"2026-04-01","narrative":"Six weeks of physiotherapy, radiculopathy on examination, MRI requested to plan surgical management. Denied MN-01, overturned on appeal citing clause 2.1 and the documented neurological deficit.","droveRecommendation":true},{"caseId":"P-3","similarity":0.413,"matchedFacts":["determine","documented","examination","radiculopathy","surgical"],"initiallyDenied":false,"wonOnAppeal":false,"clausesCited":[],"decidedOn":"2026-05-15","narrative":"Eight weeks of physiotherapy completed with the outcome recorded, radiculopathy documented on examination, and the MRI expected to determine whether to proceed to surgical decompression. Approved as submitted — no denial.","droveRecommendation":false}],"critic":{"verdict":"Block","flags":[{"check":"mandatory-criteria","concern":"mandatory criterion not documented: c1"}],"summary":"1 material problem(s) — the case must go to a reviewer."},"conflicts":["Critic — mandatory criterion not documented: c1"],"confidence":"Medium","gate":{"route":"HumanReview","reason":"the Critic raised a material concern (mandatory criterion not documented: c1) — a reviewer must decide. [mandatory 1/1 unmet; supporting 2 documented / 0 partial / 0 missing; evidence Medium; contradiction none; note conflicts 0; precedent support Strong]","mandatoryPass":false,"unmetMandatory":["c1"],"supportingDocumented":2,"supportingPartial":0,"supportingMissing":0,"evidenceQuality":"Medium","contradictionDetected":false,"precedentSupport":"Strong"},"draftBody":"Prior-authorisation request — MRI lumbar spine (CCSD-72148)\nPayer / plan: Bupa/Comprehensive  ·  Region: UK  ·  Policy: bupa-mri-ls-v3\n\nMandatory criteria: UNMET — c1\nSupporting criteria documented (2/2):\n  - radiculopathy documented on examination\n  - imaging changes management\n\nClinical summary:\n  Radiculopathy documented on examination. Imaging changes management and would determine the surgical approach.\n\nOutstanding for the reviewer: 1 undocumented.\n\nAppeal analysis: 1 criterion(a) undocumented — close the gaps with the clinician before submitting. (precedent support: Strong).","controls":[{"action":"request-evidence","label":"Request more evidence","primary":true},{"action":"edit","label":"Edit the draft","primary":false},{"action":"approve-send","label":"Approve & send","primary":false},{"action":"reject","label":"Reject","primary":true}],"approveAuthority":"Reviewer","audit":[{"kind":"assembled","actor":"system","at":"2026-09-06 00:00:00Z","detail":"pipeline ran → HumanReview"},{"kind":"agent","actor":"needs-auth · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"evidence-gap · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"claims-extraction · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"precedent-strategist · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"critic · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"}]},{"requestId":"demo-contradiction","procedure":"MRI lumbar spine","payerPlan":"Bupa/Comprehensive","region":"UK","status":"NeedsHumanReview","headline":"A reviewer must decide: The clinical note contradicts itself on physiotherapy: “Physiotherapy completed for eight weeks with good adherence” vs “On later review the patient reports they were unable to attend physiotherapy”","aiAction":"Assembled the case and routed it to a human — it did not act.","auth":{"authRequired":true,"requiredCode":"CCSD-72148","policyRef":"bupa-mri-ls-v3","ambiguous":false,"note":"Bupa/Comprehensive requires prior authorisation for MRI lumbar spine (code CCSD-72148, bupa-mri-ls-v3)."},"criteria":[{"id":"c1","text":"physiotherapy completed for six weeks","mandatory":true,"status":"Documented","evidenceStatement":"Physiotherapy completed for eight weeks with good adherence","source":"clinical note","policyRef":"bupa-mri-ls-v3","policyVersion":"v3"},{"id":"c2","text":"radiculopathy documented on examination","mandatory":false,"status":"Missing","source":"not found in the clinical note","policyRef":"bupa-mri-ls-v3","policyVersion":"v3"},{"id":"c3","text":"imaging changes management","mandatory":false,"status":"Documented","evidenceStatement":"Imaging changes management and would alter the surgical plan","source":"clinical note","policyRef":"bupa-mri-ls-v3","policyVersion":"v3"}],"precedents":[{"caseId":"P-1","similarity":0.514,"matchedFacts":["completed","eight","imaging","management","patient","physiotherapy","weeks","with"],"initiallyDenied":true,"wonOnAppeal":true,"clausesCited":["2.1"],"decidedOn":"2026-03-01","narrative":"Patient completed eight weeks of physiotherapy with radiculopathy documented on examination and imaging expected to change management. Initially denied under MN-01 (conservative treatment not evidenced); authorised on appeal under clause 2.1.","droveRecommendation":true},{"caseId":"P-3","similarity":0.423,"matchedFacts":["completed","eight","physiotherapy","surgical","weeks","with"],"initiallyDenied":false,"wonOnAppeal":false,"clausesCited":[],"decidedOn":"2026-05-15","narrative":"Eight weeks of physiotherapy completed with the outcome recorded, radiculopathy documented on examination, and the MRI expected to determine whether to proceed to surgical decompression. Approved as submitted — no denial.","droveRecommendation":false},{"caseId":"P-4","similarity":0.377,"matchedFacts":["imaging","management","physiotherapy","plan","surgical"],"initiallyDenied":false,"wonOnAppeal":false,"clausesCited":[],"decidedOn":"2026-06-20","narrative":"Documented six-week physiotherapy course, dermatomal sensory deficit on examination, imaging requested to plan surgical management. Authorised on first submission.","droveRecommendation":false}],"critic":{"verdict":"Block","flags":[{"check":"contradiction","concern":"the note both states and denies “physiotherapy” — “Physiotherapy completed for eight weeks with good adherence” vs “On later review the patient reports they were unable to attend physiotherapy”"}],"summary":"1 material problem(s) — the case must go to a reviewer."},"conflicts":["The clinical note contradicts itself on physiotherapy: “Physiotherapy completed for eight weeks with good adherence” vs “On later review the patient reports they were unable to attend physiotherapy”"],"confidence":"Medium","gate":{"route":"HumanReview","reason":"the Critic raised a material concern (the note both states and denies “physiotherapy” — “Physiotherapy completed for eight weeks with good adherence” vs “On later review the patient reports they were unable to attend physiotherapy”) — a reviewer must decide. [mandatory all met; supporting 1 documented / 0 partial / 1 missing; evidence Medium; contradiction none; note conflicts 1; precedent support Strong]","mandatoryPass":true,"unmetMandatory":[],"supportingDocumented":1,"supportingPartial":0,"supportingMissing":1,"evidenceQuality":"Medium","contradictionDetected":false,"precedentSupport":"Strong"},"draftBody":"Prior-authorisation request — MRI lumbar spine (CCSD-72148)\nPayer / plan: Bupa/Comprehensive  ·  Region: UK  ·  Policy: bupa-mri-ls-v3\n\nMandatory criteria: all met\nSupporting criteria documented (1/2):\n  - physiotherapy completed for six weeks\n  - imaging changes management\n\nClinical summary:\n  Imaging changes management and would alter the surgical plan. Physiotherapy completed for eight weeks with good adherence. On later review the patient reports they were unable to attend physiotherapy.\n\nOutstanding for the reviewer: 1 undocumented.\n\nAppeal analysis: 1 criterion(a) undocumented — close the gaps with the clinician before submitting. (precedent support: Strong).","controls":[{"action":"request-evidence","label":"Request more evidence","primary":true},{"action":"edit","label":"Edit the draft","primary":false},{"action":"approve-send","label":"Approve & send","primary":false},{"action":"reject","label":"Reject","primary":true}],"approveAuthority":"Reviewer","audit":[{"kind":"assembled","actor":"system","at":"2026-09-06 00:00:00Z","detail":"pipeline ran → HumanReview"},{"kind":"agent","actor":"needs-auth · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"evidence-gap · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"claims-extraction · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"precedent-strategist · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"critic · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"}]},{"requestId":"demo-appeal","procedure":"MRI lumbar spine","payerPlan":"Bupa/Comprehensive","region":"UK","status":"NeedsHumanReview","headline":"This is an appeal — a reviewer signs off before it is filed. 2 comparable case(s) won on appeal.","aiAction":"Assembled the case and routed it to a human — it did not act.","auth":{"authRequired":true,"requiredCode":"CCSD-72148","policyRef":"bupa-mri-ls-v3","ambiguous":false,"note":"Bupa/Comprehensive requires prior authorisation for MRI lumbar spine (code CCSD-72148, bupa-mri-ls-v3)."},"criteria":[{"id":"c1","text":"physiotherapy completed for six weeks","mandatory":true,"status":"Documented","evidenceStatement":"Physiotherapy completed for eight weeks","source":"clinical note","policyRef":"bupa-mri-ls-v3","policyVersion":"v3"},{"id":"c2","text":"radiculopathy documented on examination","mandatory":false,"status":"Documented","evidenceStatement":"Radiculopathy documented on examination","source":"clinical note","policyRef":"bupa-mri-ls-v3","policyVersion":"v3"},{"id":"c3","text":"imaging changes management","mandatory":false,"status":"Documented","evidenceStatement":"Imaging changes management and determines the surgical approach","source":"clinical note","policyRef":"bupa-mri-ls-v3","policyVersion":"v3"}],"precedents":[{"caseId":"P-1","similarity":0.786,"matchedFacts":["completed","conservative","denied","documented","eight","evidenced","examination","imaging","management","physiotherapy","radiculopathy","treatment","under","weeks"],"initiallyDenied":true,"wonOnAppeal":true,"clausesCited":["2.1"],"decidedOn":"2026-03-01","narrative":"Patient completed eight weeks of physiotherapy with radiculopathy documented on examination and imaging expected to change management. Initially denied under MN-01 (conservative treatment not evidenced); authorised on appeal under clause 2.1.","droveRecommendation":true},{"caseId":"P-3","similarity":0.531,"matchedFacts":["completed","documented","eight","examination","physiotherapy","radiculopathy","surgical","weeks"],"initiallyDenied":false,"wonOnAppeal":false,"clausesCited":[],"decidedOn":"2026-05-15","narrative":"Eight weeks of physiotherapy completed with the outcome recorded, radiculopathy documented on examination, and the MRI expected to determine whether to proceed to surgical decompression. Approved as submitted — no denial.","droveRecommendation":false},{"caseId":"P-2","similarity":0.531,"matchedFacts":["denied","documented","examination","management","physiotherapy","radiculopathy","surgical","weeks"],"initiallyDenied":true,"wonOnAppeal":true,"clausesCited":["2.1"],"decidedOn":"2026-04-01","narrative":"Six weeks of physiotherapy, radiculopathy on examination, MRI requested to plan surgical management. Denied MN-01, overturned on appeal citing clause 2.1 and the documented neurological deficit.","droveRecommendation":true}],"critic":{"verdict":"Clear","flags":[],"summary":"No material concern — the recommendation holds up."},"conflicts":[],"confidence":"Medium","gate":{"route":"HumanReview","reason":"an appeal always goes to a reviewer before it is filed. [mandatory all met; supporting 2 documented / 0 partial / 0 missing; evidence High; contradiction none; note conflicts 0; precedent support Strong]","mandatoryPass":true,"unmetMandatory":[],"supportingDocumented":2,"supportingPartial":0,"supportingMissing":0,"evidenceQuality":"High","contradictionDetected":false,"precedentSupport":"Strong"},"draftBody":"Prior-authorisation request — MRI lumbar spine (CCSD-72148)\nPayer / plan: Bupa/Comprehensive  ·  Region: UK  ·  Policy: bupa-mri-ls-v3\n\nMandatory criteria: all met\nSupporting criteria documented (2/2):\n  - physiotherapy completed for six weeks\n  - radiculopathy documented on examination\n  - imaging changes management\n\nClinical summary:\n  Physiotherapy completed for eight weeks. Radiculopathy documented on examination. Imaging changes management and determines the surgical approach.\n\nAppeal analysis: 2 comparable case(s) won on appeal (win rate 67 %). Recommend appeal, citing the precedents below. (precedent support: Strong).","appealDraft":"Re: appeal of the denied prior-authorisation request for MRI lumbar spine.\n\nWe respectfully appeal this denial. The clinical record meets the plan's published criteria for this procedure, and the payer's own recorded outcomes support authorisation:\n  - Case P-1 (2026-03-01, 0.79 similarity): a comparable fact pattern, initially denied then authorised on appeal under 2.1.\n  - Case P-2 (2026-04-01, 0.53 similarity): a comparable fact pattern, initially denied then authorised on appeal under 2.1.\n\nWe ask that the authorisation be granted. [Reviewer to add case-specific detail.]","controls":[{"action":"approve-send","label":"Approve & send","primary":true},{"action":"reject","label":"Reject","primary":true},{"action":"edit","label":"Edit the draft","primary":false},{"action":"request-evidence","label":"Request more evidence","primary":false}],"approveAuthority":"SeniorReviewer","audit":[{"kind":"assembled","actor":"system","at":"2026-09-06 00:00:00Z","detail":"pipeline ran → HumanReview"},{"kind":"agent","actor":"needs-auth · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"evidence-gap · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"claims-extraction · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"precedent-strategist · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"critic · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"}]},{"requestId":"demo-appeal-critic","procedure":"MRI lumbar spine","payerPlan":"Bupa/Comprehensive","region":"UK","status":"NeedsHumanReview","headline":"The Critic challenged the recommendation — the recommendation is firmer than Low-quality evidence supports. A reviewer decides.","aiAction":"Assembled the case and routed it to a human — it did not act.","auth":{"authRequired":true,"requiredCode":"CCSD-72148","policyRef":"bupa-mri-ls-v3","ambiguous":false,"note":"Bupa/Comprehensive requires prior authorisation for MRI lumbar spine (code CCSD-72148, bupa-mri-ls-v3)."},"criteria":[{"id":"c1","text":"physiotherapy completed for six weeks","mandatory":true,"status":"Documented","evidenceStatement":"Physiotherapy completed for six weeks","source":"clinical note","policyRef":"bupa-mri-ls-v3","policyVersion":"v3"},{"id":"c2","text":"radiculopathy documented on examination","mandatory":false,"status":"Missing","source":"not found in the clinical note","policyRef":"bupa-mri-ls-v3","policyVersion":"v3"},{"id":"c3","text":"imaging changes management","mandatory":false,"status":"Missing","source":"not found in the clinical note","policyRef":"bupa-mri-ls-v3","policyVersion":"v3"}],"precedents":[{"caseId":"P-1","similarity":0.514,"matchedFacts":["completed","conservative","denied","evidenced","physiotherapy","treatment","under","weeks"],"initiallyDenied":true,"wonOnAppeal":true,"clausesCited":["2.1"],"decidedOn":"2026-03-01","narrative":"Patient completed eight weeks of physiotherapy with radiculopathy documented on examination and imaging expected to change management. Initially denied under MN-01 (conservative treatment not evidenced); authorised on appeal under clause 2.1.","droveRecommendation":true},{"caseId":"P-2","similarity":0.4,"matchedFacts":["denied","physiotherapy","requested","weeks"],"initiallyDenied":true,"wonOnAppeal":true,"clausesCited":["2.1"],"decidedOn":"2026-04-01","narrative":"Six weeks of physiotherapy, radiculopathy on examination, MRI requested to plan surgical management. Denied MN-01, overturned on appeal citing clause 2.1 and the documented neurological deficit.","droveRecommendation":true},{"caseId":"P-3","similarity":0.308,"matchedFacts":["completed","physiotherapy","weeks"],"initiallyDenied":false,"wonOnAppeal":false,"clausesCited":[],"decidedOn":"2026-05-15","narrative":"Eight weeks of physiotherapy completed with the outcome recorded, radiculopathy documented on examination, and the MRI expected to determine whether to proceed to surgical decompression. Approved as submitted — no denial.","droveRecommendation":false}],"critic":{"verdict":"Concerns","flags":[{"check":"recommendation-strength","concern":"the recommendation is firmer than Low-quality evidence supports"}],"summary":"1 concern(s) — proceed with a human, do not auto-submit."},"conflicts":[],"confidence":"Low","gate":{"route":"HumanReview","reason":"an appeal always goes to a reviewer before it is filed. [mandatory all met; supporting 0 documented / 0 partial / 2 missing; evidence Low; contradiction none; note conflicts 0; precedent support Strong]","mandatoryPass":true,"unmetMandatory":[],"supportingDocumented":0,"supportingPartial":0,"supportingMissing":2,"evidenceQuality":"Low","contradictionDetected":false,"precedentSupport":"Strong"},"draftBody":"Prior-authorisation request — MRI lumbar spine (CCSD-72148)\nPayer / plan: Bupa/Comprehensive  ·  Region: UK  ·  Policy: bupa-mri-ls-v3\n\nMandatory criteria: all met\nSupporting criteria documented (0/2):\n  - physiotherapy completed for six weeks\n\nClinical summary:\n  Physiotherapy completed for six weeks. MRI of the lumbar spine requested.\n\nOutstanding for the reviewer: 2 undocumented.\n\nAppeal analysis: 2 comparable case(s) won on appeal (win rate 67 %). Recommend appeal, citing the precedents below. (precedent support: Strong).","appealDraft":"Re: appeal of the denied prior-authorisation request for MRI lumbar spine.\n\nWe respectfully appeal this denial. The clinical record meets the plan's published criteria for this procedure, and the payer's own recorded outcomes support authorisation:\n  - Case P-1 (2026-03-01, 0.51 similarity): a comparable fact pattern, initially denied then authorised on appeal under 2.1.\n  - Case P-2 (2026-04-01, 0.40 similarity): a comparable fact pattern, initially denied then authorised on appeal under 2.1.\n\nWe ask that the authorisation be granted. [Reviewer to add case-specific detail.]","controls":[{"action":"request-evidence","label":"Request more evidence","primary":true},{"action":"edit","label":"Edit the draft","primary":false},{"action":"approve-send","label":"Approve & send","primary":false},{"action":"reject","label":"Reject","primary":true}],"approveAuthority":"SeniorReviewer","audit":[{"kind":"assembled","actor":"system","at":"2026-09-06 00:00:00Z","detail":"pipeline ran → HumanReview"},{"kind":"agent","actor":"needs-auth · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"evidence-gap · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"claims-extraction · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"precedent-strategist · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"critic · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"}]},{"requestId":"demo-abstain","procedure":"MR arthrogram shoulder","payerPlan":"Bupa/Comprehensive","region":"UK","status":"SystemAbstained","headline":"The system does not have enough reliable evidence to make a recommendation.","aiAction":"Declined to advise and routed the case to a human.","auth":{"authRequired":true,"requiredCode":"CCSD-73222","policyRef":"bupa-mras-v1","ambiguous":false,"note":"Bupa/Comprehensive requires prior authorisation for MR arthrogram shoulder (code CCSD-73222, bupa-mras-v1)."},"criteria":[{"id":"c1","text":"conservative management including physiotherapy attempted","mandatory":true,"status":"Documented","evidenceStatement":"Physiotherapy attempted","source":"clinical note","policyRef":"bupa-mras-v1","policyVersion":"v1"},{"id":"c2","text":"instability or labral tear suspected clinically","mandatory":false,"status":"Partial","evidenceStatement":"Ongoing shoulder pain, query labral pathology","source":"clinical note","policyRef":"bupa-mras-v1","policyVersion":"v1"},{"id":"c3","text":"plain radiographs already obtained","mandatory":false,"status":"Missing","source":"not found in the clinical note","policyRef":"bupa-mras-v1","policyVersion":"v1"}],"precedents":[],"critic":{"verdict":"Abstain","flags":[{"check":"abstention","concern":"Low-quality evidence and no comparable precedent — not enough to make a reliable recommendation"}],"summary":"The recommendation is not supportable — the system should abstain."},"conflicts":[],"confidence":"Low","gate":{"route":"Abstain","reason":"the Critic cannot support the recommendation (Low-quality evidence and no comparable precedent — not enough to make a reliable recommendation) — the system abstains. [mandatory all met; supporting 0 documented / 1 partial / 1 missing; evidence Low; contradiction none; note conflicts 0; precedent support None]","mandatoryPass":true,"unmetMandatory":[],"supportingDocumented":0,"supportingPartial":1,"supportingMissing":1,"evidenceQuality":"Low","contradictionDetected":false,"precedentSupport":"None"},"draftBody":"Prior-authorisation request — MR arthrogram shoulder (CCSD-73222)\nPayer / plan: Bupa/Comprehensive  ·  Region: UK  ·  Policy: bupa-mras-v1\n\nMandatory criteria: all met\nSupporting criteria documented (0/2):\n  - conservative management including physiotherapy attempted\n\nClinical summary:\n  Physiotherapy attempted. Ongoing shoulder pain, query labral pathology. Requesting MR arthrogram to clarify.\n\nOutstanding for the reviewer: 2 undocumented.\n\nAppeal analysis: 2 criterion(a) undocumented — close the gaps with the clinician before submitting. (precedent support: None).","controls":[{"action":"request-evidence","label":"Request more evidence","primary":true},{"action":"reject","label":"Reject","primary":true},{"action":"edit","label":"Edit and decide manually","primary":false}],"approveAuthority":"SeniorReviewer","audit":[{"kind":"assembled","actor":"system","at":"2026-09-06 00:00:00Z","detail":"pipeline ran → Abstain"},{"kind":"agent","actor":"needs-auth · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"evidence-gap · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"claims-extraction · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"precedent-strategist · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"},{"kind":"agent","actor":"critic · stub deterministic","at":"2026-09-06 00:00:00Z","detail":"invoked during assembly"}]}],"recovery":{"total":{"scope":"all scopes (2)","denied":58,"notAppealed":21,"appealed":32,"appealsWon":21,"comparableWinRate":0.65625,"meanClaimValue":560,"estimatedRecoverableValue":7164,"confidence":"High","formula":"21 not appealed × 66% blended win rate × £560 mean claim value = £7,164","window":"denials on record, Sep 2025 – Sep 2026"},"byScope":[{"scope":"Bupa/Comprehensive · MRI lumbar spine · UK","denied":46,"notAppealed":15,"appealed":27,"appealsWon":19,"comparableWinRate":0.7037037037037037,"meanClaimValue":540,"estimatedRecoverableValue":5700,"confidence":"High","formula":"15 not appealed × 70% comparable win rate × £540 mean claim value = £5,700","window":"denials on record, Sep 2025 – Sep 2026"},{"scope":"Bupa/Comprehensive · MR arthrogram shoulder · UK","denied":12,"notAppealed":6,"appealed":5,"appealsWon":2,"comparableWinRate":0.4,"meanClaimValue":610,"estimatedRecoverableValue":1464,"confidence":"Low","formula":"6 not appealed × 40% comparable win rate × £610 mean claim value = £1,464","window":"denials on record, Sep 2025 – Sep 2026"}]},"benchmark":{"measured":{"cases":7,"avgCriteriaChecked":3,"avgEvidenceGapsFound":1,"avgPrecedentsConsidered":3.7142857142857144,"avgAssembledInMs":0,"unsafeAutomationRate":0},"rows":[{"metric":"Case preparation time","manual":"≈ 20 min / case","careApprovalIQ":"assembled automatically (deterministic stubs run in milliseconds; ≈ 30–60 s with the hosted models)","manualIsEstimate":true,"basis":"AMA 2023 prior-auth survey: practices spend ≈ 12 h/physician/week; ≈ 20 min/request is a mid-range estimate."},{"metric":"Criteria checked against the note","manual":"manual read, easy to miss one","careApprovalIQ":"3 criteria per case, every one, with the satisfying statement quoted","manualIsEstimate":true,"basis":"no manual per-criterion audit is routine today."},{"metric":"Evidence gaps surfaced before submission","manual":"usually found only after a denial","careApprovalIQ":"1 flagged per case, up front","manualIsEstimate":true,"basis":"the appeals-gap statistic (11.5% appealed / 80.7% win) implies gaps are rarely closed pre-submission."},{"metric":"Comparable precedents reviewed","manual":"ad hoc, if at all","careApprovalIQ":"3.7 ranked automatically per case, with the matched facts shown","manualIsEstimate":true,"basis":"precedent review is not a standard step in manual pre-auth."},{"metric":"Reviewer effort","manual":"assemble the case + decide","careApprovalIQ":"decide only, on a prepared and cited case","manualIsEstimate":true,"basis":"qualitative — the assembly work moves to the pipeline."},{"metric":"Unsupported-recommendation rate","manual":"not tracked","careApprovalIQ":"Critic-gated; CI hard-gate = 0 unsafe automations (§7.3)","manualIsEstimate":false,"basis":"measured by Zynara.Eval on the labelled set."}],"disclaimer":"The manual column is an estimate, labelled per row with its basis. The Care Approval IQ column is measured from the demo pipeline. No improvement percentage is claimed."},"profiles":[{"id":"uk","region":"UK","name":"United Kingdom — private medical insurance","shortLabel":"UK · PMI","currency":"GBP","currencySymbol":"£","terminology":{"prior-auth":"prior authorisation","clinician":"clinician / consultant","payer":"insurer","member":"member","procedure-code":"CCSD code"},"codingConventions":"CCSD procedure codes · ICD-10 diagnosis","regulators":["Financial Conduct Authority (FCA)","Financial Ombudsman Service (FOS)","UK GDPR / Data Protection Act 2018"],"appealPath":["Payer internal reconsideration","Financial Ombudsman Service (FOS)","Courts"],"integrationProfile":"No mandated prior-auth API — payer portals + secure messaging + PDF. FHIR UK Core emerging.","policyPack":"Per-payer plan rule-sets (Bupa / AXA Health / Vitality), versioned per procedure in Cosmos."},{"id":"us","region":"US","name":"United States — commercial health plan","shortLabel":"US · Commercial","currency":"USD","currencySymbol":"$","terminology":{"prior-auth":"prior authorization","clinician":"provider","payer":"health plan","member":"member","procedure-code":"CPT / HCPCS code"},"codingConventions":"CPT / HCPCS procedure codes · ICD-10-CM diagnosis","regulators":["CMS — Interoperability & Prior Authorization Final Rule (CMS-0057-F)","ERISA (self-funded plans)","HIPAA","State Departments of Insurance"],"appealPath":["Payer internal appeal","External review by an Independent Review Organization (IRO)","State DOI / federal (ERISA) review"],"integrationProfile":"X12 278 today; CMS-0057-F mandates the FHIR Prior Auth API (Da Vinci PAS / CRD / DTR) from Jan 2027.","policyPack":"Payer medical policies + InterQual / MCG criteria, versioned per procedure in Cosmos."}]}
+</script>
 
 <script>
-const API = new URLSearchParams(location.search).get("api");
-let DATA = { scenarios: [], cases: [] };
-let current = null;
+(function () {
+  "use strict";
 
-const statusClass = s => ({
-  ReadyToSubmit: "s-ready", NeedsStrengthening: "s-strengthen",
-  NeedsHumanReview: "s-review", SystemAbstained: "s-abstain", NotRequired: "s-none",
-}[s] || "s-none");
-const statusLabel = s => ({
-  ReadyToSubmit: "Ready to submit", NeedsStrengthening: "Needs strengthening",
-  NeedsHumanReview: "Human review", SystemAbstained: "System abstained", NotRequired: "Not required",
-}[s] || s);
-const esc = s => (s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  var DATA = JSON.parse(document.getElementById("demo-data").textContent);
+  var draftView = "submission";
+  var openId = null;
+  var role = "Reviewer";
+  var RANK = { Coordinator: 0, Reviewer: 1, SeniorReviewer: 2, MedicalDirector: 3 };
 
-async function load() {
-  if (API) {
-    try {
-      const [sc, cs] = await Promise.all([
-        fetch(`${API}/api/demo/scenarios`).then(r => r.json()),
-        fetch(`${API}/api/cases`).then(r => r.json()),
-      ]);
-      DATA.scenarios = sc;
-      DATA.cases = await Promise.all(cs.map(c => fetch(`${API}/api/cases/${c.requestId}`).then(r => r.json()).then(x => x.view)));
-      document.getElementById("srcnote").textContent = `live · ${API}`;
-    } catch (e) {
-      document.getElementById("srcnote").textContent = "live API unreachable — falling back to demo data";
-      await loadStatic();
-    }
-  } else {
-    await loadStatic();
-  }
-  renderScenarios();
-  renderQueue();
-  if (DATA.cases.length) select(DATA.cases[0].requestId);
-}
-
-async function loadStatic() {
-  const d = await fetch("demo-cases.json").then(r => r.json());
-  DATA = d;
-  document.getElementById("srcnote").textContent = "demo dataset (offline) · demo-cases.json";
-}
-
-function renderScenarios() {
-  const sel = document.getElementById("scenario");
-  sel.innerHTML = `<option value="">Run a scenario…</option>` +
-    DATA.scenarios.map(s => `<option value="${s.id}">${esc(s.label)}</option>`).join("");
-  sel.onchange = async () => {
-    const id = sel.value; if (!id) return;
-    if (API) {
-      const v = await fetch(`${API}/api/demo/scenarios/${id}/run`, { method: "POST" }).then(r => r.json());
-      upsert(v);
-    }
-    select(id); sel.value = "";
+  var ST = {
+    ReadyToSubmit:      { label: "Ready to submit",   cls: "ok",    hue: "var(--ok)" },
+    NeedsStrengthening: { label: "Needs strengthening", cls: "warn", hue: "var(--warn)" },
+    NeedsHumanReview:   { label: "Human review",      cls: "info",  hue: "var(--accent)" },
+    SystemAbstained:    { label: "System abstained",  cls: "slate", hue: "var(--slate)" },
+    NotRequired:        { label: "Not required",      cls: "mute",  hue: "var(--faint)" }
   };
-}
+  var GB = {
+    AutoSubmit:  { ink: "var(--ok)",     soft: "var(--ok-soft)",     line: "var(--ok-line)" },
+    Strengthen:  { ink: "var(--warn)",   soft: "var(--warn-soft)",   line: "var(--warn-line)" },
+    HumanReview: { ink: "var(--accent-ink)", soft: "var(--accent-soft)", line: "var(--accent-line)" },
+    Abstain:     { ink: "var(--slate)",  soft: "var(--slate-soft)",  line: "var(--slate-line)" }
+  };
+  var STOP = new Set(["with","under","would","been","that","this","from","have","will","when",
+    "into","than","then","over","also","such","they","them","were","and","the","eight","six"]);
 
-function upsert(view) {
-  const i = DATA.cases.findIndex(c => c.requestId === view.requestId);
-  if (i >= 0) DATA.cases[i] = view; else DATA.cases.unshift(view);
-  renderQueue();
-}
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+  function tidy(s) {
+    return String(s || "")
+      .replace(/criterion\(a\)/g, "criteria").replace(/case\(s\)/g, "cases")
+      .replace(/\(s\)/g, "s").replace(/\s{2,}/g, " ").trim();
+  }
+  function st(x) { return ST[x] || ST.NotRequired; }
+  function confPct(level) { return level === "High" ? 92 : level === "Medium" ? 62 : level === "Low" ? 30 : 50; }
+  function confHue(level) { return level === "High" ? "var(--ok)" : level === "Medium" ? "var(--warn)" : "var(--slate)"; }
 
-function renderQueue() {
-  document.getElementById("qlist").innerHTML = DATA.cases.map(c => `
-    <div class="qitem ${current === c.requestId ? "active" : ""}" data-id="${c.requestId}">
-      <div class="proc">${esc(c.procedure)}</div>
-      <div class="meta">${esc(c.payerPlan)} · ${esc(c.region)}
-        · <span class="st ${statusClass(c.status)}" style="padding:1px 6px">${statusLabel(c.status)}</span>
-        · conf ${esc(c.confidence)}</div>
-      <div class="head">${esc(c.headline)}</div>
-    </div>`).join("");
-  document.querySelectorAll(".qitem").forEach(el => el.onclick = () => select(el.dataset.id));
-}
+  /* ---- review queue ---------------------------------------------- */
+  function renderStats() {
+    var by = { ReadyToSubmit: 0, NeedsStrengthening: 0, NeedsHumanReview: 0, SystemAbstained: 0 };
+    DATA.cases.forEach(function (c) { if (by[c.status] != null) by[c.status]++; });
+    document.getElementById("reviewStats").innerHTML =
+      stat(DATA.cases.length, "in queue", "") +
+      stat(by.ReadyToSubmit, "ready", "ok") +
+      stat(by.NeedsHumanReview + by.NeedsStrengthening, "need a human", "info") +
+      stat(by.SystemAbstained, "abstained", "slate");
+  }
+  function stat(n, k, cls) {
+    return '<div class="pstat"><b class="' + cls + '">' + n + '</b><span class="k">' + k + "</span></div>";
+  }
 
-function select(id) {
-  current = id;
-  const c = DATA.cases.find(x => x.requestId === id);
-  renderQueue();
-  if (!c) return;
-  renderDetail(c);
-}
+  /* ---- recoverable value --------------------------------------- */
+  var GBP = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 });
+  function money(n) { return GBP.format(n || 0); }
+  function pct(n) { return Math.round((n || 0) * 100) + "%"; }
 
-function precedentCard(p) {
-  const pct = Math.round(p.similarity * 100);
-  return `<div class="precedent ${p.droveRecommendation ? "drove" : ""}">
-    <div class="top">
-      <span class="id">${esc(p.caseId)}</span>
-      <span class="sim"><i style="width:${pct}%"></i></span>
-      <span class="simn">${pct}% match</span>
-      ${p.droveRecommendation ? `<span class="drove-tag">▲ drove the recommendation</span>` : ""}
-    </div>
-    <div>
-      ${p.wonOnAppeal ? `<span class="chip win">won on appeal</span>` : ""}
-      ${p.initiallyDenied ? `<span class="chip deny">initially denied</span>` : ""}
-      ${(p.clausesCited || []).map(x => `<span class="chip">clause ${esc(x)}</span>`).join("")}
-      <span class="chip">decided ${esc(p.decidedOn)}</span>
-    </div>
-    <div>${(p.matchedFacts || []).map(f => `<span class="chip">${esc(f)}</span>`).join("") || `<span class="src">no shared fact tokens</span>`}</div>
-    <div class="narr">${esc(p.narrative)}</div>
-  </div>`;
-}
+  function renderRecovery() {
+    var r = DATA.recovery;
+    if (!r) { document.getElementById("pane-cost").querySelector(".phead-stats").remove(); return; }
+    var t = r.total;
 
-function renderDetail(c) {
-  const critic = c.critic;
-  const g = c.gate;
-  const parts = [];
+    document.getElementById("recoveryWindow").textContent = t.window;
+    document.getElementById("recoveryStats").innerHTML =
+      stat(t.denied, "denied", "") +
+      stat(t.notAppealed, "not appealed", "warn") +
+      stat(pct(t.comparableWinRate), "win rate", "ok") +
+      stat(r.byScope.length, "scopes", "slate");
 
-  parts.push(`<div class="card">
-    <h3>Why</h3>
-    <div class="why">${esc(c.headline)}</div>
-    <div class="row">
-      <span class="st ${statusClass(c.status)}">${statusLabel(c.status)}</span>
-      <span class="kv">Confidence <b>${esc(c.confidence)}</b> <span class="src">(derived from the decision model)</span></span>
-    </div>
-    <p class="kv" style="margin:10px 0 0"><b>AI action:</b> ${esc(c.aiAction)}</p>
-    <p class="kv" style="margin:4px 0 0"><b>Authorisation:</b> ${c.auth.authRequired
-      ? `required — code ${esc(c.auth.requiredCode || "TBC")}, ${esc(c.auth.policyRef || "")}` : "not required"}
-      ${c.auth.ambiguous ? ` <span class="src">(plan text ambiguous — agent-explained)</span>` : ""}</p>
-  </div>`);
+    document.getElementById("recoveryHead").innerHTML =
+      '<div class="rec-head">' +
+        '<div class="rec-big"><span class="n tnum">' + money(t.estimatedRecoverableValue) + "</span>" +
+          '<span class="k">estimated recoverable value · <span class="conf-tag ' + esc(t.confidence) +
+            '">' + esc(t.confidence) + " confidence</span></span></div>" +
+        '<div class="rec-inputs">' +
+          recInput("Not appealed", t.notAppealed) +
+          recInput("Comparable win rate", pct(t.comparableWinRate)) +
+          recInput("Mean claim value", money(t.meanClaimValue)) +
+          recInput("Denials on record", t.denied) +
+        "</div>" +
+        '<div class="rec-formula"><b>Formula.</b> ' + esc(t.formula) + "</div>" +
+      "</div>";
 
-  parts.push(`<div class="card">
-    <h3>Evidence — each criterion against the clinical note</h3>
-    <table class="crit">
-      <tr><th>Criterion</th><th>Status</th><th>Evidence &amp; source</th><th>Policy</th></tr>
-      ${c.criteria.map(cr => `<tr>
-        <td>${esc(cr.text)} ${cr.mandatory ? `<span class="badge mand">mandatory</span>` : ""}</td>
-        <td><span class="st ${cr.status}">${cr.status}</span></td>
-        <td>${cr.evidenceStatement ? `<div class="quote">“${esc(cr.evidenceStatement)}”</div>` : `<span class="src">—</span>`}
-            <div class="src">${esc(cr.source)}</div></td>
-        <td class="src">${esc(cr.policyRef)}<br>${esc(cr.policyVersion)}</td>
-      </tr>`).join("")}
-    </table>
-  </div>`);
+    document.getElementById("recoveryBody").innerHTML = r.byScope.map(function (s, i) {
+      return "<tr>" +
+        '<td class="sr">' + (i + 1) + "</td>" +
+        "<td>" + esc(s.scope) + "</td>" +
+        '<td class="r tnum">' + s.denied + "</td>" +
+        '<td class="r tnum">' + s.notAppealed + "</td>" +
+        '<td class="r tnum">' + pct(s.comparableWinRate) + " <span style=\"color:var(--faint)\">(" + s.appealsWon + "/" + s.appealed + ")</span></td>" +
+        '<td class="r tnum">' + money(s.meanClaimValue) + "</td>" +
+        '<td class="r tnum" style="font-weight:700">' + money(s.estimatedRecoverableValue) + "</td>" +
+        '<td><span class="conf-tag ' + esc(s.confidence) + '">' + esc(s.confidence) + "</span></td>" +
+      "</tr>";
+    }).join("");
+  }
+  function recInput(k, v) { return "<div>" + esc(k) + "<b>" + esc(v) + "</b></div>"; }
 
-  parts.push(`<div class="card">
-    <h3>Precedents — comparable cases on the payer's record</h3>
-    ${c.precedents.length
+  function renderBenchmark() {
+    var b = DATA.benchmark;
+    if (!b) return;
+    var m = b.measured;
+    document.getElementById("benchCap").textContent =
+      "measured over " + m.cases + " assembled cases" +
+      (m.avgAssembledInMs ? " · assembled in " + m.avgAssembledInMs + " ms avg" : "");
+    document.getElementById("benchBody").innerHTML = b.rows.map(function (r) {
+      return "<tr>" +
+        "<td style=\"font-weight:600\">" + esc(r.metric) + "</td>" +
+        "<td>" + esc(r.manual) + (r.manualIsEstimate ? ' <span class="est">est.</span>' : "") +
+          '<div class="bench-basis">' + esc(r.basis) + "</div></td>" +
+        '<td style="color:var(--accent-ink)">' + esc(r.careApprovalIQ) + "</td>" +
+      "</tr>";
+    }).join("");
+    document.getElementById("benchNote").innerHTML = "<p class=\"muted\">" + esc(b.disclaimer) + "</p>";
+  }
+
+  function renderQueue() {
+    document.getElementById("reviewCap").textContent =
+      DATA.cases.length + " cases · synthetic demo data, no patient information";
+    document.getElementById("reviewBody").innerHTML = DATA.cases.map(function (c, i) {
+      var s = st(c.status);
+      var docd = c.criteria.filter(function (x) { return x.status === "Documented"; }).length;
+      var evCls = docd === c.criteria.length ? "full" : docd > 0 ? "some" : "none";
+      var won = (c.precedents || []).filter(function (p) { return p.wonOnAppeal; }).length;
+      return '<tr class="click" data-id="' + esc(c.requestId) + '">' +
+        '<td class="sr">' + (i + 1) + "</td>" +
+        '<td class="proc-cell">' + esc(c.procedure) +
+          '<span class="sub">' + esc(c.auth.requiredCode || "—") + "</span></td>" +
+        "<td>" + esc(c.payerPlan) + "</td>" +
+        '<td><span class="evcount ' + evCls + '">' + docd + "/" + c.criteria.length + "</span></td>" +
+        "<td>" + (won ? '<span class="pill ok" style="text-transform:none">' + won + " won" + "</span>"
+                      : '<span class="pill mute">none</span>') + "</td>" +
+        '<td><span class="pill ' + s.cls + '" style="text-transform:none">' + s.label + "</span></td>" +
+        '<td><span class="conf"><span class="bar"><i style="width:' + confPct(c.confidence) +
+          '%;background:' + confHue(c.confidence) + '"></i></span>' +
+          '<span class="n" style="color:' + confHue(c.confidence) + '">' + esc(c.confidence) + "</span></span></td>" +
+      "</tr>";
+    }).join("");
+    Array.prototype.forEach.call(document.querySelectorAll("#reviewBody tr"), function (tr) {
+      tr.addEventListener("click", function () { openCase(tr.dataset.id); });
+    });
+  }
+
+  /* ---- drawer --------------------------------------------------- */
+  function sec(label, hue) {
+    return '<div class="dr-sec"><span class="dot" style="background:' + hue + '"></span>' + label + "</div>";
+  }
+
+  function precedentCard(p) {
+    var pct = Math.round(p.similarity * 100);
+    var facts = (p.matchedFacts || []).filter(function (f) { return !STOP.has(f) && f.length > 3; });
+    return '<div class="prec' + (p.droveRecommendation ? " drove" : "") + '">' +
+      '<div class="prec-top">' +
+        '<span class="prec-id">' + esc(p.caseId) + "</span>" +
+        '<span class="simbar"><i style="width:' + pct + '%"></i></span>' +
+        '<span class="simpct tnum">' + pct + "%</span>" +
+        (p.droveRecommendation ? '<span class="drove-lbl">drove the recommendation</span>' : "") +
+      "</div>" +
+      '<div class="prec-badges">' +
+        (p.wonOnAppeal ? '<span class="tagpill won">won on appeal</span>' : "") +
+        (p.initiallyDenied ? '<span class="tagpill deny">initially denied</span>' : "") +
+        (p.clausesCited || []).map(function (x) { return '<span class="tagpill">clause ' + esc(x) + "</span>"; }).join("") +
+        '<span class="tagpill">decided ' + esc(p.decidedOn) + "</span>" +
+      "</div>" +
+      (facts.length ? '<div class="facts">' + facts.map(function (f) { return '<span class="fact">' + esc(f) + "</span>"; }).join("") + "</div>" : "") +
+      '<p class="prec-narr">' + esc(p.narrative) + "</p>" +
+    "</div>";
+  }
+
+  function openCase(id) {
+    if (openId !== id) draftView = "submission";
+    openId = id;
+    var c = DATA.cases.find(function (x) { return x.requestId === id; });
+    if (!c) return;
+    var s = st(c.status);
+    var g = c.gate;
+
+    activeRegion = c.region;
+    document.getElementById("regionName").textContent = c.region;
+    document.getElementById("payerName").textContent = c.payerPlan;
+
+    var dr = document.getElementById("drawer");
+    dr.style.setProperty("--st-hue", s.hue);
+    document.getElementById("drTitle").textContent = c.procedure;
+    document.getElementById("drSub").innerHTML =
+      '<span class="rid">' + esc(c.requestId) + "</span>" +
+      "<span>" + esc(c.payerPlan) + " · " + esc(c.region) + "</span>" +
+      "<span>code " + esc(c.auth.requiredCode || "—") + "</span>";
+    document.getElementById("drTags").innerHTML =
+      '<span class="pill ' + s.cls + '" style="text-transform:none">' + s.label + "</span>" +
+      '<span class="conf"><span class="bar"><i style="width:' + confPct(c.confidence) + "%;background:" +
+        confHue(c.confidence) + '"></i></span><span class="n" style="color:' + confHue(c.confidence) +
+        '">conf ' + esc(c.confidence) + "</span></span>" +
+      (c.critic ? '<span class="verdict ' + esc(c.critic.verdict) + '">Critic · ' + esc(c.critic.verdict) + "</span>" : "");
+
+    var b = [];
+
+    b.push('<p class="dr-why">' + esc(tidy(c.headline)) + "</p>");
+    b.push('<p class="dr-ai"><b>What the system did:</b> ' + esc(c.aiAction) + "</p>");
+    b.push('<p class="dr-ai"><b>Authorisation:</b> ' + (c.auth.authRequired
+      ? "required · <span class=\"mono\">" + esc(c.auth.requiredCode) + "</span> · <span class=\"mono\">" + esc(c.auth.policyRef) + "</span>"
+      : "not required") + "</p>");
+
+    if (g) {
+      var gb = GB[g.route] || GB.HumanReview;
+      b.push(
+        '<div class="dr-gate-banner" style="--gb-ink:' + gb.ink + ";--gb-soft:" + gb.soft + ";--gb-line:" + gb.line + '">' +
+        '<svg viewBox="0 0 20 20"><path d="M10 2l7 4v5c0 4-3 6-7 7-4-1-7-3-7-7V6z"/></svg>' +
+        '<div><span class="rt">' + esc(g.route) + "</span> — " + esc(tidy(g.reason).split(". [")[0]) + ".</div></div>"
+      );
+    }
+
+    b.push(sec("Evidence — each criterion against the clinical note", "var(--evid)"));
+    b.push('<div class="ev">' + c.criteria.map(function (cr) {
+      return '<div class="ev-row">' +
+        '<div class="ev-top">' +
+          '<span class="ev-name">' + esc(cr.text) + "</span>" +
+          (cr.mandatory ? '<span class="ev-tag">mandatory</span>' : "") +
+          '<span class="cstat ' + esc(cr.status) + '">' + esc(cr.status) + "</span>" +
+        "</div>" +
+        (cr.evidenceStatement ? '<div class="ev-quote">' + esc(cr.evidenceStatement) + "</div>" : "") +
+        '<div class="ev-meta"><span>source · <span class="mono">' + esc(cr.source) + "</span></span>" +
+          '<span>policy · <span class="mono">' + esc(cr.policyRef) + " " + esc(cr.policyVersion) + "</span></span></div>" +
+      "</div>";
+    }).join("") + "</div>");
+
+    b.push(sec("Precedents — comparable cases on the payer’s record", "var(--prec)"));
+    b.push((c.precedents && c.precedents.length)
       ? c.precedents.map(precedentCard).join("")
-      : `<p class="empty" style="padding:10px 0">No precedent on record for this payer + procedure — a reason the system is cautious here.</p>`}
-  </div>`);
+      : '<div class="empty" style="padding:22px 12px"><b>No precedent on record</b>for this payer and procedure — a reason the system is cautious here.</div>');
 
-  if (critic) {
-    parts.push(`<div class="card">
-      <h3>Critic — tried to disprove the recommendation</h3>
-      <div class="row"><span class="st ${statusClass(critic.verdict === "Clear" ? "ReadyToSubmit"
-        : critic.verdict === "Concerns" ? "NeedsStrengthening"
-        : critic.verdict === "Abstain" ? "SystemAbstained" : "NeedsHumanReview")}">${esc(critic.verdict)}</span>
-        <span class="kv">${esc(critic.summary)}</span></div>
-      ${(critic.flags || []).map(f => `<div class="flag"><b>${esc(f.check)}</b> — ${esc(f.concern)}</div>`).join("")}
-    </div>`);
+    if (c.critic) {
+      b.push(sec("Critic — a separate agent trying to disprove the case", "var(--crc)"));
+      b.push('<div class="critic-line"><span class="verdict ' + esc(c.critic.verdict) + '">' + esc(c.critic.verdict) + "</span>" +
+        '<span class="critic-sum">' + esc(c.critic.summary) + "</span></div>");
+      b.push((c.critic.flags || []).map(function (f) {
+        return '<div class="flag"><b>' + esc(f.check) + "</b> — " + esc(f.concern) + "</div>";
+      }).join(""));
+    }
+
+    if (c.conflicts && c.conflicts.length) {
+      b.push(sec("Conflicts — never resolved silently", "var(--crit)"));
+      b.push('<ul class="conflicts">' + c.conflicts.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>");
+    }
+
+    if (g) {
+      b.push(sec("Gate — deterministic routing, no model in the loop", "var(--gate)"));
+      b.push('<div class="model">' +
+        cell("Mandatory", g.mandatoryPass ? "all met" : "UNMET · " + (g.unmetMandatory || []).join(", "), !g.mandatoryPass) +
+        cell("Supporting", g.supportingDocumented + " documented · " + g.supportingPartial + " partial · " + g.supportingMissing + " missing", g.supportingMissing > 0) +
+        cell("Evidence quality", g.evidenceQuality, g.evidenceQuality === "Low") +
+        cell("Contradiction", g.contradictionDetected ? "detected" : "none", g.contradictionDetected) +
+        cell("Precedent support", g.precedentSupport, false) +
+      "</div>");
+      b.push('<div class="gate-reason">' + esc(tidy(g.reason)) + "</div>");
+    }
+
+    if (c.draftBody || c.appealDraft) {
+      var hasAppeal = !!c.appealDraft;
+      b.push(sec("Draft — the reviewer edits before anything is sent", "var(--accent)"));
+      b.push(
+        (hasAppeal
+          ? '<div class="draft-tabs">' +
+              '<button class="draft-tab" data-d="appeal" aria-selected="' + (draftView !== "submission") + '">Appeal draft</button>' +
+              '<button class="draft-tab" data-d="submission" aria-selected="' + (draftView === "submission") + '">Submission draft</button>' +
+            "</div>"
+          : "") +
+        '<pre class="draft">' + esc(hasAppeal && draftView !== "submission" ? c.appealDraft : c.draftBody) + "</pre>"
+      );
+    }
+
+    var trail = (c._audit || c.audit || []);
+    if (trail.length) {
+      b.push(sec("Audit trail — who and what touched this case", "var(--slate)"));
+      b.push('<ul class="audit">' + trail.map(function (a) {
+        var refused = /^REFUSED/.test(a.detail);
+        return '<li' + (refused ? ' class="refused"' : "") + '>' +
+          '<span class="ic">' + esc(a.kind) + "</span>" +
+          '<span class="tx"><b>' + esc(a.actor) + "</b><p>" + esc(a.detail) + "</p></span></li>";
+      }).join("") + "</ul>");
+    }
+
+    var body = document.getElementById("drBody");
+    body.innerHTML = b.join("");
+    body.scrollTop = 0;
+    Array.prototype.forEach.call(body.querySelectorAll(".draft-tab"), function (t) {
+      t.addEventListener("click", function () { draftView = t.dataset.d; openCase(c.requestId); });
+    });
+
+    renderFoot(c);
+    document.getElementById("scrim").classList.add("on");
+    document.getElementById("drawer").classList.add("on");
   }
 
-  if ((c.conflicts || []).length) {
-    parts.push(`<div class="card">
-      <h3>Conflicts — not resolved silently</h3>
-      <ul class="conf">${c.conflicts.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
-    </div>`);
+  function renderFoot(c) {
+    var need = c.approveAuthority || "Reviewer";
+    var canApprove = RANK[role] >= RANK[need];
+    var canReject = RANK[role] >= RANK.Reviewer;
+
+    var html = '<span class="lbl">Human control · as ' + esc(roleLabel(role)) + '</span>';
+    html += c.controls.map(function (ct) {
+      var blocked = (ct.action === "approve-send" && !canApprove) || (ct.action === "reject" && !canReject);
+      var label = ct.action === "approve-send" && !canApprove
+        ? "Approve & send — needs " + roleLabel(need)
+        : ct.label;
+      return '<button class="act' + (ct.primary && !blocked ? " primary" : "") + (blocked ? " need" : "") + '"' +
+        (blocked ? " disabled" : "") + ' data-a="' + esc(ct.action) + '">' + esc(label) + "</button>";
+    }).join("");
+    html += '<span class="done" id="drDone">' + (c._decision ? "recorded · " + esc(c._decision) : "") + "</span>";
+
+    var foot = document.getElementById("drFoot");
+    foot.innerHTML = html;
+    Array.prototype.forEach.call(foot.querySelectorAll(".act:not([disabled])"), function (btn) {
+      btn.addEventListener("click", function () {
+        var action = btn.dataset.a;
+        c._decision = action;
+        c._audit = (c._audit || (c.audit ? c.audit.slice() : [])).concat([{
+          kind: "decision",
+          actor: "reviewer:you (" + role + ")",
+          detail: action + " — recorded",
+        }]);
+        toast(btn.textContent.trim().split(" — ")[0] + " — recorded as " + roleLabel(role));
+        openCase(c.requestId);
+      });
+    });
+  }
+  function roleLabel(r) {
+    return { Coordinator: "Coordinator", Reviewer: "Reviewer",
+      SeniorReviewer: "Senior reviewer", MedicalDirector: "Medical director" }[r] || r;
   }
 
-  if (g) {
-    parts.push(`<div class="card">
-      <h3>Gate — deterministic routing</h3>
-      <div class="why" style="font-size:15px">${esc(g.route)}</div>
-      <p class="kv">${esc(g.reason)}</p>
-      <div class="model">
-        <div>Mandatory <b>${g.mandatoryPass ? "all met" : "UNMET: " + esc((g.unmetMandatory || []).join(", "))}</b></div>
-        <div>Supporting <b>${g.supportingDocumented} documented · ${g.supportingPartial} partial · ${g.supportingMissing} missing</b></div>
-        <div>Evidence quality <b>${esc(g.evidenceQuality)}</b></div>
-        <div>Contradiction <b>${g.contradictionDetected ? "detected" : "none"}</b></div>
-        <div>Precedent support <b>${esc(g.precedentSupport)}</b></div>
-      </div>
-    </div>`);
+  function cell(label, value, bad) {
+    return "<div" + (bad ? ' class="bad"' : "") + ">" + esc(label) + "<b>" + esc(value) + "</b></div>";
   }
 
-  if (c.draftBody || c.appealDraft) {
-    parts.push(`<div class="card">
-      <h3>${c.appealDraft ? "Appeal draft" : "Submission draft"} <span class="src">— reviewer edits before it is sent</span></h3>
-      <pre class="draft">${esc(c.appealDraft || c.draftBody)}</pre>
-    </div>`);
+  function closeAll() {
+    openId = null;
+    document.getElementById("scrim").classList.remove("on");
+    document.getElementById("drawer").classList.remove("on");
+    document.getElementById("profileModal").classList.remove("on");
   }
 
-  document.getElementById("detail").innerHTML = parts.join("");
-  renderControls(c);
-}
+  /* ---- policy + regulatory profile ---------------------------- */
+  var activeRegion = "UK";
+  function renderProfile() {
+    var list = DATA.profiles || [];
+    var p = list.find(function (x) { return x.region === activeRegion; }) || list[0];
+    if (!p) { document.getElementById("profileBtn").style.display = "none"; return; }
 
-function renderControls(c) {
-  const bar = document.getElementById("controls");
-  bar.hidden = false;
-  bar.innerHTML = `<span class="note">Human control —</span>` +
-    c.controls.map(ct => `<button class="${ct.primary ? "primary" : "ghost"}" data-a="${ct.action}">${esc(ct.label)}</button>`).join("") +
-    `<span class="note" id="decided">${c.decision ? `<span class="done">recorded: ${esc(c.decision.action)}</span>` : ""}</span>`;
-  bar.querySelectorAll("button").forEach(b => b.onclick = () => decide(c, b.dataset.a));
-}
+    document.getElementById("regionName").textContent = p.region;
+    var switcher = list.length > 1
+      ? '<div class="pm-switch">' + list.map(function (x) {
+          return '<button data-r="' + esc(x.region) + '" aria-pressed="' + (x.region === activeRegion) + '">' + esc(x.shortLabel) + "</button>";
+        }).join("") + "</div>"
+      : "";
 
-async function decide(c, action) {
-  if (API) {
-    try { await fetch(`${API}/api/cases/${c.requestId}/decision`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, by: "reviewer@demo" }) }); } catch (e) {}
+    var terms = Object.keys(p.terminology || {}).map(function (k) {
+      return '<span class="pm-term">' + esc(k) + " → " + esc(p.terminology[k]) + "</span>";
+    }).join("");
+
+    document.getElementById("pmBody").innerHTML =
+      '<p class="pm-lead">' + esc(p.name) + "</p>" +
+      switcher +
+      row("Policy pack", esc(p.policyPack)) +
+      row("Terminology", '<div class="pm-terms">' + terms + "</div>") +
+      row("Coding conventions", esc(p.codingConventions)) +
+      row("Regulators", "<ul>" + (p.regulators || []).map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") + "</ul>") +
+      row("Appeal / escalation path", "<ul>" + (p.appealPath || []).map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") + "</ul>") +
+      row("Integration profile", esc(p.integrationProfile)) +
+      row("Currency", esc(p.currency) + " (" + esc(p.currencySymbol) + ")");
+
+    Array.prototype.forEach.call(document.querySelectorAll(".pm-switch button"), function (b) {
+      b.addEventListener("click", function () { activeRegion = b.dataset.r; renderProfile(); });
+    });
   }
-  c.decision = { action, by: "reviewer@demo" };
-  document.getElementById("decided").innerHTML = `<span class="done">recorded: ${esc(action)}</span>`;
-}
+  function row(k, v) { return '<div class="pm-row"><div class="pm-k">' + esc(k) + '</div><div class="pm-v">' + v + "</div></div>"; }
 
-document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
-  document.querySelectorAll(".tab").forEach(x => x.classList.toggle("active", x === t));
-  for (const name of ["queue", "warnings", "cost"]) {
-    const el = document.getElementById("tab-" + name);
-    el.hidden = name !== t.dataset.tab;
+  var toastTimer;
+  function toast(msg) {
+    var t = document.getElementById("toast");
+    t.innerHTML = '<svg viewBox="0 0 14 14"><path d="M2 7.5l3.5 3.5 7-8"/></svg>' + esc(msg);
+    t.classList.add("on");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove("on"); }, 2600);
   }
-  document.getElementById("controls").hidden = t.dataset.tab !== "queue" || !current;
-});
 
-load();
+  /* ---- tabs + theme ------------------------------------------- */
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (t) {
+    t.addEventListener("click", function () {
+      Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (x) {
+        x.setAttribute("aria-selected", String(x === t));
+      });
+      ["review", "warnings", "cost"].forEach(function (name) {
+        document.getElementById("pane-" + name).classList.toggle("on", name === t.dataset.tab);
+      });
+    });
+  });
+
+  document.getElementById("themeBtn").addEventListener("click", function () {
+    var cur = document.documentElement.getAttribute("data-theme");
+    var next = cur === "dark" ? "light" : cur === "light" ? "dark"
+      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark");
+    document.documentElement.setAttribute("data-theme", next);
+    try { localStorage.setItem("caiq-theme", next); } catch (e) {}
+  });
+  try {
+    var saved = localStorage.getItem("caiq-theme");
+    if (saved) document.documentElement.setAttribute("data-theme", saved);
+  } catch (e) {}
+
+  document.getElementById("drClose").addEventListener("click", closeAll);
+  document.getElementById("pmClose").addEventListener("click", closeAll);
+  document.getElementById("scrim").addEventListener("click", closeAll);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeAll(); });
+  document.getElementById("profileBtn").addEventListener("click", function () {
+    renderProfile();
+    document.getElementById("scrim").classList.add("on");
+    document.getElementById("profileModal").classList.add("on");
+  });
+
+  /* ---- go ---------------------------------------------------- */
+  function boot() {
+    renderStats();
+    renderQueue();
+    renderRecovery();
+    renderBenchmark();
+    renderProfile();
+  }
+  boot();
+
+  /* Optional live mode: ?api=<ApiProxy base url> pulls real cases instead of the
+     inlined snapshot. Falls back to the snapshot on any error. */
+  (function liveMode() {
+    var api = new URLSearchParams(location.search).get("api");
+    if (!api) return;
+    api = api.replace(/\/+$/, "");
+    var cap = document.getElementById("reviewCap");
+    Promise.all([
+      fetch(api + "/api/cases").then(function (r) { return r.json(); }),
+      fetch(api + "/api/recovery").then(function (r) { return r.json(); }),
+      fetch(api + "/api/benchmark").then(function (r) { return r.json(); }),
+      fetch(api + "/api/profiles").then(function (r) { return r.json(); }),
+      fetch(api + "/api/demo/scenarios").then(function (r) { return r.json(); })
+    ]).then(function (parts) {
+      return Promise.all(parts[0].map(function (s) {
+        return fetch(api + "/api/cases/" + s.requestId)
+          .then(function (r) { return r.json(); }).then(function (x) { return x.view; });
+      })).then(function (views) {
+        DATA = { cases: views, recovery: parts[1], benchmark: parts[2],
+                 profiles: parts[3], scenarios: parts[4] };
+        boot();
+        if (cap) cap.textContent = DATA.cases.length + " cases · live · " + api;
+      });
+    }).catch(function () {
+      if (cap) cap.textContent += " · live API unreachable — showing demo data";
+    });
+  })();
+
+  document.getElementById("rolePicker").addEventListener("change", function (e) {
+    role = e.target.value;
+    if (openId) { var c = DATA.cases.find(function (x) { return x.requestId === openId; }); if (c) renderFoot(c); }
+  });
+})();
 </script>
-</body>
-</html>

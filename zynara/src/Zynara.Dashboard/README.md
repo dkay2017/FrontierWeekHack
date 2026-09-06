@@ -5,17 +5,18 @@ The reviewer workspace (Static Web App) — evidence-first, not approve-button-f
 
 ## Run
 
-- **Offline (default):** open `index.html` (or serve the folder). It loads
-  `demo-cases.json` — the pre-computed `CaseView`s covering every Gate route.
-- **Live API:** `index.html?api=http://localhost:7071` — fetches from
-  `Zynara.ApiProxy` (`/api/cases`, `/api/cases/{id}`, `/api/demo/scenarios`,
-  `/api/demo/scenarios/{id}/run`, `/api/cases/{id}/decision`).
-- **`standalone.html`** — the same review console with the demo data inlined and
-  an IBM Plex type treatment; no fetch, no server. This is the version published
-  as an artifact for review. `index.html` stays the app that talks to the API.
+- **Offline (default):** open `index.html` (or serve the folder). The demo
+  dataset is inlined (`<script id="demo-data">`) so it renders with no server —
+  this is also the version published as an artifact for review.
+- **Live API:** `index.html?api=https://<apiproxy-host>` — pulls real cases from
+  `Zynara.ApiProxy` (`/api/cases`, `/api/cases/{id}`, `/api/recovery`,
+  `/api/benchmark`, `/api/profiles`, `/api/demo/scenarios`) and re-renders. Any
+  fetch error falls back to the inlined snapshot.
 
-`demo-cases.json` is generated from `Zynara.Core.Demo` — regenerate it whenever
-the projection or the demo scenarios change.
+The inlined snapshot and `demo-cases.json` are generated from `Zynara.Core.Demo`
+by `tools/Zynara.DemoDump` — regenerate both whenever the projection or the demo
+scenarios change (`dotnet run --project tools/Zynara.DemoDump -- src/Zynara.Dashboard/demo-cases.json`,
+then re-inline into `index.html`).
 
 ## What the card shows
 

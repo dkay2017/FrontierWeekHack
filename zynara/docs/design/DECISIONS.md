@@ -5,6 +5,17 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D29 · One dashboard file — `index.html` is the light console (S-5)
+
+**2026-09-06.** The repo carried two dashboards: `index.html` (the original
+dark version, rejected) and `standalone.html` (the light house-style rebuild the
+user approved). Deleted the dark one; `standalone.html` is now `index.html` — the
+single file the Static Web App serves and the artifact publishes. It renders from
+the inlined `<script id="demo-data">` snapshot by default; `?api=<ApiProxy host>`
+pulls live `cases` / `recovery` / `benchmark` / `profiles` / `demo/scenarios` and
+re-renders, falling back to the snapshot on any fetch error.
+Touched: `src/Zynara.Dashboard/{index.html,README.md}` (deleted `standalone.html`).
+
 ## D28 · Challenge 3 — the Foundry portal evaluation half (S-10)
 
 **2026-09-06.** Challenge 3 was only half covered: `eval/Zynara.Eval` (CI,

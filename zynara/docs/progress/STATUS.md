@@ -183,12 +183,13 @@ P0-2 (Critic agent) → P0-1 (reframe docs) → P0-4 (eval suite). **All P0 done
 ## Parked — 2026-09-06 (end of session 6)
 
 Everything committed + pushed. Resume at **"Next — remaining P1 / P2"** below.
-Dashboard: `standalone.html` reworked into the light-first Zynara/TireForge house
-style (masthead + seal logo, aurora ground, tinted cards, table + right-hand
-drawer for the case detail). Published artifact:
+Dashboard: reworked into the light-first Zynara/TireForge house style (masthead +
+seal logo, aurora ground, tinted cards, table + right-hand drawer for the case
+detail). Published artifact:
 `https://claude.ai/code/artifact/5c26a346-ad1d-41e5-8859-79bc88b9b65b`. User
-approved the direction ("much better"). `index.html` (the live-API version) still
-needs the same restyle port.
+approved the direction ("much better"). **S-5 (D29): the old dark `index.html` is
+deleted; this light version *is* `index.html` now, with an optional `?api=` live
+mode.**
 
 ## Done — session 6 tail (2026-09-06) — P2-5
 
@@ -315,7 +316,7 @@ the user chose: **de-risk spike → `Zynara.Data` → grow eval set → video la
 | ~~S-2~~ | **Challenge 2 — agent-keyed traces** — ✅ **done (D26)** | — | `ZynaraTelemetry` ActivitySource: `pipeline.run → spoke.* → invoke_agent * → chat *`. Azure Monitor OTel exporter wired in both Function hosts (gated on `APPLICATIONINSIGHTS_CONNECTION_STRING`). `TelemetryTests` assert the tree. **102 tests.** Visual check at deploy (S-4). |
 | S-3 | **Challenge 4 — Foundry portal workflow** | S | 2–3 node portal workflow (manual, in the portal, like the vector store). Agents-as-assets half is done via the provisioner. |
 | S-4 | **Challenge 0 — `azd provision` / deploy** | M | Never run against a live subscription. Needs a real RG + the `Zynara.DbDeploy` hook + `Zynara.Submission` to build. |
-| S-5 | **`Zynara.Dashboard/index.html`** — port to the light house style | S | Still the old 377-line dark version; `standalone.html` is the good one. Replace or re-point. |
+| ~~S-5~~ | **`Zynara.Dashboard/index.html`** — light house style — ✅ **done (D29)** | — | The old dark version is deleted; `index.html` is the light-first console (was `standalone.html`). Inlined snapshot by default; `?api=<host>` pulls live cases/recovery/benchmark/profiles and re-renders, falling back to the snapshot on error. |
 | S-6 | **Architecture SVG** — `appeal-builder` → `precedent-strategist`, add the contradiction step + the "upstream / not built" band | S | Another session edits this file — coordinate; do not `git add -A`. |
 | S-7 | **Pitch + 5-point doc** | M | Submission artifact. |
 | S-8 | **Video** | M | **Last**, per the user. |
