@@ -53,6 +53,18 @@ Exit 0 = every hosted agent returned parseable output and the Gate routed the
 case. Non-zero = an agent failed or the response could not be parsed (the message
 says which).
 
+## File Search (recommended before recording the video)
+
+With `VECTOR_STORE_ID` unset the hosted Critic can't see the policy clause text or
+the precedent narratives, so it flags *"no policy clause text is quoted"* and the
+clean case routes to **Strengthen** instead of AutoSubmit. Load the corpus once
+(see `data/corpus/README.md`), then:
+
+```
+export VECTOR_STORE_ID="vs_..."
+dotnet run --project tools/Zynara.FoundrySpike
+```
+
 ## If it fails
 
 | Symptom | Likely cause |

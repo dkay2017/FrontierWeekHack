@@ -279,9 +279,14 @@ needs the same restyle port.
 **Every evaluator P0 / P1 / P2 finding is addressed.** Remaining, in the order
 the user chose: **de-risk spike → `Zynara.Data` → grow eval set → video last.**
 
-1. **De-risk spike — `tools/Zynara.FoundrySpike` built, not yet run.** Runs the
-   whole pipeline against the HOSTED agents for 2 scenarios. Needs a Foundry
-   project + `az login`. Runbook: `docs/runbooks/foundry-spike.md`. **User to run.**
+1. **De-risk spike — ✅ RUN, PASSED (2026-09-06).** `tools/Zynara.FoundrySpike`
+   ran the whole pipeline against hosted GPT-5.4 in project
+   `zynara-foundry-28985` / `care-approval` (RG `zynara-spike-rg`). Auth +
+   provisioning + 5 agent calls/case + parsing all worked; ~25 s/case. The real
+   Critic is stricter than the stub — with File Search **off** it flags "no
+   policy clause text" and the clean case routes to Strengthen. **Load the corpus
+   (`data/corpus/`, manual — see its README) + set `VECTOR_STORE_ID`** for a
+   clean demo run.
 2. ~~`Zynara.Data`~~ **done (D20)** — Cosmos-backed `IZynaraStore` +
    `ICaseRepository` + real cost meter; `CosmosJson` round-trip tested;
    `tools/Zynara.DbDeploy` seeder (azd hook); orchestrator + api-proxy wire it on
