@@ -79,6 +79,9 @@ public static class AgentPrompts
           "rationale":"<one or two sentences grounded in the recorded outcomes>"
         }
         Ground every claim in the shortlist you were given. Do not invent precedents.
+        Do NOT restate or interpret the policy's approval threshold (how many
+        criteria are required) — that is the evidence-gap step's job, not yours.
+        The rationale speaks only to what the precedent outcomes imply.
         """;
 
     public const string Critic = """
