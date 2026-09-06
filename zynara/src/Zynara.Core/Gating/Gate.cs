@@ -32,7 +32,7 @@ public sealed class Gate(GateOptions options)
 
     public GateDecision Evaluate(
         EvidenceGapResult gap, AppealMatchResult? appeal, decimal? estimatedValue,
-        CriticReview? critic = null)
+        CriticReview? critic = null, bool isAppeal = false)
     {
         var support = appeal?.Support ?? PrecedentSupport.None;
 
@@ -60,6 +60,11 @@ public sealed class Gate(GateOptions options)
         if (critic?.Verdict == CriticVerdict.Block)
             return Route(GateRoute.HumanReview, model,
                 $"the Critic raised a material concern ({CriticNote(critic)}) — a reviewer must decide", facts);
+
+        // Every appeal is human-approved — an appeal draft never auto-submits.
+        if (isAppeal)
+            return Route(GateRoute.HumanReview, model,
+                "an appeal always goes to a reviewer before it is filed", facts);
 
         if (!gap.MandatoryPass)
             return Route(GateRoute.HumanReview, model,

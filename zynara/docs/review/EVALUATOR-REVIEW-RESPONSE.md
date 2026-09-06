@@ -8,9 +8,17 @@ Source: `../design/Care_Approval_IQ_Agent_a_Thon_Evaluator_Review.docx`
   the `Abstain` route (D4). Code + 30 Core tests.
 - **P0-2 done** — the Critic agent, seven checks, verdict feeds the Gate (D5).
   Code + 18 Agent tests.
-- **P0-1 done (docs)** — TDD reframed (§3.1 "why multi-agent", §7.3 eval suite,
+- **P0-1 done** — TDD reframed (§3.1 "why multi-agent", §7.3 eval suite,
   §11.1 "the four questions"), ARCHITECTURE §5/§6/§8/§10 + both mermaids,
-  `DECISIONS.md` started (D1–D6). Diagram SVG + P0-4 (eval build) still open.
+  `DECISIONS.md` (D1–D6), architecture SVG + PNG updated to 4 agents + Critic.
+- **P0-4 done** — `eval/Zynara.Eval`: the metric suite (evidence precision/recall,
+  mandatory false-negative rate, precedent-citation accuracy, hallucination count,
+  route agreement, safe-abstention rate, unsafe-automation rate) + a generalist
+  baseline for the agents-vs-one-generalist comparison, over 8 labelled cases.
+  `dotnet test` hard-gates the safety metrics (unsafe automation = 0, mandatory
+  FN = 0). Current run: route agreement 100%, unsafe automation 0 (baseline 2),
+  safe abstention 1/1, no hallucinated references.
+- **All P0 items complete.**
 - **D-2 taken** — expiry-watch / policy-drift demoted to deterministic monitors
   (D6).
 

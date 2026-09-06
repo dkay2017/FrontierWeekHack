@@ -1,0 +1,47 @@
+{
+  "id": "case-04-contradiction",
+  "description": "Note contradicts a criterion",
+  "request": {
+    "procedure": "MRI lumbar spine",
+    "payerPlan": "Bupa/Comprehensive",
+    "region": "UK",
+    "clinicalNote": "Imaging changes management and alters the planned surgery. Physiotherapy completed for eight weeks. No radiculopathy seen on examination.",
+    "denialLetter": null,
+    "estimatedValue": 350
+  },
+  "criteria": [
+    {
+      "id": "c1",
+      "text": "physiotherapy completed for six weeks",
+      "mandatory": true
+    },
+    {
+      "id": "c2",
+      "text": "radiculopathy documented on examination",
+      "mandatory": false
+    },
+    {
+      "id": "c3",
+      "text": "imaging changes management",
+      "mandatory": false
+    }
+  ],
+  "rules": [
+    {
+      "authRequired": true,
+      "requiredCode": "CCSD-72148",
+      "policyRef": "bupa-mri-ls-v3"
+    }
+  ],
+  "precedents": [],
+  "groundTruth": {
+    "criterionStatus": {
+      "c1": "Documented",
+      "c2": "Contradicted",
+      "c3": "Documented"
+    },
+    "expectedRoute": "HumanReview",
+    "expectedCitedPrecedents": [],
+    "expertAbstains": false
+  }
+}

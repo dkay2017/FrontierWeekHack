@@ -30,7 +30,8 @@ public sealed class AuthPipeline(
         var gap = await evidenceGap.RunAsync(request, ct);
         var appeal = await appealMatch.RunAsync(request, gap.Assessment, ct);
         var review = await critic.RunAsync(request, na, gap, appeal, ct);
-        var decision = gate.Evaluate(gap, appeal, request.EstimatedValue, review);
+        var isAppeal = !string.IsNullOrWhiteSpace(request.DenialLetter);
+        var decision = gate.Evaluate(gap, appeal, request.EstimatedValue, review, isAppeal);
 
         var criteria = await store.GetCriteriaAsync(
             request.PayerPlan, request.Procedure, request.Region, ct);

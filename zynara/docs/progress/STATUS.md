@@ -103,7 +103,21 @@ because P0-2/P0-3 rework the Gate + evidence model that slice 2 just built.
 - D-3 — P0 first, before slice 4.
 
 **P0 work order:** P0-3 (structured decision model — reworks Gate/evidence) →
-P0-2 (Critic agent) → P0-1 (reframe docs) → P0-4 (eval suite).
+P0-2 (Critic agent) → P0-1 (reframe docs) → P0-4 (eval suite). **All P0 done
+(2026-09-06).**
+
+- **P0-3** — structured decision model, mandatory criteria never averaged, the
+  `Abstain` route (D4). Core tests green.
+- **P0-2** — the Critic agent (7 checks, verdict feeds the Gate — D5). Stub +
+  Foundry twins. Agent tests green.
+- **P0-1** — TDD §3.1 / §7.3 / §11.1, ARCHITECTURE §5/§6/§8/§10 + mermaids,
+  `DECISIONS.md` (D1–D6), SVG + PNG now show 4 agents + Critic + the 4-route Gate.
+- **P0-4** — `eval/Zynara.Eval`: metric suite + generalist baseline + 8 labelled
+  cases; `dotnet test` hard-gates unsafe-automation = 0 and mandatory-FN = 0.
+  Latest: route agreement 100%, unsafe automation 0 (baseline 2), safe
+  abstention 1/1, 0 hallucinated references.
+
+Next: resume **slice 4 — the Durable orchestrator** (see Pending #1).
 
 ## Pending (deferred until P0 is in)
 
@@ -113,8 +127,8 @@ P0-2 (Critic agent) → P0-1 (reframe docs) → P0-4 (eval suite).
    advisory timers).
 2. `infra/` skeleton — `main.bicep` + module stubs, `azure.yaml`; CI (build +
    test + eval gate); enforce agent↔payer identity isolation (P1-4).
-3. Data plan — labelled clinical-case set for P0-4 (ground truth per criterion +
-   expected route + expected citations); 2–3 payer policy files.
+3. Data plan — grow the labelled clinical-case set beyond the initial 8
+   (`eval/Zynara.Eval/cases/`); 2–3 real payer policy files for File Search.
 4. `Zynara.Dashboard` — evidence-first HITL workspace (P1-1) + precedent panel
    (P1-2).
 5. `Zynara.ApiProxy` — read models + reviewer actions + RBAC (P1-3).

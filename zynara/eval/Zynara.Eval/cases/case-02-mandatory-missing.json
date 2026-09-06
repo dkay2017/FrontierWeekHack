@@ -1,0 +1,47 @@
+{
+  "id": "case-02-mandatory-missing",
+  "description": "Mandatory criterion not documented",
+  "request": {
+    "procedure": "MRI lumbar spine",
+    "payerPlan": "Bupa/Comprehensive",
+    "region": "UK",
+    "clinicalNote": "Radiculopathy documented on examination. Imaging changes management and alters the surgery plan.",
+    "denialLetter": null,
+    "estimatedValue": 350
+  },
+  "criteria": [
+    {
+      "id": "c1",
+      "text": "physiotherapy completed for six weeks",
+      "mandatory": true
+    },
+    {
+      "id": "c2",
+      "text": "radiculopathy documented on examination",
+      "mandatory": false
+    },
+    {
+      "id": "c3",
+      "text": "imaging changes management",
+      "mandatory": false
+    }
+  ],
+  "rules": [
+    {
+      "authRequired": true,
+      "requiredCode": "CCSD-72148",
+      "policyRef": "bupa-mri-ls-v3"
+    }
+  ],
+  "precedents": [],
+  "groundTruth": {
+    "criterionStatus": {
+      "c1": "Missing",
+      "c2": "Documented",
+      "c3": "Documented"
+    },
+    "expectedRoute": "HumanReview",
+    "expectedCitedPrecedents": [],
+    "expertAbstains": false
+  }
+}
