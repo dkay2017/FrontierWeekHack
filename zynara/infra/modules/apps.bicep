@@ -151,7 +151,7 @@ resource submissionHostStorage 'Microsoft.Authorization/roleAssignments@2022-04-
   }
 }
 
-resource dashboard 'Microsoft.Web/staticSites@2023-12-01' = {
+resource dashboard 'Microsoft.Web/staticSites@2024-04-01' = {
   name: 'stapp-zynara-${environmentName}'
   location: staticWebAppLocation
   tags: union(tags, { 'azd-service-name': 'dashboard' })
@@ -160,7 +160,7 @@ resource dashboard 'Microsoft.Web/staticSites@2023-12-01' = {
 }
 
 // Link the api-proxy as the SWA backend (Standard SKU only → same-origin /api).
-resource dashboardBackend 'Microsoft.Web/staticSites/linkedBackends@2023-12-01' = if (staticWebAppSku == 'Standard') {
+resource dashboardBackend 'Microsoft.Web/staticSites/linkedBackends@2024-04-01' = if (staticWebAppSku == 'Standard') {
   parent: dashboard
   name: 'apiproxy'
   properties: {
