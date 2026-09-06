@@ -136,7 +136,11 @@ module apps './modules/apps.bicep' = {
     staticWebAppLocation: staticWebAppLocation
     hostStorageName: 'zynhost${suffix}'
     reasoningIdentityId: identity.outputs.reasoningIdentityId
+    reasoningClientId: identity.outputs.reasoningClientId
+    reasoningPrincipalId: identity.outputs.reasoningPrincipalId
     submissionIdentityId: identity.outputs.submissionIdentityId
+    submissionClientId: identity.outputs.submissionClientId
+    submissionPrincipalId: identity.outputs.submissionPrincipalId
     cosmosEndpoint: data.outputs.cosmosEndpoint
     cosmosDatabaseName: data.outputs.databaseName
     corpusStorageBlobEndpoint: data.outputs.corpusBlobEndpoint

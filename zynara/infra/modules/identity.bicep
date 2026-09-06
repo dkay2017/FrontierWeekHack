@@ -28,6 +28,8 @@ resource dashboard 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31'
 // reasoning = orchestrator + api-proxy. submission = the Submission Adapter.
 output reasoningIdentityId string = reasoning.id
 output reasoningPrincipalId string = reasoning.properties.principalId
+output reasoningClientId string = reasoning.properties.clientId
 output submissionIdentityId string = submission.id
 output submissionPrincipalId string = submission.properties.principalId
+output submissionClientId string = submission.properties.clientId
 output dashboardIdentityId string = dashboard.id
