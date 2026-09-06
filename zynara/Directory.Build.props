@@ -1,9 +1,5 @@
 <Project>
-  <PropertyGroup>
-    <!-- Zynara.Data uses the Cosmos SDK's System.Text.Json serializer
-         (UseSystemTextJsonSerializerWithOptions); the SDK's build check still
-         wants Newtonsoft referenced. Suppress it repo-wide since projects that
-         transitively pick up Cosmos don't inherit a per-project setting. -->
-    <AzureCosmosDisableNewtonsoftJsonCheck>true</AzureCosmosDisableNewtonsoftJsonCheck>
-  </PropertyGroup>
+  <!-- Zynara.Data references Newtonsoft.Json explicitly (the Cosmos SDK 3.x needs
+       it at runtime even with the STJ serializer), so the SDK's build check passes
+       everywhere it flows transitively — no need to disable it. -->
 </Project>

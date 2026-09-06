@@ -10,6 +10,9 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.62.1" />
+    <!-- The Cosmos SDK 3.x needs Newtonsoft.Json at runtime (DocumentClient ctor)
+         even with the System.Text.Json serializer; it must be referenced explicitly. -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Azure.Identity" Version="1.21.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.11" />
   </ItemGroup>
