@@ -6,58 +6,82 @@ namespace Zynara.Core.Tests;
 
 public class GateTests
 {
-    private static EvidenceGapResult Gap(double readiness, int missing = 0, int conflicts = 0)
+    [Fact]
+    public void Auto_submits_when_mandatory_met_no_contradiction_high_evidence_and_within_value()
     {
-        var met = Enumerable.Range(0, 8).Select(i => $"m{i}").ToArray();
-        var miss = Enumerable.Range(0, missing).Select(i => $"x{i}").ToArray();
-        var conf = Enumerable.Range(0, conflicts).Select(i => $"k{i}").ToArray();
-        return new EvidenceGapResult(new EvidenceGapAssessment(met, miss, conf, "t"), readiness);
+        var d = new Gate().Evaluate(
+            Build.Gap(documented: 3, missing: 0, quality: EvidenceQuality.High),
+            Build.Appeal(PrecedentSupport.Strong),
+            estimatedValue: 400m);
+
+        Assert.Equal(GateRoute.AutoSubmit, d.Route);
     }
 
     [Fact]
-    public void Auto_submits_when_ready_no_gaps_and_within_the_value_limit()
+    public void A_missing_mandatory_criterion_routes_to_human_review_regardless_of_supporting_evidence()
     {
-        var d = new Gate().Evaluate(Gap(0.90), estimatedValue: 400m);
-        Assert.True(d.AutoSubmit);
-        Assert.Contains("auto-submit", d.Reason);
+        var d = new Gate().Evaluate(
+            Build.Gap(mandatoryPass: false, documented: 20, quality: EvidenceQuality.High, unmetMandatory: new[] { "c1" }),
+            Build.Appeal(PrecedentSupport.Strong),
+            estimatedValue: 1m);
+
+        Assert.Equal(GateRoute.HumanReview, d.Route);
+        Assert.Contains("mandatory criterion unmet (c1)", d.Reason);
     }
 
     [Fact]
-    public void Exact_threshold_passes()
+    public void A_contradiction_routes_to_human_review_and_is_not_silently_resolved()
     {
-        var d = new Gate(new GateOptions { ReadinessThreshold = 0.80 }).Evaluate(Gap(0.80), null);
-        Assert.True(d.AutoSubmit);
+        var d = new Gate().Evaluate(
+            Build.Gap(contradiction: true, quality: EvidenceQuality.High),
+            Build.Appeal(PrecedentSupport.Strong),
+            estimatedValue: 1m);
+
+        Assert.Equal(GateRoute.HumanReview, d.Route);
+        Assert.Contains("contradictory", d.Reason);
     }
 
     [Fact]
-    public void Routes_to_review_below_the_readiness_threshold()
+    public void Low_evidence_and_weak_precedent_support_makes_the_system_abstain()
     {
-        var d = new Gate().Evaluate(Gap(0.70), null);
-        Assert.False(d.AutoSubmit);
-        Assert.Contains("readiness 0.70 <", d.Reason);
+        var d = new Gate().Evaluate(
+            Build.Gap(quality: EvidenceQuality.Low, missing: 2),
+            Build.Appeal(PrecedentSupport.None),
+            estimatedValue: 1m);
+
+        Assert.Equal(GateRoute.Abstain, d.Route);
+        Assert.Contains("abstains", d.Reason);
     }
 
     [Fact]
-    public void Routes_to_review_when_a_criterion_is_missing_even_if_readiness_is_high()
+    public void Over_the_auto_value_limit_routes_to_human_review()
     {
-        var d = new Gate().Evaluate(Gap(0.95, missing: 1), null);
-        Assert.False(d.AutoSubmit);
-        Assert.Contains("1 criterion(a) missing", d.Reason);
-    }
+        var d = new Gate(new GateOptions { AutoLimit = 500m }).Evaluate(
+            Build.Gap(quality: EvidenceQuality.High),
+            Build.Appeal(PrecedentSupport.Strong),
+            estimatedValue: 9000m);
 
-    [Fact]
-    public void Routes_to_review_when_a_criterion_is_contradicted()
-    {
-        var d = new Gate().Evaluate(Gap(0.95, conflicts: 1), null);
-        Assert.False(d.AutoSubmit);
-        Assert.Contains("contradiction", d.Reason);
-    }
-
-    [Fact]
-    public void Routes_to_review_above_the_auto_value_limit()
-    {
-        var d = new Gate(new GateOptions { AutoLimit = 500m }).Evaluate(Gap(0.95), estimatedValue: 5000m);
-        Assert.False(d.AutoSubmit);
+        Assert.Equal(GateRoute.HumanReview, d.Route);
         Assert.Contains("auto-limit", d.Reason);
+    }
+
+    [Fact]
+    public void An_undocumented_supporting_criterion_asks_the_clinician_to_strengthen()
+    {
+        var d = new Gate().Evaluate(
+            Build.Gap(documented: 2, missing: 1, quality: EvidenceQuality.High),
+            Build.Appeal(PrecedentSupport.Moderate),
+            estimatedValue: 1m);
+
+        Assert.Equal(GateRoute.Strengthen, d.Route);
+    }
+
+    [Fact]
+    public void The_decision_always_carries_its_working()
+    {
+        var d = new Gate().Evaluate(Build.Gap(), Build.Appeal(), 1m);
+        Assert.Contains("mandatory", d.Reason);
+        Assert.Contains("precedent support", d.Reason);
+        Assert.NotNull(d.Model);
     }
 }

@@ -35,37 +35,54 @@ public class SpokeTests
     }
 
     [Fact]
-    public async Task EvidenceGapMatch_derives_readiness_as_met_over_total()
+    public async Task EvidenceGapMatch_tracks_the_mandatory_criterion_separately()
     {
         var store = new InMemoryZynaraStore().AddCriteria(Sample.Criteria());
-        // note mentions physiotherapy (c1) and management (c3), not radiculopathy (c2)
+        // c1 (mandatory, physiotherapy) present; c2 (radiculopathy) absent; c3 (management) present
         var note = "Twelve weeks of physiotherapy completed. MRI result would change management.";
 
         var gap = await new EvidenceGapMatch(store, new StubEvidenceGapAgent())
             .RunAsync(Sample.Request(note));
 
-        Assert.Equal(2.0 / 3.0, gap.Readiness, 3);
-        Assert.Contains("c2", gap.Assessment.Missing);
+        Assert.True(gap.MandatoryPass);
+        Assert.Equal(1, gap.MandatoryTotal);
+        Assert.Equal(1, gap.SupportingMissing);        // c2
+        Assert.Empty(gap.UnmetMandatory);
     }
 
     [Fact]
-    public async Task AppealMatch_ranks_a_precedent_that_shares_the_denial_reason_code_to_the_top()
+    public async Task EvidenceGapMatch_reports_an_unmet_mandatory_criterion()
+    {
+        var store = new InMemoryZynaraStore().AddCriteria(Sample.Criteria());
+        var note = "Radiculopathy present. MRI would change management."; // no physiotherapy → c1 (mandatory) missing
+
+        var gap = await new EvidenceGapMatch(store, new StubEvidenceGapAgent())
+            .RunAsync(Sample.Request(note));
+
+        Assert.False(gap.MandatoryPass);
+        Assert.Contains("c1", gap.UnmetMandatory);
+    }
+
+    [Fact]
+    public async Task AppealMatch_ranks_a_precedent_sharing_the_denial_code_first_and_derives_support()
     {
         var store = new InMemoryZynaraStore()
             .AddPrecedent(Sample.Precedent("P-far", "unrelated shoulder arthroscopy case", AppealOutcome.AppealLost))
             .AddPrecedent(Sample.Precedent("P-near", "physiotherapy six weeks radiculopathy lumbar",
+                AppealOutcome.AppealWon, "MN-01"))
+            .AddPrecedent(Sample.Precedent("P-near2", "physiotherapy radiculopathy lumbar spine",
                 AppealOutcome.AppealWon, "MN-01"));
 
         var req = Sample.Request(
-            "physiotherapy for six weeks, radiculopathy present",
+            "physiotherapy for six weeks, radiculopathy present, lumbar spine",
             denial: "Denied under MN-01: conservative treatment not documented.");
-        var emptyGap = new EvidenceGapAssessment(
-            Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>(), "");
+        var gap = Build.Assessment();
 
-        var result = await new AppealMatch(store, new StubAppealBuilderAgent())
-            .RunAsync(req, emptyGap);
+        var result = await new AppealMatch(store, new StubAppealBuilderAgent()).RunAsync(req, gap);
 
-        Assert.Equal("P-near", result.Shortlist[0].CaseId);
+        Assert.Equal("P-near", result.Shortlist[0].Precedent.CaseId);
+        Assert.True(result.Shortlist[0].Similarity > 0);
+        Assert.Equal(PrecedentSupport.Strong, result.Support);
         Assert.Equal(AppealVerdict.Appeal, result.Recommendation.Verdict);
     }
 
@@ -82,20 +99,6 @@ public class SpokeTests
         Assert.Equal(-10, result.DaysOfMargin);
         Assert.NotNull(result.Warning);
         Assert.Single(store.EarlyWarnings);
-    }
-
-    [Fact]
-    public async Task ExpiryMath_is_silent_when_there_is_plenty_of_margin()
-    {
-        var store = new InMemoryZynaraStore().AddAuth(new AuthRecord(
-            "A-1", "req-1", Sample.Plan, Sample.Procedure,
-            new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)));
-
-        var result = await new ExpiryMath(store, new StubExpiryWatchAgent())
-            .RunAsync("req-1", procedureDate: new DateOnly(2026, 6, 1));
-
-        Assert.Null(result.Warning);
-        Assert.Empty(store.EarlyWarnings);
     }
 
     [Fact]

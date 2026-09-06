@@ -17,6 +17,15 @@ public class StubAgentTests
             new("c3", "imaging would change clinical management"),
         });
 
+    private static CriterionStatus StatusOf(EvidenceGapAssessment a, string id) =>
+        a.Findings.First(f => f.CriterionId == id).Status;
+
+    private static PrecedentMatch Match(string id, string factPattern, AppealOutcome outcome, params string[] codes) =>
+        new(new Precedent(id, "Bupa/Comprehensive", "MRI lumbar spine", Region.UK, factPattern,
+                InitiallyApproved: false, AppealOutcome: outcome, DenialReasonCodes: codes,
+                ClausesCited: new[] { "1.2" }, DecidedOn: new DateOnly(2026, 3, 1)),
+            0.5, Array.Empty<string>());
+
     [Fact]
     public void Di_wires_the_five_stub_agents_by_default()
     {
@@ -58,10 +67,10 @@ public class StubAgentTests
 
         var a = await new StubEvidenceGapAgent().AssessAsync(note, criteria);
 
-        Assert.Contains("c1", a.Met);          // physiotherapy mentioned
-        Assert.Contains("c3", a.Met);          // imaging / management mentioned
-        Assert.Contains("c2", a.Missing);      // neurological deficit not mentioned
-        a.Validate(criteria);                  // every id is real and classified once
+        Assert.Equal(CriterionStatus.Documented, StatusOf(a, "c1"));
+        Assert.Equal(CriterionStatus.Documented, StatusOf(a, "c3"));
+        Assert.Equal(CriterionStatus.Missing, StatusOf(a, "c2"));
+        a.Validate(criteria);
     }
 
     [Fact]
@@ -72,7 +81,15 @@ public class StubAgentTests
 
         var a = await new StubEvidenceGapAgent().AssessAsync(note, criteria);
 
-        Assert.Contains("c2", a.Conflicts);
+        Assert.Equal(CriterionStatus.Contradicted, StatusOf(a, "c2"));
+        Assert.True(a.AnyContradiction);
+    }
+
+    [Fact]
+    public async Task EvidenceGap_grades_quality_low_when_most_criteria_are_missing()
+    {
+        var a = await new StubEvidenceGapAgent().AssessAsync("Patient seen.", SampleCriteria());
+        Assert.Equal(EvidenceQuality.Low, a.Quality);
     }
 
     [Fact]
@@ -83,9 +100,15 @@ public class StubAgentTests
             Id = "r1", Procedure = "MRI lumbar spine", PayerPlan = "Bupa/Comprehensive",
             Region = Region.UK, ClinicalNote = "n/a",
         };
-        var gap = new EvidenceGapAssessment(new[] { "c1", "c2", "c3" }, Array.Empty<string>(), Array.Empty<string>(), "ok");
+        var gap = new EvidenceGapAssessment(
+            new[]
+            {
+                new CriterionFinding("c1", CriterionStatus.Documented, null),
+                new CriterionFinding("c2", CriterionStatus.Documented, null),
+                new CriterionFinding("c3", CriterionStatus.Documented, null),
+            }, EvidenceQuality.High, "ok");
 
-        var rec = await new StubAppealBuilderAgent().RecommendAsync(req, gap, Array.Empty<Precedent>());
+        var rec = await new StubAppealBuilderAgent().RecommendAsync(req, gap, Array.Empty<PrecedentMatch>());
 
         Assert.Equal(AppealVerdict.Submit, rec.Verdict);
         Assert.Null(rec.AppealDraft);
@@ -99,18 +122,20 @@ public class StubAgentTests
             Id = "r1", Procedure = "MRI lumbar spine", PayerPlan = "Bupa/Comprehensive",
             Region = Region.UK, ClinicalNote = "n/a", DenialLetter = "Denied: conservative treatment not documented.",
         };
-        var gap = new EvidenceGapAssessment(new[] { "c1", "c2" }, new[] { "c3" }, Array.Empty<string>(), "one gap");
-        var precedents = new[]
+        var gap = new EvidenceGapAssessment(
+            new[]
+            {
+                new CriterionFinding("c1", CriterionStatus.Documented, null),
+                new CriterionFinding("c2", CriterionStatus.Documented, null),
+                new CriterionFinding("c3", CriterionStatus.Missing, null),
+            }, EvidenceQuality.Medium, "one gap");
+        var shortlist = new[]
         {
-            new Precedent("P-101", "Bupa/Comprehensive", "MRI lumbar spine", Region.UK,
-                "6 weeks physio, radiculopathy", false, AppealOutcome.AppealWon,
-                new[] { "MN-01" }, new[] { "criterion 1.2" }, new DateOnly(2026, 3, 1)),
-            new Precedent("P-102", "Bupa/Comprehensive", "MRI lumbar spine", Region.UK,
-                "similar", false, AppealOutcome.AppealWon, Array.Empty<string>(),
-                Array.Empty<string>(), new DateOnly(2026, 4, 1)),
+            Match("P-101", "6 weeks physio, radiculopathy", AppealOutcome.AppealWon, "MN-01"),
+            Match("P-102", "similar", AppealOutcome.AppealWon),
         };
 
-        var rec = await new StubAppealBuilderAgent().RecommendAsync(req, gap, precedents);
+        var rec = await new StubAppealBuilderAgent().RecommendAsync(req, gap, shortlist);
 
         Assert.Equal(AppealVerdict.Appeal, rec.Verdict);
         Assert.NotNull(rec.AppealDraft);

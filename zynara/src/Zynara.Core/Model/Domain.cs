@@ -49,8 +49,12 @@ public sealed record PolicyRule(
     string PolicyRef,
     string? Notes = null);
 
-/// <summary>One written approval criterion for a procedure.</summary>
-public sealed record Criterion(string Id, string Text);
+/// <summary>
+/// One written approval criterion for a procedure. A <see cref="Mandatory"/>
+/// criterion is a hard gate — it can never be averaged away by supporting
+/// criteria (evaluator finding #3).
+/// </summary>
+public sealed record Criterion(string Id, string Text, bool Mandatory = false);
 
 /// <summary>A procedure's written approval criteria for one payer, at one policy version.</summary>
 public sealed record Criteria(

@@ -12,15 +12,29 @@ public class DomainTests
     [Fact]
     public void EvidenceGapAssessment_Validate_rejects_an_unknown_criterion_id()
     {
-        var a = new EvidenceGapAssessment(new[] { "c1", "c9" }, Array.Empty<string>(), Array.Empty<string>(), "x");
+        var a = new EvidenceGapAssessment(
+            new[] { new CriterionFinding("c9", CriterionStatus.Missing, null) }, EvidenceQuality.Low, "x");
         Assert.Throws<ArgumentException>(() => a.Validate(Criteria()));
     }
 
     [Fact]
     public void EvidenceGapAssessment_Validate_rejects_a_criterion_classified_twice()
     {
-        var a = new EvidenceGapAssessment(new[] { "c1" }, new[] { "c1" }, Array.Empty<string>(), "x");
+        var a = new EvidenceGapAssessment(
+            new[]
+            {
+                new CriterionFinding("c1", CriterionStatus.Documented, null),
+                new CriterionFinding("c1", CriterionStatus.Missing, null),
+            }, EvidenceQuality.Low, "x");
         Assert.Throws<ArgumentException>(() => a.Validate(Criteria()));
+    }
+
+    [Fact]
+    public void EvidenceGapAssessment_Validate_requires_every_criterion_to_be_classified()
+    {
+        var a = new EvidenceGapAssessment(
+            new[] { new CriterionFinding("c1", CriterionStatus.Documented, null) }, EvidenceQuality.Low, "x");
+        Assert.Throws<ArgumentException>(() => a.Validate(Criteria())); // c2 unclassified
     }
 
     [Fact]

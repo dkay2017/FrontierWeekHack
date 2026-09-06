@@ -24,9 +24,10 @@ public interface INeedsAuthAgent
 
 // ---------------------------------------------------------------------------
 // evidence-gap — reads the free-text clinical note against the written criteria.
-// Returns which criteria are documented / missing / contradicted. The readiness
-// score the Gate uses is derived from this deterministically by EvidenceGapMatch,
-// not taken from the model.
+// Returns a per-criterion finding (documented / partial / missing / contradicted)
+// with the supporting clinical statement, plus an overall evidence-quality call.
+// EvidenceGapMatch and the Gate turn this into the structured decision model —
+// no single averaged "readiness" number (evaluator finding #3).
 // ---------------------------------------------------------------------------
 public interface IEvidenceGapAgent
 {
@@ -34,25 +35,60 @@ public interface IEvidenceGapAgent
         string clinicalNote, Criteria criteria, CancellationToken ct = default);
 }
 
-/// <summary>The agent's reading of the note against the criteria — criterion ids, not prose, in the lists.</summary>
-public sealed record EvidenceGapAssessment(
-    IReadOnlyList<string> Met,
-    IReadOnlyList<string> Missing,
-    IReadOnlyList<string> Conflicts,
-    string Text)
+public enum CriterionStatus
 {
-    /// <summary>Every id referenced must be a real criterion id, and each id classified at most once.</summary>
+    /// <summary>The note clearly satisfies this criterion.</summary>
+    Documented,
+
+    /// <summary>Some evidence, but not enough to call it satisfied.</summary>
+    Partial,
+
+    /// <summary>The note is silent on this criterion.</summary>
+    Missing,
+
+    /// <summary>The note contains evidence that contradicts this criterion.</summary>
+    Contradicted,
+}
+
+/// <summary>Overall quality of the clinical evidence supplied — drives the abstain route.</summary>
+public enum EvidenceQuality
+{
+    High,
+    Medium,
+    Low,
+}
+
+/// <summary>One criterion's finding. <see cref="Evidence"/> quotes the clinical statement the agent relied on.</summary>
+public sealed record CriterionFinding(
+    string CriterionId,
+    CriterionStatus Status,
+    string? Evidence);
+
+/// <summary>The agent's structured reading of the note against the criteria.</summary>
+public sealed record EvidenceGapAssessment(
+    IReadOnlyList<CriterionFinding> Findings,
+    EvidenceQuality Quality,
+    string Summary)
+{
+    public IEnumerable<string> WithStatus(CriterionStatus s) =>
+        Findings.Where(f => f.Status == s).Select(f => f.CriterionId);
+
+    public bool AnyContradiction => Findings.Any(f => f.Status == CriterionStatus.Contradicted);
+
+    /// <summary>Every finding must reference a real criterion, and each criterion appears exactly once.</summary>
     public EvidenceGapAssessment Validate(Criteria criteria)
     {
         var known = criteria.Items.Select(c => c.Id).ToHashSet();
         var seen = new HashSet<string>();
-        foreach (var id in Met.Concat(Missing).Concat(Conflicts))
+        foreach (var f in Findings)
         {
-            if (!known.Contains(id))
-                throw new ArgumentException($"EvidenceGapAssessment references unknown criterion id '{id}'.");
-            if (!seen.Add(id))
-                throw new ArgumentException($"EvidenceGapAssessment classifies criterion '{id}' more than once.");
+            if (!known.Contains(f.CriterionId))
+                throw new ArgumentException($"EvidenceGapAssessment references unknown criterion id '{f.CriterionId}'.");
+            if (!seen.Add(f.CriterionId))
+                throw new ArgumentException($"EvidenceGapAssessment classifies criterion '{f.CriterionId}' more than once.");
         }
+        if (seen.Count != known.Count)
+            throw new ArgumentException("EvidenceGapAssessment must classify every criterion exactly once.");
         return this;
     }
 }
@@ -79,9 +115,18 @@ public interface IAppealBuilderAgent
     Task<AppealRecommendation> RecommendAsync(
         Request request,
         EvidenceGapAssessment gap,
-        IReadOnlyList<Precedent> shortlist,
+        IReadOnlyList<PrecedentMatch> shortlist,
         CancellationToken ct = default);
 }
+
+/// <summary>
+/// One ranked precedent — carries the deterministic similarity score and the facts
+/// that matched, so the reviewer UI can show *why* it is comparable (evaluator finding #2).
+/// </summary>
+public sealed record PrecedentMatch(
+    Precedent Precedent,
+    double Similarity,
+    IReadOnlyList<string> MatchedFacts);
 
 /// <summary><c>AppealDraft</c> is populated only when <c>request.DenialLetter</c> is set.</summary>
 public sealed record AppealRecommendation(

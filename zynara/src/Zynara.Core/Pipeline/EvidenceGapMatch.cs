@@ -6,9 +6,10 @@ namespace Zynara.Core.Pipeline;
 
 /// <summary>
 /// Spoke 2. Pulls the payer's written criteria for the procedure, has the
-/// <c>evidence-gap</c> agent read the clinical note against them, then derives the
-/// <c>readiness</c> score the Gate consumes — <c>met / total</c>, computed here,
-/// never taken from the model.
+/// <c>evidence-gap</c> agent read the clinical note against them, then builds the
+/// evidence side of the structured decision model — <b>mandatory</b> criteria
+/// tracked separately from supporting ones, never averaged into a single number
+/// (evaluator finding #3).
 /// </summary>
 public sealed class EvidenceGapMatch(IZynaraStore store, IEvidenceGapAgent agent)
 {
@@ -21,10 +22,24 @@ public sealed class EvidenceGapMatch(IZynaraStore store, IEvidenceGapAgent agent
         var assessment = await agent.AssessAsync(request.ClinicalNote, criteria, ct);
         assessment.Validate(criteria);
 
-        var readiness = criteria.Items.Count == 0
-            ? 1.0
-            : Math.Round((double)assessment.Met.Count / criteria.Items.Count, 4);
+        var status = assessment.Findings.ToDictionary(f => f.CriterionId, f => f.Status);
+        var mandatory = criteria.Items.Where(c => c.Mandatory).Select(c => c.Id).ToList();
+        var supporting = criteria.Items.Where(c => !c.Mandatory).Select(c => c.Id).ToList();
 
-        return new EvidenceGapResult(assessment, readiness);
+        var unmetMandatory = mandatory
+            .Where(id => status.GetValueOrDefault(id) != CriterionStatus.Documented)
+            .ToList();
+
+        return new EvidenceGapResult(
+            Assessment: assessment,
+            MandatoryPass: unmetMandatory.Count == 0,
+            MandatoryTotal: mandatory.Count,
+            SupportingDocumented: supporting.Count(id => status.GetValueOrDefault(id) == CriterionStatus.Documented),
+            SupportingPartial: supporting.Count(id => status.GetValueOrDefault(id) == CriterionStatus.Partial),
+            SupportingMissing: supporting.Count(id => status.GetValueOrDefault(id) is CriterionStatus.Missing),
+            ContradictionDetected: assessment.AnyContradiction)
+        {
+            UnmetMandatory = unmetMandatory,
+        };
     }
 }

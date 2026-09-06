@@ -1,4 +1,6 @@
+using System.Text;
 using Zynara.Core.Abstractions;
+using Zynara.Core.Agents;
 using Zynara.Core.Gating;
 using Zynara.Core.Model;
 
@@ -10,6 +12,7 @@ namespace Zynara.Core.Pipeline;
 /// The Durable Functions orchestrator (slice 4) runs the same spokes as activities
 /// for retry isolation and replay; this class is the single-process reference used
 /// locally and in tests, and the body the orchestrator's steps delegate to.
+/// (The Critic step — evaluator P0-2 — slots in between appeal match and the Gate.)
 /// </summary>
 public sealed class AuthPipeline(
     NeedsAuthCheck needsAuth,
@@ -26,7 +29,7 @@ public sealed class AuthPipeline(
 
         var gap = await evidenceGap.RunAsync(request, ct);
         var appeal = await appealMatch.RunAsync(request, gap.Assessment, ct);
-        var decision = gate.Evaluate(gap, request.EstimatedValue);
+        var decision = gate.Evaluate(gap, appeal, request.EstimatedValue);
 
         var criteria = await store.GetCriteriaAsync(
             request.PayerPlan, request.Procedure, request.Region, ct);
@@ -46,32 +49,34 @@ internal static class DraftBuilder
         AppealMatchResult appeal,
         Criteria? criteria)
     {
-        var citedCriteria = criteria is null
-            ? Array.Empty<string>()
-            : gap.Assessment.Met
-                .Select(id => criteria.Items.FirstOrDefault(c => c.Id == id)?.Text)
-                .Where(t => t is not null)
-                .Cast<string>()
-                .ToArray();
+        var documented = gap.Assessment
+            .WithStatus(CriterionStatus.Documented)
+            .Select(id => criteria?.Items.FirstOrDefault(c => c.Id == id)?.Text)
+            .Where(t => t is not null).Cast<string>().ToArray();
 
-        var body = new System.Text.StringBuilder()
+        var missing = gap.Assessment
+            .WithStatus(CriterionStatus.Missing).Concat(gap.Assessment.WithStatus(CriterionStatus.Partial))
+            .Select(id => criteria?.Items.FirstOrDefault(c => c.Id == id)?.Text)
+            .Where(t => t is not null).Cast<string>().ToArray();
+
+        var body = new StringBuilder()
             .AppendLine($"Prior-authorisation request — {request.Procedure} ({na.RequiredCode ?? "code TBC"})")
             .AppendLine($"Payer / plan: {request.PayerPlan}  ·  Region: {request.Region}  ·  Policy: {na.PolicyRef}")
             .AppendLine()
-            .AppendLine($"Criteria documented ({gap.Assessment.Met.Count}/{(criteria?.Items.Count ?? 0)}):")
-            .AppendLine(citedCriteria.Length > 0
-                ? string.Join("\n", citedCriteria.Select(c => $"  - {c}"))
-                : "  (none)")
+            .AppendLine($"Mandatory criteria: {(gap.MandatoryPass ? "all met" : $"UNMET — {string.Join(", ", gap.UnmetMandatory)}")}")
+            .AppendLine($"Supporting criteria documented ({gap.SupportingDocumented}/" +
+                        $"{gap.SupportingDocumented + gap.SupportingPartial + gap.SupportingMissing}):")
+            .AppendLine(documented.Length > 0 ? string.Join("\n", documented.Select(c => $"  - {c}")) : "  (none)")
             .AppendLine()
             .AppendLine("Clinical summary:")
             .AppendLine("  " + Truncate(request.ClinicalNote, 600))
             .ToString();
 
-        if (gap.HasGaps)
-            body += $"\nOutstanding: {gap.Assessment.Missing.Count} missing, " +
-                    $"{gap.Assessment.Conflicts.Count} contradicted — see the reviewer notes.\n";
+        if (missing.Length > 0 || gap.ContradictionDetected)
+            body += $"\nOutstanding for the reviewer: {missing.Length} undocumented" +
+                    (gap.ContradictionDetected ? ", contradictory evidence present" : "") + ".\n";
 
-        body += $"\n{appeal.Recommendation.Text}";
+        body += $"\nAppeal analysis: {appeal.Recommendation.Text} (precedent support: {appeal.Support}).";
 
         return new SubmissionDraft(
             RequestId: request.Id,
@@ -79,7 +84,7 @@ internal static class DraftBuilder
             Procedure: request.Procedure,
             RequiredCode: na.RequiredCode,
             Body: body.TrimEnd(),
-            CitedCriteria: citedCriteria,
+            CitedCriteria: documented,
             CitedPrecedents: appeal.Recommendation.CitedPrecedentIds);
     }
 

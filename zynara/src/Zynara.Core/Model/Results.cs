@@ -14,18 +14,40 @@ public sealed record NeedsAuthResult(
     bool Ambiguous,
     string Note);
 
-/// <summary>EvidenceGapMatch result — the assessment is the agent's reading; <see cref="Readiness"/> is derived here.</summary>
+/// <summary>
+/// EvidenceGapMatch result. The agent's per-criterion findings, plus the evidence
+/// dimensions of the decision model derived here — mandatory criteria are tracked
+/// separately and never averaged (evaluator finding #3).
+/// </summary>
 public sealed record EvidenceGapResult(
     EvidenceGapAssessment Assessment,
-    double Readiness)
+    bool MandatoryPass,
+    int MandatoryTotal,
+    int SupportingDocumented,
+    int SupportingPartial,
+    int SupportingMissing,
+    bool ContradictionDetected)
 {
-    public bool HasGaps => Assessment.Missing.Count > 0 || Assessment.Conflicts.Count > 0;
+    public EvidenceQuality Quality => Assessment.Quality;
+
+    /// <summary>Ids of every mandatory criterion that is not Documented — the reason a case cannot auto-submit.</summary>
+    public IReadOnlyList<string> UnmetMandatory { get; init; } = Array.Empty<string>();
 }
 
-/// <summary>AppealMatch result — the ranked precedent shortlist plus the agent's recommendation.</summary>
+/// <summary>How strongly the precedent corpus supports the case.</summary>
+public enum PrecedentSupport
+{
+    Strong,
+    Moderate,
+    Weak,
+    None,
+}
+
+/// <summary>AppealMatch result — the ranked shortlist, the agent recommendation, and the derived support level.</summary>
 public sealed record AppealMatchResult(
-    IReadOnlyList<Precedent> Shortlist,
-    AppealRecommendation Recommendation);
+    IReadOnlyList<PrecedentMatch> Shortlist,
+    AppealRecommendation Recommendation,
+    PrecedentSupport Support);
 
 /// <summary>An advisory flag raised by ExpiryMath or PolicyDiff — no Gate, no outbound action.</summary>
 public sealed record EarlyWarning(
@@ -44,12 +66,41 @@ public sealed record DriftResult(
     IReadOnlyList<string> RemovedCriteria,
     EarlyWarning? Warning);
 
-/// <summary>The Gate's verdict — deterministic, shown with its working.</summary>
+/// <summary>The four routes the Gate can take (evaluator finding #3).</summary>
+public enum GateRoute
+{
+    /// <summary>Ready — auto-submit the draft.</summary>
+    AutoSubmit,
+
+    /// <summary>Fixable gaps — return to the clinician before submitting.</summary>
+    Strengthen,
+
+    /// <summary>A mandatory criterion is unmet, a contradiction, or over the value limit — a reviewer decides.</summary>
+    HumanReview,
+
+    /// <summary>Not enough reliable evidence to make a recommendation — the system declines to advise.</summary>
+    Abstain,
+}
+
+/// <summary>The evidence + precedent dimensions the Gate weighed — always shown with the verdict.</summary>
+public sealed record DecisionModel(
+    bool MandatoryPass,
+    int MandatoryTotal,
+    int SupportingDocumented,
+    int SupportingPartial,
+    int SupportingMissing,
+    EvidenceQuality EvidenceQuality,
+    bool ContradictionDetected,
+    PrecedentSupport PrecedentSupport,
+    IReadOnlyList<string> UnmetMandatory);
+
+/// <summary>The Gate's verdict — deterministic, always carrying its working.</summary>
 public sealed record GateDecision(
-    bool AutoSubmit,
+    GateRoute Route,
+    DecisionModel Model,
     string Reason)
 {
-    public string Route => AutoSubmit ? "auto-submit" : "human-review";
+    public bool AutoSubmit => Route == GateRoute.AutoSubmit;
 }
 
 /// <summary>The assembled prior-authorisation submission a reviewer sees.</summary>

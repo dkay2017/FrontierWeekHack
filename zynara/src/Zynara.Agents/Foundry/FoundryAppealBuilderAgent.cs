@@ -17,24 +17,29 @@ public sealed class FoundryAppealBuilderAgent(
     public async Task<AppealRecommendation> RecommendAsync(
         Request request,
         EvidenceGapAssessment gap,
-        IReadOnlyList<Precedent> shortlist,
+        IReadOnlyList<PrecedentMatch> shortlist,
         CancellationToken ct = default)
     {
         var denied = !string.IsNullOrWhiteSpace(request.DenialLetter);
+        var missing = gap.WithStatus(CriterionStatus.Missing).Count();
+        var contradicted = gap.WithStatus(CriterionStatus.Contradicted).Count();
 
         var prompt = new StringBuilder()
             .AppendLine($"Procedure: {request.Procedure} · payer {request.PayerPlan} · region {request.Region}.")
-            .AppendLine($"Evidence gap: {gap.Missing.Count} missing, {gap.Conflicts.Count} contradicted. {gap.Text}")
+            .AppendLine($"Evidence gap: {missing} missing, {contradicted} contradicted. {gap.Summary}")
             .AppendLine(denied ? $"Denial letter: {request.DenialLetter}" : "No denial yet.")
             .AppendLine()
             .AppendLine("Precedent shortlist (most similar first):");
-        foreach (var p in shortlist)
+        foreach (var m in shortlist)
+        {
+            var p = m.Precedent;
             prompt.AppendLine(
-                $"  [{p.CaseId}] {p.FactPattern} — " +
+                $"  [{p.CaseId}] similarity {m.Similarity:0.00} — {p.FactPattern} — " +
                 $"{(p.InitiallyApproved ? "approved first time" : "initially denied")}, " +
                 $"appeal {p.AppealOutcome}" +
                 (p.ClausesCited.Count > 0 ? $", clauses {string.Join("/", p.ClausesCited)}" : "") +
                 (p.DenialReasonCodes.Count > 0 ? $", codes {string.Join("/", p.DenialReasonCodes)}" : ""));
+        }
 
         var inv = await client.InvokeAsync(options.AppealBuilderAgentName, prompt.ToString(), toolHandler: null, ct);
         await Usage.RecordAsync(recorder, options.AppealBuilderAgentName, options.Model, inv, request.Id, ct);

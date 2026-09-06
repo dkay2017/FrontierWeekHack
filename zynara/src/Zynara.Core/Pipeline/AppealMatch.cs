@@ -7,10 +7,12 @@ namespace Zynara.Core.Pipeline;
 /// <summary>
 /// Spoke 3 (the differentiator's deterministic half). Filters precedent metadata to
 /// the same payer + procedure + region, ranks it by fact-pattern similarity to the
-/// case in hand, and hands the top shortlist to the <c>appeal-builder</c> agent.
-/// Ranking is deterministic — token overlap between the clinical note (or denial
-/// letter) and each precedent's fact-pattern narrative, plus a bonus for a shared
-/// denial reason code.
+/// case in hand, and hands the top shortlist — with the similarity score and the
+/// facts that matched — to the <c>appeal-builder</c> agent. It also derives the
+/// precedent-support level the Gate consumes.
+/// Ranking is deterministic: token overlap between the clinical note (or denial
+/// letter) and each precedent's narrative, a bonus for a shared denial reason code,
+/// and a bonus for a case that won on appeal.
 /// </summary>
 public sealed class AppealMatch(IZynaraStore store, IAppealBuilderAgent agent)
 {
@@ -28,28 +30,49 @@ public sealed class AppealMatch(IZynaraStore store, IAppealBuilderAgent agent)
         var denialCodes = DenialCodes(request.DenialLetter);
 
         var shortlist = candidates
-            .Select(p => (p, score: Score(p, caseTokens, denialCodes)))
-            .OrderByDescending(x => x.score)
-            .ThenByDescending(x => x.p.DecidedOn)
+            .Select(p => Build(p, caseTokens, denialCodes))
+            .OrderByDescending(m => m.Similarity)
+            .ThenByDescending(m => m.Precedent.DecidedOn)
             .Take(ShortlistSize)
-            .Select(x => x.p)
             .ToList();
 
         var recommendation = await agent.RecommendAsync(request, gap, shortlist, ct);
-        return new AppealMatchResult(shortlist, recommendation);
+        var support = DeriveSupport(shortlist);
+
+        return new AppealMatchResult(shortlist, recommendation, support);
     }
 
-    private static double Score(Precedent p, HashSet<string> caseTokens, HashSet<string> denialCodes)
+    private static PrecedentMatch Build(
+        Precedent p, HashSet<string> caseTokens, HashSet<string> denialCodes)
     {
         var pTokens = Tokens(p.FactPattern);
+        var matched = caseTokens.Intersect(pTokens).OrderBy(t => t).ToList();
+
         var overlap = caseTokens.Count == 0 || pTokens.Count == 0
             ? 0d
-            : (double)caseTokens.Intersect(pTokens).Count() / Math.Max(caseTokens.Count, pTokens.Count);
+            : (double)matched.Count / Math.Max(caseTokens.Count, pTokens.Count);
 
         var codeBonus = p.DenialReasonCodes.Any(denialCodes.Contains) ? 0.35 : 0d;
         var wonBonus = p.AppealOutcome == AppealOutcome.AppealWon ? 0.15 : 0d;
 
-        return overlap + codeBonus + wonBonus;
+        return new PrecedentMatch(p, Math.Round(overlap + codeBonus + wonBonus, 3), matched);
+    }
+
+    private static PrecedentSupport DeriveSupport(IReadOnlyList<PrecedentMatch> shortlist)
+    {
+        if (shortlist.Count == 0)
+            return PrecedentSupport.None;
+
+        var won = shortlist.Count(m => m.Precedent.AppealOutcome == AppealOutcome.AppealWon);
+        var strongMatch = shortlist.Any(m => m.Similarity >= 0.35);
+
+        return (won, strongMatch) switch
+        {
+            (>= 2, true) => PrecedentSupport.Strong,
+            (>= 1, _) => PrecedentSupport.Moderate,
+            (0, true) => PrecedentSupport.Weak,
+            _ => PrecedentSupport.Weak,
+        };
     }
 
     private static HashSet<string> Tokens(string? text) =>
@@ -63,7 +86,6 @@ public sealed class AppealMatch(IZynaraStore store, IAppealBuilderAgent agent)
         if (string.IsNullOrWhiteSpace(denialLetter))
             return new HashSet<string>();
 
-        // Reason codes look like MN-01, CO-197, 50: pull short upper-case / digit tokens.
         return denialLetter
             .Split(Split, StringSplitOptions.RemoveEmptyEntries)
             .Where(t => t.Length is >= 2 and <= 8 && t.Any(char.IsDigit) && t.All(c => char.IsLetterOrDigit(c) || c == '-'))
