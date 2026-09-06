@@ -30,8 +30,10 @@ var jsonOpts = new JsonSerializerOptions(JsonSerializerDefaults.Web)
     WriteIndented = true,
 };
 
+// Fixed clock so the audit timestamps in the committed snapshot are deterministic.
 var sp = new ServiceCollection()
     .AddSingleton<IZynaraStore>(_ => DemoWorld.Seed(new InMemoryZynaraStore()))
+    .AddSingleton<TimeProvider>(new FixedClock(new DateTimeOffset(2026, 9, 6, 0, 0, 0, TimeSpan.Zero)))
     .AddZynaraAgents()
     .AddZynaraCore()
     .BuildServiceProvider();
@@ -43,7 +45,10 @@ foreach (var scenario in DemoCatalog.All)
     views.Add((await cases.RunAsync(scenario.Request)).View);
 
 var recovery = await sp.GetRequiredService<RecoveryService>().GetAsync();
-var benchmark = await sp.GetRequiredService<BenchmarkService>().GetAsync();
+
+// AssembledInMs is a live-only timing — zero it so the committed snapshot is deterministic (CI checks it).
+var bench = await sp.GetRequiredService<BenchmarkService>().GetAsync();
+var benchmark = bench with { Measured = bench.Measured with { AvgAssembledInMs = 0 } };
 
 var payload = new
 {
@@ -73,4 +78,10 @@ try
 catch (Exception ex)
 {
     Console.WriteLine($"(skipped config/profiles: {ex.Message})");
+}
+
+/// <summary>A <see cref="TimeProvider"/> frozen at one instant — deterministic snapshots.</summary>
+file sealed class FixedClock(DateTimeOffset now) : TimeProvider
+{
+    public override DateTimeOffset GetUtcNow() => now;
 }

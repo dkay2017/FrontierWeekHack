@@ -5,6 +5,35 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D19 · infra/ skeleton + CI — the identity + network boundary in code
+
+**2026-09-06.** Evaluator P1-4 / §13. `infra/main.bicep` (+ 6 modules) —
+`az bicep build` clean, not yet deployed. Encodes the boundary:
+
+- one **user-assigned managed identity per component** (`identity.bicep`):
+  `id-reasoning` (orchestrator + api-proxy), `id-submission` (the Submission
+  Adapter), `id-dashboard`.
+- `network.bicep` — VNet with `snet-compute` / `snet-submission` / `snet-data`;
+  the **compute NSG denies egress** to `snet-submission` and to
+  `payerAddressPrefix`. Cosmos + Blob reached only over private endpoints.
+- `id-reasoning` gets Cognitive Services User (inference) + Cosmos data-plane +
+  Blob read. `id-submission` gets the payer-integration secret (Key Vault Secrets
+  User) + Cosmos write — and **no Foundry, no Blob**. `id-dashboard` gets nothing.
+- `data.bicep` Cosmos containers: requests · submissions · outcomes · **caseAudit**
+  (D15) · agentCalls · **denialCohorts** (D12).
+- `azure.yaml` (azd) wires orchestrator / apiproxy / **submission** (identity +
+  subnet provisioned now; the adapter project itself is still to build) /
+  dashboard.
+
+`.github/workflows/zynara-ci.yml` — build + `dotnet test` (the eval gate runs
+here) + `bicep build` + a check that the committed `demo-cases.json` /
+`config/profiles/` are not stale. `Zynara.DemoDump` made deterministic (fixed
+`TimeProvider`, `AvgAssembledInMs` zeroed in the snapshot) so that check is stable.
+
+Touched: `infra/*`, `azure.yaml`, `.github/workflows/zynara-ci.yml`,
+`tools/Zynara.DemoDump`, `Zynara.Core/Impact/BenchmarkService.cs`,
+`src/Zynara.Dashboard/standalone.html`.
+
 ## D18 · Eval — policy-citation accuracy + appeal-verdict agreement
 
 **2026-09-06.** Review re-read note #3. `EvalGroundTruth` gains

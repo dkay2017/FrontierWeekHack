@@ -263,26 +263,32 @@ needs the same restyle port.
   verdict vs. label, 7 cases, CI floor 80%). Clause hallucination folded into the
   hard-gated hallucination count. Both 100%. **94 tests green.**
 
+## Done — 2026-09-06 — P1-4 infra + CI
+
+- **`infra/`** (D19) — `main.bicep` + 6 modules, `az bicep build` clean, not
+  deployed. Encodes review §13: one managed identity per component; `snet-compute`
+  NSG denies egress to `snet-submission` + the payer CIDR; `id-reasoning` =
+  Foundry + Cosmos + Blob, `id-submission` = the payer secret + Cosmos write only
+  (no Foundry). Cosmos containers incl. `caseAudit` + `denialCohorts`.
+  `azure.yaml` (azd).
+- **`.github/workflows/zynara-ci.yml`** — build + test (eval gate) + bicep build +
+  a stale-snapshot check; `Zynara.DemoDump` made deterministic for it.
+
 ## Next — remaining (resume point)
 
-**All evaluator P0 + P1 + P2 items are done in code except P1-4 (infra-only).**
-See `docs/review/EVALUATOR-REVIEW-RESPONSE.md` for the item-by-item state.
+**Every evaluator P0 / P1 / P2 finding is addressed.** What's left is the rest of
+the build, not review items:
 
-1. **`infra/` skeleton** — `main.bicep` + modules, `azure.yaml`; a user-assigned
-   managed identity per component; the reasoning plane with **no egress to the
-   payer subnet**, the Submission Adapter the only identity with
-   outbound-integration permission (P1-4 / review §13). CI workflow: build +
-   `dotnet test` (eval gate runs here).
-2. **`Zynara.Data`** — Cosmos-backed `IZynaraStore` + `ICaseRepository` (Cosmos
-   `caseAudit`); the real `IAgentCallRecorder`. Replaces the in-memory seeds.
-3. **Grow the labelled eval set** 8 → ~20 (`eval/Zynara.Eval/cases/`); 2–3 real
-   payer policy files for File Search.
-4. **Architecture SVG** — add the shaded "upstream / not built" band for the
-   extraction assumptions (TDD §2.1 / D13) and the contradiction step.
-5. **`Zynara.Dashboard/index.html`** — port the light house style from
-   `standalone.html` (the live-API version still has the old look).
-6. Real end-to-end run — needs Azurite + Functions Core Tools (not in the
-   Codespace); the orchestrator + ApiProxy are build- and unit-verified only.
+1. **`Zynara.Data`** — Cosmos-backed `IZynaraStore` + `ICaseRepository`; the real
+   `IAgentCallRecorder`. Replaces the in-memory seeds in the orchestrator +
+   api-proxy `Program.cs`.
+2. **`Zynara.Submission`** — the Submission Adapter (its identity + subnet exist
+   in infra; the project doesn't).
+3. **Grow the labelled eval set** 8 → ~20; 2–3 real payer policy files for File Search.
+4. **`Zynara.Dashboard/index.html`** — port the light house style from `standalone.html`.
+5. **Architecture SVG** — "upstream / not built" band (TDD §2.1 / D13) + the contradiction step.
+6. Real end-to-end run — needs Azurite + Functions Core Tools (not in the Codespace).
+7. Video + pitch + 5-point doc.
 
 ## Timeline (18 days)
 

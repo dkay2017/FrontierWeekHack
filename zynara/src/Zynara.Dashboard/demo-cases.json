@@ -194,37 +194,37 @@
         {
           "kind": "assembled",
           "actor": "system",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "pipeline ran \u2192 AutoSubmit"
         },
         {
           "kind": "agent",
           "actor": "needs-auth \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "evidence-gap \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "claims-extraction \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "appeal-builder \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "critic \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         }
       ]
@@ -379,37 +379,37 @@
         {
           "kind": "assembled",
           "actor": "system",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "pipeline ran \u2192 Strengthen"
         },
         {
           "kind": "agent",
           "actor": "needs-auth \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "evidence-gap \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "claims-extraction \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "appeal-builder \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "critic \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         }
       ]
@@ -572,37 +572,37 @@
         {
           "kind": "assembled",
           "actor": "system",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "pipeline ran \u2192 HumanReview"
         },
         {
           "kind": "agent",
           "actor": "needs-auth \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "evidence-gap \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "claims-extraction \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "appeal-builder \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "critic \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         }
       ]
@@ -768,37 +768,37 @@
         {
           "kind": "assembled",
           "actor": "system",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "pipeline ran \u2192 HumanReview"
         },
         {
           "kind": "agent",
           "actor": "needs-auth \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "evidence-gap \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "claims-extraction \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "appeal-builder \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "critic \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         }
       ]
@@ -968,37 +968,37 @@
         {
           "kind": "assembled",
           "actor": "system",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "pipeline ran \u2192 HumanReview"
         },
         {
           "kind": "agent",
           "actor": "needs-auth \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "evidence-gap \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "claims-extraction \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "appeal-builder \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "critic \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         }
       ]
@@ -1158,37 +1158,37 @@
         {
           "kind": "assembled",
           "actor": "system",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "pipeline ran \u2192 HumanReview"
         },
         {
           "kind": "agent",
           "actor": "needs-auth \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "evidence-gap \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "claims-extraction \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "appeal-builder \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "critic \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         }
       ]
@@ -1287,37 +1287,37 @@
         {
           "kind": "assembled",
           "actor": "system",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "pipeline ran \u2192 Abstain"
         },
         {
           "kind": "agent",
           "actor": "needs-auth \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "evidence-gap \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "claims-extraction \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "appeal-builder \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         },
         {
           "kind": "agent",
           "actor": "critic \u00B7 stub deterministic",
-          "at": "2026-09-06 13:51:57Z",
+          "at": "2026-09-06 00:00:00Z",
           "detail": "invoked during assembly"
         }
       ]
@@ -1372,14 +1372,14 @@
       "avgCriteriaChecked": 3,
       "avgEvidenceGapsFound": 1,
       "avgPrecedentsConsidered": 2.5714285714285716,
-      "avgAssembledInMs": 9,
+      "avgAssembledInMs": 0,
       "unsafeAutomationRate": 0
     },
     "rows": [
       {
         "metric": "Case preparation time",
         "manual": "\u2248 20 min / case",
-        "careApprovalIQ": "assembled in 9 ms (deterministic stubs; \u2248 30\u201360 s with the hosted models)",
+        "careApprovalIQ": "assembled automatically (deterministic stubs run in milliseconds; \u2248 30\u201360 s with the hosted models)",
         "manualIsEstimate": true,
         "basis": "AMA 2023 prior-auth survey: practices spend \u2248 12 h/physician/week; \u2248 20 min/request is a mid-range estimate."
       },

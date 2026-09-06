@@ -30,7 +30,7 @@ public sealed class BenchmarkService(ICaseRepository cases)
         var rows = new List<BenchmarkRow>
         {
             new("Case preparation time",
-                "≈ 20 min / case", $"assembled in {m.AvgAssembledInMs} ms (deterministic stubs; ≈ 30–60 s with the hosted models)",
+                "≈ 20 min / case", "assembled automatically (deterministic stubs run in milliseconds; ≈ 30–60 s with the hosted models)",
                 true, "AMA 2023 prior-auth survey: practices spend ≈ 12 h/physician/week; ≈ 20 min/request is a mid-range estimate."),
 
             new("Criteria checked against the note",

@@ -90,13 +90,17 @@ Nothing here overturns a decision. Items 1 and 3 are the substantive ones.
 - **P2-3 done** (D17) — `claims-extraction` agent + `ContradictionCheck` spoke;
   the note-against-itself contradiction flow (review note #2).
 - **Eval note #3 done** (D18) — policy-citation accuracy + appeal-verdict
-  agreement added; clause hallucination hard-gated. **94 tests green.**
+  agreement added; clause hallucination hard-gated.
+- **P1-4 done** (D19) — `infra/main.bicep` + 6 modules encode the identity +
+  network boundary (§13): one managed identity per component, `snet-compute` NSG
+  denies egress to the submission subnet + the payer CIDR, `id-submission` is the
+  only identity with the payer secret and it has no Foundry. `az bicep build`
+  clean; `.github/workflows/zynara-ci.yml` runs build + test + the eval gate.
+  **94 tests green.**
 
-**Remaining: only P1-4** (infra identity isolation — `infra/` Bicep, no
-deployable Azure yet) and the deferred build items (`Zynara.Data` Cosmos, CI
-workflow, grow the eval set). **Every evaluator P0 / P1 / P2 finding is
-addressed in code** (P1-4's identity + network boundary is designed and
-documented; the Bicep is the only artefact outstanding).
+**Every evaluator P0 / P1 / P2 finding is addressed.** Not deployed to a live
+subscription; `Zynara.Data` (Cosmos wiring) + `Zynara.Submission` (the adapter
+itself) are the remaining build work, not review items.
 
 ---
 

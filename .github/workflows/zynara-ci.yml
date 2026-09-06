@@ -1,0 +1,49 @@
+name: zynara-ci
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'zynara/**', '.github/workflows/zynara-ci.yml' ]
+  pull_request:
+    paths: [ 'zynara/**', '.github/workflows/zynara-ci.yml' ]
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: zynara
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore Zynara.sln
+
+      - name: Build
+        run: dotnet build Zynara.sln --configuration Release --no-restore
+
+      # `dotnet test` runs Zynara.Eval — the CI gate. Its EvalGateTests hard-fail
+      # the build if unsafe-automation, mandatory-FN or hallucinated-refs is > 0,
+      # or if route / abstention / verdict / citation agreement drops below its floor.
+      - name: Test (incl. the eval gate)
+        run: dotnet test Zynara.sln --configuration Release --no-build --verbosity normal
+
+      - name: Regenerate the dashboard demo dataset
+        run: dotnet run --project tools/Zynara.DemoDump -- src/Zynara.Dashboard/demo-cases.json
+
+      - name: Fail if the committed demo dataset is stale
+        run: git diff --exit-code src/Zynara.Dashboard/demo-cases.json config/profiles/
+
+  infra-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bicep build
+        run: az bicep build --file zynara/infra/main.bicep
+        working-directory: .
