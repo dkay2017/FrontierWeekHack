@@ -29,7 +29,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   properties: { Application_Type: 'web', WorkspaceResourceId: logs.id }
 }
 
-resource account 'Microsoft.CognitiveServices/accounts@2024-10-01' = {
+resource account 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
   name: accountName
   location: location
   tags: tags
@@ -43,7 +43,7 @@ resource account 'Microsoft.CognitiveServices/accounts@2024-10-01' = {
   }
 }
 
-resource project 'Microsoft.CognitiveServices/accounts/projects@2024-10-01' = {
+resource project 'Microsoft.CognitiveServices/accounts/projects@2025-06-01' = {
   parent: account
   name: projectName
   location: location
@@ -52,7 +52,7 @@ resource project 'Microsoft.CognitiveServices/accounts/projects@2024-10-01' = {
   properties: {}
 }
 
-resource model 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01' = {
+resource model 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = {
   parent: account
   name: modelDeploymentName
   sku: { name: 'GlobalStandard', capacity: modelCapacity }
