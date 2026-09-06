@@ -11,6 +11,8 @@
 // managed identity. Private networking is production hardening — TDD §7.1.
 
 param location string
+@description('Static Web App region — the SWA resource is only available in a few regions, none in the Nordics.')
+param staticWebAppLocation string = 'westeurope'
 param tags object
 param environmentName string
 param suffix string
@@ -151,7 +153,7 @@ resource submissionHostStorage 'Microsoft.Authorization/roleAssignments@2022-04-
 
 resource dashboard 'Microsoft.Web/staticSites@2023-12-01' = {
   name: 'stapp-zynara-${environmentName}'
-  location: location
+  location: staticWebAppLocation
   tags: union(tags, { 'azd-service-name': 'dashboard' })
   sku: { name: staticWebAppSku, tier: staticWebAppSku }
   properties: {}
@@ -165,6 +167,8 @@ resource dashboardBackend 'Microsoft.Web/staticSites/linkedBackends@2023-12-01' 
     backendResourceId: apiProxy.id
     region: location
   }
+  // NOTE: linkedBackends requires the backend Function app in a region the SWA
+  // supports pairing with; if this fails, drop to Free SKU + ?api= on the dashboard.
 }
 
 output orchestratorName string = orchestrator.name

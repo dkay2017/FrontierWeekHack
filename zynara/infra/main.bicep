@@ -51,6 +51,10 @@ param agentsMode string = 'stub'
 @allowed([ 'Free', 'Standard' ])
 param staticWebAppSku string = 'Standard'
 
+@description('Static Web App region — the resource type is not available in the Nordics.')
+@allowed([ 'westeurope', 'centralus', 'eastus2', 'westus2', 'eastasia' ])
+param staticWebAppLocation string = 'westeurope'
+
 @description('Extra tags. environment=hack and azd-env-name are always added.')
 param tags object = {}
 
@@ -125,6 +129,7 @@ module apps './modules/apps.bicep' = {
     suffix: suffix
     agentsMode: agentsMode
     staticWebAppSku: staticWebAppSku
+    staticWebAppLocation: staticWebAppLocation
     hostStorageName: 'zynhost${suffix}'
     reasoningIdentityId: identity.outputs.reasoningIdentityId
     submissionIdentityId: identity.outputs.submissionIdentityId
