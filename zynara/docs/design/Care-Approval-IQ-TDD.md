@@ -44,7 +44,7 @@ free-text clinical note · payer + plan · (post-decision) the denial letter.
 - Watch approved authorisations for expiry and payer policies for drift
 
 **In scope for this design:**
-- End-to-end pipeline: request → needs-auth → evidence gap → precedent match →
+- End-to-end pipeline: request → needs-auth → evidence gap → appeal match →
   deterministic Gate → human review → submit → (on denial) appeal draft → review
 - Human-in-the-loop approval for **every** outbound action (submit and appeal)
 - **Payer-agnostic** rules-as-data, with a visible **UK ⇄ US region switch** that
@@ -129,9 +129,10 @@ cross-cutting concerns.
   human; the Submission Adapter is the sole actor that touches a payer;
   deterministic code owns every decision value; every recommendation retains its
   grounding (clause + precedent ids); an in-product disclaimer states *decision
-  support, not coverage or medical advice*. Broader AI governance (version
-  pinning, continuous drift monitoring, retention policy) is a consideration in
-  §7.1, not built for the demo.
+  support, not coverage or medical advice*. Production hardening — private
+  networking, an AI-governance layer (quota / rate limits / spend caps), a CI/CD
+  deploy pipeline, HA/DR, secret rotation, PHI handling — is enumerated in §7.1,
+  named but not built for the demo.
 
 ## 5. End-to-End Flow
 
@@ -279,23 +280,32 @@ In scope — built and demonstrated:
 - **Disclaimer, shown in-product:** *Care Approval IQ is decision support, not
   coverage or medical advice. A person makes every decision.*
 
-### 7.1 Production hardening — considerations, not in the demo scope
+### 7.1 Production readiness — what this build deliberately leaves out
 
-A production deployment would add, on top of the cost metering and citation
-trail above:
+The demo is a solo, 18-day build (§8). The architecture is production-*shaped*
+(managed identity from commit 1, deterministic Gate, sole outbound path, one
+correlated trace, CI + tests, an eval gate) but a real deployment would add the
+following. Each is named so a judge can see the gap is understood, not missed.
 
-- **Private networking.** Cosmos DB, Blob Storage and Foundry reached only over
-  a VNet via private endpoints; no public data-plane exposure.
-- **An AI-governance layer.** Per-agent Foundry **quota and rate limits**, a
-  model allow-list, and spend caps — enforced at the platform, not just metered.
-- **Model / prompt version pinning and change log.** Each agent version and its
-  system prompt recorded against the outcomes it produced.
-- **Continuous drift / quality monitoring.** The `Zynara.Eval` harness (§12) is
-  CI-only here; in production it runs against live de-identified traffic with
-  alerting on accuracy regression.
-- **Access and retention policy** for the corpus and the outcomes store.
+| Area | What production adds | Why it is out of scope here |
+|---|---|---|
+| **Network isolation** | Cosmos DB, Blob and Foundry on a VNet behind **private endpoints**; the Function App VNet-integrated; no public data-plane. Public egress via a firewall/NAT with an allow-list. | Private endpoints need a VNet + DNS zones + a longer provision; adds nothing a judge can see in a 3-min demo. |
+| **AI-governance layer** | Per-agent Foundry **quota and rate limits**, a **model allow-list**, per-tenant **spend caps** — enforced at the platform, not just metered on the dashboard. Prompt-shield / jailbreak filtering on agent inputs. | We meter cost (in scope); enforcing caps needs Foundry policy config + a budget-alert → disable loop that isn't demo-visible. |
+| **CI/CD deployment pipeline** | GitHub Actions: build + test + eval-gate (already in CI) → **`azd deploy` to a staging slot** → smoke test → **manual approval** → production, with **infra drift detection** (`azd provision --preview` / `what-if`) and automatic rollback on health-probe failure. Environments per branch. | CI (build + test + eval) exists from commit 1; the deploy half needs a standing Azure subscription + slots + approvers we don't set up for a demo. |
+| **Model / prompt versioning** | Every agent version + its system prompt pinned and recorded against the outcomes it produced, so any decision is reproducible; prompt changes go through the same PR + eval gate as code. | Foundry versions the agents; wiring the outcome↔version link and a prompt-change gate is a few days of plumbing. |
+| **Continuous quality monitoring** | The `Zynara.Eval` harness (§12) runs against live **de-identified** traffic on a schedule, alerting on accuracy regression and drift; a human-review sampling queue feeds labelled data back. | Eval is CI-only here (gates the build). Live scoring needs a de-identification step + a labelling workflow. |
+| **HA / DR** | Cosmos multi-region (or zone-redundant) writes; Blob GRS; Function App on a plan with zone redundancy; a documented **RTO/RPO** and a restore runbook tested quarterly. | Single-region serverless is right for a demo; multi-region is a cost + config decision for a real SLA. |
+| **Scale & resilience** | Load test to the real request rate; Durable Functions auto-scales, but tune host concurrency, activity timeouts and retry policies to measured numbers; circuit-breaker on the Submission Adapter. | Demo volume is tens/day; the retry/timeout defaults are fine until there is real traffic to measure. |
+| **Secrets & compliance** | Key Vault secret **rotation** (the two unavoidable strings), a data-residency guarantee per region, a retention + deletion policy for the corpus and the outcomes store, an access-review cadence, and a **PHI handling design** (the demo carries none — production would, and needs de-identification, field-level encryption, and audit). | The demo carries **no PHI** by design; the moment it does, this becomes the largest workstream. |
+| **Security assurance** | Threat model, dependency + container scanning in CI (Dependabot + `dotnet list package --vulnerable`), a penetration test before go-live, and a WAF in front of the Static Web App + API Proxy. | Standard pre-prod gates; nothing to demonstrate in the submission. |
+| **Real payer connectivity** | The Submission Adapter's portal-RPA / X12 278 clearinghouse / FHIR Prior-Authorization implementations, plus an eligibility / active-coverage check. See §9. | CMS-0057-F mandates the FHIR APIs on a 2027 timeline; synthetic data proves the pipeline today. |
 
 The architecture SVG carries a one-line note to this effect under CROSS-CUTTING.
+
+**What would *not* change at production scale:** the deterministic orchestrator
+owning the Gate (TD-1), the five checks as discrete activities (TD-2), the sole
+outbound path, the hybrid principle, and Cosmos + Blob + File Search as the store
+split (TD-4, TD-5) — these are scale-independent choices.
 
 ### 7.2 Region abstraction as compliance surface
 
@@ -365,7 +375,7 @@ midnight US).
 | **2 — agent-keyed traces** | nested `invoke_agent <name>` + `chat <model>` spans under one `pipeline.run` trace, trace id on the `submissions` document |
 | **3 — evaluate an agent** | `evidence-gap-agent`, portal Coherence/Fluency + `Zynara.Eval` CI gate on classification accuracy over the labelled case set |
 | **4 — persistent assets + portal workflow** | agents visible as assets; a 2–3 node portal workflow, the conditional Gate/appeal steps in the Durable orchestrator |
-| **AI governance** | described as a production consideration in §7.1 (cost metering, version pinning, drift monitoring); not built for the demo |
+| **AI governance** | cost metering is built (dashboard Cost tab); the enforcement layer — quota / rate limits / spend caps / model allow-list — plus versioning and live drift monitoring are enumerated in §7.1 as production hardening, not built for the demo |
 
 ## 11. How the Design Targets the Three Judging Criteria
 
@@ -377,8 +387,10 @@ midnight US).
 
 ## 12. Technology Decisions
 
-ADR-style. Each records the decision, the reasoning, the cost accepted, and the
-rejected alternative. `ARCHITECTURE.md` §17 carries the one-line summary table.
+ADR-style. TD-1…TD-5 each record the decision, the reasoning, the cost accepted,
+and the rejected alternative; TD-6 groups the platform defaults. `ARCHITECTURE.md`
+§17 carries the one-line summary table. The architecture SVG/PNG (§4) is the
+authoritative picture; this document must agree with it.
 
 ### TD-1 · Orchestration is a deterministic Durable Functions orchestrator, not agent-to-agent chaining
 
@@ -505,3 +517,16 @@ deterministic text diff over two Blob versions — no index needed.
 the operational DB and still needs a home-grown embedding pipeline. Azure AI
 Search — more capable hybrid/semantic retrieval, but another service to
 provision and secure for no demo-level gain.
+
+### TD-6 · Platform choices
+
+Grouped — each is the boring default for this shape of workload; the note is why
+it beats the obvious alternative.
+
+| Choice | Why | Rejected |
+|---|---|---|
+| **Foundry Agent Service** (persistent hosted agents) over raw model calls | Agents are versioned assets, portal-visible (Challenge 4), come with File Search + tool-calling + tracing wired, and give a clean provision-once / invoke-many surface. Each agent is still behind a `Zynara.Core` interface, so the code doesn't depend on the hosting model. | Hand-rolled chat-completions calls — we'd rebuild retrieval, tool loop, versioning and tracing ourselves, and lose the portal asset view the challenge asks for. |
+| **C# / .NET 8** | Durable Functions' most mature SDK; static types make the prose→typed-contract boundary (TD-2) a compile-time guarantee; the team's prior project is .NET, so patterns transfer. | Python — fine for the agents, weaker for a typed Durable orchestrator and the deterministic engines. |
+| **Static Web App** (Standard) + linked backend for the dashboard | One resource for the SPA + its `/api`, same-origin (no CORS), free TLS + global CDN, managed identity to the API Proxy. The dashboard is read-mostly with a few reviewer actions — it doesn't need a full app service. | A container/App Service for the front end — more to run and secure for a static SPA. |
+| **`azd` + Bicep**, subscription-scoped, **new resource group**, managed-identity-first **from commit 1** | One `azd up` provisions and deploys; Bicep is the drift-detectable source of truth; managed identity retrofitted later is the classic security debt, so it's there from the start. | Portal click-ops or retrofitted identity — not reproducible, not reviewable, and a security gap. |
+| **App Insights + W3C trace context** | One correlated trace per request id across every hop (Challenge 2), nested `invoke_agent` / `chat` spans, trace id persisted on the `submissions` document — the audit trail and the cost meter both read from it. | Bespoke logging — no distributed correlation, no portal trace view. |
