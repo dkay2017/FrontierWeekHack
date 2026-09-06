@@ -4,9 +4,9 @@
 current at every checkpoint and **commit + push** — uncommitted work is lost on a
 Codespace rebuild.
 
-_Last updated: 2026-09-06 (session 7 — all evaluator P0/P1/P2 done in code;
-Foundry de-risk spike run + PASSED; agent set trimmed to 5 + `precedent-strategist`
-rename; 100 tests). Deadline: **2026-09-23 midnight US**.
+_Last updated: 2026-09-06 (session 8 — **LIVE on Azure**: `azd up` to
+`zynara-spike-rg`, orchestrator verified end-to-end against Cosmos; 108 tests.
+S-1/2/3/5/10 done, S-4 live with 2 gaps). Deadline: **2026-09-23 midnight US**.
 Submission: 3-min video (required) + repo + architecture doc + TDD + dashboard UI._
 
 ## What this is
@@ -325,13 +325,56 @@ their own tests / the spike — full stack together is S-4.)
 | ~~S-1~~ | **`Zynara.Submission`** — the outbound adapter — ✅ **done (D27)** | — | Function app on `id-submission` (KV secret + Cosmos write, no Foundry). `POST /api/submit/{id}` sends only a reviewer-approved case, once (idempotent). `SubmissionService` + `CosmosSubmissionStore` + `submissions` container. Stub payer gateway by default; `KeyVaultPayerGateway` reads the credential to prove the boundary. **108 tests.** |
 | ~~S-2~~ | **Challenge 2 — agent-keyed traces** — ✅ **done (D26)** | — | `ZynaraTelemetry` ActivitySource: `pipeline.run → spoke.* → invoke_agent * → chat *`. Azure Monitor OTel exporter wired in both Function hosts (gated on `APPLICATIONINSIGHTS_CONNECTION_STRING`). `TelemetryTests` assert the tree. **102 tests.** Visual check at deploy (S-4). |
 | ~~S-3~~ | **Challenge 4 — Foundry portal workflow** — ✅ **built + run (2026-09-06)** | — | `care-approval-reasoning` = `evidence-gap → precedent-strategist → critic → End`, ran end to end in preview. Critic node returns `block` (incomplete context on a linear chain) — expected, documented in the runbook as the case for the deterministic orchestrator. Persistent-agents half done via the provisioner. |
-| S-4 | **Challenge 0 — `azd provision` / deploy** | M | Never run against a live subscription. Needs a real RG + the `Zynara.DbDeploy` hook + `Zynara.Submission` to build. |
+| S-4 | **Challenge 0 — `azd provision` / deploy** — 🟡 **LIVE, verified end to end (2026-09-06); 2 gaps left** | M | Deployed to **`zynara-spike-rg`** (one RG, next to the existing Foundry). See "Deploy state" below. |
 | ~~S-5~~ | **`Zynara.Dashboard/index.html`** — light house style — ✅ **done (D29)** | — | The old dark version is deleted; `index.html` is the light-first console (was `standalone.html`). Inlined snapshot by default; `?api=<host>` pulls live cases/recovery/benchmark/profiles and re-renders, falling back to the snapshot on error. |
 | S-6 | **Architecture SVG** — `appeal-builder` → `precedent-strategist`, add the contradiction step + the "upstream / not built" band | S | Another session edits this file — coordinate; do not `git add -A`. |
 | S-7 | **Pitch + 5-point doc** | M | Submission artifact. |
 | S-8 | **Video** | M | **Last**, per the user. |
 | S-9 | 2–3 real payer policy files for File Search | S | Corpus is synthetic Bupa today. |
 | ~~S-10~~ | **Challenge 3 — Foundry *portal* evaluation** — ✅ **done (D28)** | — | `eval/portal/eval_portal.jsonl` (15 turns for `evidence-gap-agent`) + `build_dataset.py` + `docs/runbooks/challenge-3-portal-evaluation.md`. User runs it in the portal (Evaluate → Evaluations → Create → Agent → Coherence/Fluency), like the vector store. |
+
+## Deploy state — LIVE (2026-09-06, end of session 8)
+
+**Resource group `zynara-spike-rg`** (one RG, alongside the pre-existing Foundry
+account `zynara-foundry-28985` / project `care-approval`). Env: `zynara-hack`.
+
+**Working, verified in Azure:**
+- API (Function app `func-zynara-apiproxy-itbahognjguwy`) — every endpoint 200
+  **through the Static Web App proxy**: `health`, `cases`, `recovery`, `benchmark`,
+  `profiles`, `demo/scenarios`.
+- **Orchestrator end-to-end** — `POST /api/requests` on
+  `func-zynara-orchestrator-itbahognjguwy` started a Durable orchestration that
+  ran to **Completed**, reading criteria + precedents from **Cosmos**, running the
+  Gate. This is the real proof the Durable path + hub storage + activities work.
+- Cosmos `careapproval` seeded — criteria 2, precedents 5, denialCohorts 2.
+- Dashboard live: `https://proud-water-0e35b1603.6.azurestaticapps.net`
+- `agentsMode = stub` on the deploy (Foundry flip is a later step).
+
+**The shakedown fixes (all now in bicep + committed, D30 pending):**
+CognitiveServices API `2025-06-01`; suffix seeded on RG; SWA → `westeurope`;
+explicit `Newtonsoft.Json`; deployer + app identities' Cosmos data-plane roles;
+`Newtonsoft` runtime dep; Consumption Y1 + TireForge storage pattern
+(blob/queue/table roles); **`AZURE_CLIENT_ID`** on each app so the code's
+`DefaultAzureCredential` resolves the user-assigned identity; dashboard
+`package.json`; `azd deploy` **one service at a time** (Codespace OOMs on 3
+parallel `dotnet publish`).
+
+**2 gaps left (next session):**
+1. **Dashboard queue is empty** (`/api/cases` → `[]`). `AuthOrchestrator` returns
+   the `PipelineResult` but never persists a `CaseRecord` to the `cases`
+   container — only the api-proxy's `CaseService.RunAsync` does. Fix: add a
+   persist activity to the orchestrator, or fire `POST /api/demo/scenarios/{id}/run`
+   against the live api-proxy to populate the queue.
+2. **Easy Auth on the api-proxy** — the SWA linked backend auto-enabled it, so
+   direct calls to `func-zynara-apiproxy-*.azurewebsites.net` 401; only the SWA
+   proxy path works. Expected SWA behaviour, not a bug — document it, or drop the
+   linked backend + use `?api=` if direct access is wanted.
+
+**Running cost (idle, rough):** Static Web App **Standard ≈ $9/mo** (the only
+fixed cost) · Cosmos serverless, 3× Consumption Functions, 2× Storage — a few $/mo
+· App Insights + Log Analytics — pay-per-GB, low for a demo · Foundry gpt-5.4
+deployment — $0 while `agentsMode=stub`. **≈ $10–15/mo total.** To zero it:
+`azd down` (keeps the existing Foundry — it's `existing` in bicep), or SWA → Free.
 
 ## Timeline (18 days)
 

@@ -5,6 +5,39 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D30 · Live deploy — one RG, existing Foundry, Consumption Y1 (S-4)
+
+**2026-09-06.** First `azd up` to a real subscription. Decisions taken under fire:
+
+- **One resource group** (`zynara-spike-rg`) holding everything, next to the
+  pre-existing Foundry account from the spike. `foundry.bicep` was rewritten to
+  **reference** the existing `zynara-foundry-28985` / `care-approval` (+ its
+  `gpt-5.4` deployment) rather than create a new one — it now only adds Log
+  Analytics + App Insights + the Cognitive Services User grant.
+- **Consumption Y1 Linux** for the Function apps (was EP1). EP1 + keyless host
+  storage cannot work (needs an Azure Files content share, needs the key). Y1 +
+  the TireForge storage pattern: identity-based `AzureWebJobsStorage`
+  (blob/queue/table URIs + the UAMI `clientId`), the content share on the account
+  key, Blob Data Owner + Queue + Table roles for both app UAMIs.
+- **`AZURE_CLIENT_ID`** app setting per app — the code's `DefaultAzureCredential`
+  cannot pick a user-assigned identity without it (`ManagedIdentityCredential:
+  Unable to load the proper Managed Identity`, 400).
+- **`Newtonsoft.Json`** referenced explicitly (Cosmos SDK 3.x runtime need).
+- Deployer principal (`AZURE_PRINCIPAL_ID`) granted Cosmos Data Contributor so
+  the `postprovision` seed hook works (Cosmos `disableLocalAuth`).
+- Static Web App pinned to `westeurope` (not offered in the Nordics); name suffix
+  seeded on the RG, not the env name; CognitiveServices API `2025-06-01`.
+- `azd deploy` one service at a time — the Codespace OOMs on 3 parallel `dotnet publish`.
+
+**Verified in Azure:** the API answers through the SWA proxy, and `POST
+/api/requests` on the orchestrator ran a Durable orchestration to completion
+against Cosmos. Two gaps recorded in STATUS "Deploy state": the orchestrator
+doesn't persist a `CaseRecord` (empty dashboard queue), and the SWA linked
+backend auto-enabled Easy Auth on the api-proxy.
+Touched: `infra/main.bicep`, `infra/modules/{foundry,apps,data,identity}.bicep`,
+`infra/main.parameters.json`, `Directory.Build.props`,
+`src/Zynara.Data/Zynara.Data.csproj`, `src/Zynara.Dashboard/package.json`.
+
 ## D29 · One dashboard file — `index.html` is the light console (S-5)
 
 **2026-09-06.** The repo carried two dashboards: `index.html` (the original
