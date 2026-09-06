@@ -45,7 +45,8 @@ free-text clinical note · payer + plan · (post-decision) the denial letter.
 
 **In scope for this design:**
 - End-to-end pipeline: request → needs-auth → evidence gap → appeal match →
-  deterministic Gate → human review → submit → (on denial) appeal draft → review
+  **critic** → deterministic Gate → human review → submit → (on denial) appeal
+  draft → review
 - Human-in-the-loop approval for **every** outbound action (submit and appeal)
 - **Payer-agnostic** rules-as-data, with a visible **UK ⇄ US region switch** that
   swaps the criteria set, terminology and appeal-escalation path
@@ -78,21 +79,62 @@ the removed queue, Cosmos over SQL, the split doc store — is recorded with its
 rationale and its rejected alternative in §12 · Technology Decisions.)*
 
 It replaces manual pre-auth assembly and the "don't bother appealing" reflex with
-five specialised agents — each with a narrow reasoning job — and a human reviewer
-as the safety net, not a bottleneck.
+a small team of reasoning agents that build **and challenge** a case, deterministic
+code that decides, and a human reviewer who authorises.
 
-- **5 purpose-built agents** instead of one generalist — rule lookup, free-text
-  comprehension against a rubric, corpus-level precedent matching, date
-  arithmetic, and document diffing are five different skills, and one prompt
-  doing all five is worse at each.
+- **Four reasoning agents that collaborate, not a pipeline of prompts.**
+  `needs-auth` reads ambiguous plan language · `evidence-gap` maps the clinical
+  note to the written criteria · `appeal-builder` reasons over recorded precedent
+  outcomes and drafts the appeal · **`critic`** then tries to *disprove* the
+  assembled recommendation (unsupported claims, non-comparable precedents,
+  over-strong conclusions, hidden contradictions, whether the system should
+  abstain). Agents reason and challenge one another; the deterministic Gate
+  decides; the human authorises.
+- **Two deterministic monitors** — `ExpiryMath` (date arithmetic) and `PolicyDiff`
+  (text diff) run continuously and raise advisory Early Warnings. They are
+  deterministic services with a thin optional narrator, **not** reasoning agents
+  (D6).
 - **One mandatory outbound path** (the Submission Adapter) — no agent submits to
   a payer or files an appeal directly.
-- **A deterministic Gate** between reasoning and action: `readiness ≥ threshold
-  AND no missing criteria AND value ≤ auto-limit` → auto-submit draft; otherwise
-  → human review queue. An exact-threshold case passes.
+- **A deterministic Gate that weighs a structured model, not one averaged
+  number** (D4). Mandatory criteria are a hard gate — never averaged away; a
+  contradiction is never silently resolved; and the system can explicitly
+  **abstain** when the evidence is too thin. The four routes:
+  `AutoSubmit / Strengthen / HumanReview / Abstain`, each shown with its working.
 - **Hybrid principle (carried from the prior project's D12):** deterministic code
   owns every value that drives a decision or an action; agents produce the prose
   and the judgement over unstructured text.
+
+### 3.1 Why multi-agent beats one generalist
+
+One prompt asked to "read the plan, map the note to the criteria, weigh the
+precedents, draft the appeal, and check your own work" is worse at every part and
+impossible to trust. This design is multi-agent because the agents do genuinely
+different kinds of reasoning **and hold each other to account**:
+
+1. **Different reasoning modes.** Ambiguous-contract reading, free-text
+   comprehension against a rubric, corpus-level fact-pattern matching, and
+   adversarial self-review are four different skills. Each agent has one job, one
+   prompt, and one evaluation target.
+2. **A dedicated challenger.** The `critic-agent` never builds — it only tries to
+   disprove. It catches unsupported claims, non-comparable precedents,
+   over-strong conclusions and hidden contradictions that a single generalist
+   producing its own answer will not flag on itself. Its verdict can force a
+   human or an abstention.
+3. **Independent evaluation.** `evidence-gap` is scored in isolation against a
+   labelled dataset (§7.3 / Challenge 3) — precision, recall, mandatory
+   false-negative rate. That is only possible because its job is not entangled
+   with three others.
+4. **A seam for the human, and for the deterministic Gate.** The Gate sits
+   *between* the agents' reasoning and any action. A monolithic agent that both
+   decides and acts leaves nowhere for the Gate — or the reviewer — to live.
+5. **Auditability.** Each agent's output is a separate cited record: which
+   criterion, which precedent, which clause, what the Critic challenged. A
+   regulator or the Financial Ombudsman Service can follow the whole trail.
+
+The measurable claim — that the agents together beat one generalist on the
+labelled set (agreement, false-negative rate, safe-abstention rate) — is what
+§7.3 sets out to prove.
 
 ## 4. Technical Architecture
 
@@ -108,8 +150,8 @@ cross-cutting concerns.
 | # | Layer | Components |
 |---|-------|-----------|
 | 1 | **Intake** | The request contract (procedure · plan · region · clinical note · prior denial letter — the note and letter as attached files) → **Intake API**: `POST /api/requests`, the orchestrator app's Durable HTTP starter — validates the DTO, starts the orchestration keyed on request id, returns `202` + status URL. Not a separate Function App and not a queue (§12 · TD-3). *Open: portal form vs. API client vs. FHIR bundle for v1 — see §8.* |
-| 2 | **Compute · Orchestration** (Azure Durable Functions) | `Zynara.Orchestrator` (the orchestrator function — sequences the pipeline, keyed on request id) → NeedsAuthCheck / EvidenceGapMatch / AppealMatch / ExpiryMath / PolicyDiff (**Durable Activity Functions** — deterministic, no LLM; kept as discrete activities for the reasons in §12 · TD-2). Owns the Gate. |
-| 3 | **AI Foundry · Agent Service** | `needs-auth-agent` · `evidence-gap-agent` · `appeal-builder-agent` · `expiry-watch-agent` · `policy-drift-agent` (persistent Foundry agents; each behind a `Zynara.Core` interface with a stub twin for offline tests) |
+| 2 | **Compute · Orchestration** (Azure Durable Functions) | `Zynara.Orchestrator` (the orchestrator function — sequences `NeedsAuthCheck → EvidenceGapMatch → AppealMatch → CriticCheck`, keyed on request id) as **Durable Activity Functions** — deterministic wrappers, no LLM in the wrapper — for the reasons in §12 · TD-2. `ExpiryMath` / `PolicyDiff` run as advisory timers. Owns the Gate. |
+| 3 | **AI Foundry · Agent Service** | four reasoning agents — `needs-auth-agent` · `evidence-gap-agent` · `appeal-builder-agent` · **`critic-agent`** — each behind a `Zynara.Core` interface with a deterministic stub twin. `ExpiryMath` / `PolicyDiff` narrator calls are optional and thin (D6). |
 | 4 | **Data** | Submission Adapter (Azure Function · the only path to payer portal / X12 / FHIR / fax) → **Azure Cosmos DB** serverless (operational state): `requests · submissions · outcomes · auths · earlyWarnings · agentCalls`, plus `precedents` / `policies` **metadata** → **Azure Blob Storage** (the unstructured corpus: policy docs, denial PDFs, precedent narratives) → **Foundry File Search** (vector index the agents query). Split rationale: §12 · TD-4, TD-5. |
 | 5 | **Experience** | Reviewer (human) → Dashboard (`Zynara.Dashboard`, Static Web App Standard + linked backend; tabs = **Review Queue** (drafts · appeals · HITL · Recovery £ stat) · **Early Warnings** (expiry-watch · policy-drift) · **Cost** (£/$ per request · agent · day), with a **UK ⇄ US** header control) → **API Proxy** (Azure Function; read models + reviewer approve/reject actions) |
 
@@ -136,7 +178,7 @@ cross-cutting concerns.
 
 ## 5. End-to-End Flow
 
-`Submit → NeedsAuth → Gap → AppealMatch → Gate → Review → Send → Decision → Appeal → Review → Track`
+`Submit → NeedsAuth → Gap → AppealMatch → Critic → Gate → Review → Send → Decision → Appeal → Review → Track`
 
 1. **Submit** — `POST /api/requests` (the orchestrator app's Durable HTTP
    starter) receives a request (procedure, coverage ref, clinical note,
@@ -158,24 +200,30 @@ cross-cutting concerns.
    and ranks the shortlist by fact-pattern similarity; `appeal-builder-agent`
    reasons over the File-Search-retrieved precedent narratives, reports the
    recorded outcomes and recommends **submit / strengthen / appeal**.
-5. **Gate** — `readiness ≥ threshold AND no missing criteria AND value ≤
-   auto-limit` → an auto-submit draft; otherwise → the human review queue with
-   the gap list and the precedents attached.
-6. **Review** — the reviewer approves or edits the draft on the dashboard.
-7. **Send** — the Submission Adapter submits to the payer in their format
+5. **Critic** — `critic-agent` reviews the assembled case and runs its seven
+   checks; its verdict (`Clear / Concerns / Block / Abstain`) and any flags are
+   attached to the case.
+6. **Gate** — deterministic. Weighs the structured decision model (D4):
+   any unmet **mandatory** criterion or a contradiction → `HumanReview`; a Critic
+   `Block` → `HumanReview` regardless of the numbers; a Critic `Abstain` or
+   Low-quality evidence with Weak/None precedent support → `Abstain`; value over
+   the auto-limit → `HumanReview`; an undocumented supporting criterion, Medium
+   evidence, or Critic `Concerns` → `Strengthen`; otherwise → `AutoSubmit`. Every
+   route carries its working.
+8. **Send** — the Submission Adapter submits to the payer in their format
    (portal / X12 278 / FHIR / fax) — the only outbound path.
-8. **Decision** — approved → step 11; denied → step 9. The denial letter (PDF)
+9. **Decision** — approved → step 12; denied → step 10. The denial letter (PDF)
     is parsed for the reason code and the clause cited.
-9. **Appeal** — `appeal-builder-agent` drafts the appeal citing the specific policy
-    clause misapplied and the precedent case ids; deterministic code fills the
-    dates and the escalation route (region-specific: state/external review vs.
-    Financial Ombudsman Service).
-10. **Review** — the reviewer approves the appeal; the Adapter files it.
-11. **Track** — `ExpiryMath` watches the approved auth's validity window against
+10. **Appeal** — `appeal-builder-agent` drafts the appeal citing the specific policy
+    clause misapplied and the precedent case ids; `critic-agent` reviews the
+    draft; deterministic code fills the dates and the escalation route
+    (region-specific: state/external review vs. Financial Ombudsman Service).
+11. **Review** — the reviewer approves the appeal; the Adapter files it.
+12. **Track** — `ExpiryMath` watches the approved auth's validity window against
     the scheduling feed and raises an `EarlyWarning` if it will expire before the
     procedure date; `PolicyDiff` watches payer policy versions and raises a
-    `DriftAlert` naming the affected templates. Both are advisory — no Gate, no
-    outbound action.
+    `DriftAlert` naming the affected templates. Both are deterministic and
+    advisory — no Gate, no outbound action, no agent (D6).
 
 Throughout: one trace id per request across every hop; every agent call written
 to `agentCalls` (usage fields captured for the §7.1 cost-metering consideration);
@@ -204,16 +252,20 @@ Intake API:
   retry isolation, per-step stub twins in CI, and replay-safe resume — full
   justification in §12 · TD-2.
 
-**AI Foundry · Agent Service** — five persistent agents provisioned via
+**AI Foundry · Agent Service** — **four reasoning agents** provisioned via
 `Azure.AI.Projects` (`AgentAdministrationClient.CreateAgentVersion`), each wired
-behind a `Zynara.Core` interface:
+behind a `Zynara.Core` interface with a deterministic stub twin:
 | Agent | Reasoning job | Tools / grounding |
 |---|---|---|
 | `needs-auth-agent` | Plain-language reading of ambiguous plan text | payer rule-set KB, procedure-code lookup |
-| `evidence-gap-agent` | Free-text clinical note vs. a structured criteria rubric | Foundry File Search over `policies/` (Blob), the clinical note |
-| `appeal-builder-agent` | Corpus-level fact-pattern match; drafts the appeal argument | `precedents` metadata (Cosmos) + precedent narratives (File Search), policy clause text |
-| `expiry-watch-agent` | Narrates a cross-system expiry risk | the auth record + scheduling feed (deterministic date math) |
-| `policy-drift-agent` | Explains the operational impact of a criteria change | two policy versions from Blob (deterministic diff) |
+| `evidence-gap-agent` | Free-text clinical note vs. the numbered criteria — per-criterion status + the supporting quote + an evidence-quality grade | Foundry File Search over `policies/` (Blob), the clinical note |
+| `appeal-builder-agent` | Corpus-level fact-pattern match over recorded outcomes; drafts the appeal argument | `precedents` metadata (Cosmos) + precedent narratives (File Search), policy clause text |
+| **`critic-agent`** | Tries to disprove the assembled recommendation — the seven checks (§3) — and can force a human or an abstention | the whole assembled case + File Search to verify citations |
+
+The two continuous monitors, `ExpiryMath` (date arithmetic) and `PolicyDiff`
+(text diff), are **deterministic services**, not agents (D6). Each may call a
+thin narrator agent purely for alert wording; the detection and the numbers stay
+in code.
 
 **Data** —
 - **Submission Adapter** (Function · Data Source Adapter; the only path to payer
@@ -267,9 +319,11 @@ In scope — built and demonstrated:
   Gate's working. Any decision can be replayed: which criterion → which
   precedent → which clause. This is a field on the document, not new
   infrastructure.
-- **Auditable scoring, not a black-box number.** The Gate's `readiness` and
-  route are deterministic and shown with their working ("readiness 0.82 = 6/7
-  criteria met, physio-duration criterion missing").
+- **Structured routing, not a black-box number** (D4). The Gate's route is
+  deterministic and shown with its working — e.g. *"HumanReview — mandatory
+  criterion unmet (conservative-treatment); supporting 2 documented / 0 partial /
+  1 missing; evidence High; contradiction none; precedent support Strong."* A
+  missing mandatory criterion is never averaged away by supporting ones.
 - **Per-agent cost metering.** Every agent response carries `Usage`
   (`promptTokens`, `completionTokens`, `model`); `{usage, model, traceId,
   requestId, agent}` is persisted per call to `agentCalls`, aggregated to £/$
@@ -303,7 +357,7 @@ following. Each is named so a judge can see the gap is understood, not missed.
 The architecture SVG carries a one-line note to this effect under CROSS-CUTTING.
 
 **What would *not* change at production scale:** the deterministic orchestrator
-owning the Gate (TD-1), the five checks as discrete activities (TD-2), the sole
+owning the Gate (TD-1), the pipeline steps as discrete activities (TD-2), the sole
 outbound path, the hybrid principle, and Cosmos + Blob + File Search as the store
 split (TD-4, TD-5) — these are scale-independent choices.
 
@@ -312,6 +366,29 @@ split (TD-4, TD-5) — these are scale-independent choices.
 Payer-specific knowledge is **data, not code** — `policies/<region>/<payer>/<procedure>.md`
 in Blob plus `config/regions.json` — so a compliance reviewer can see and
 version exactly which criteria the system applied, per payer, per region.
+
+### 7.3 Evaluation — beyond classification accuracy
+
+A CI gate on classification accuracy is a start; a high-risk administrative
+workflow needs safety-shaped metrics. `Zynara.Eval` replays a labelled
+clinical-case set (ground truth per criterion + expected route + expected
+citations) and measures:
+
+| Metric | Why it matters |
+|---|---|
+| Evidence-extraction **precision / recall** | does the agent find what is there, without inventing what is not |
+| **Mandatory-criterion false-negative rate** | the unsafe direction — calling a missing mandatory criterion "met" |
+| Mandatory-criterion false-positive rate | the annoying direction — over-flagging |
+| Policy-citation accuracy · precedent-citation accuracy | is the grounding real |
+| **Hallucination / unsupported-claim rate** | claims with no source in the supplied evidence |
+| Appeal-recommendation **agreement** vs. labels | do the agents (with the Critic) agree with an expert |
+| **Safe-abstention rate** | of the cases an expert marks "not enough to advise", how many did the system route to `Abstain` |
+| **Unsafe-automation rate** | cases the system auto-submitted that an expert would not have — CI hard-gate: **must be 0** |
+
+CI hard-gates the two safety metrics (unsafe automation = 0; mandatory
+false-negative below a set bar). The agents-vs-generalist comparison (§3.1) runs
+the same set through a single-prompt baseline and reports the delta on agreement,
+false-negative rate and safe abstention.
 
 ## 8. Deployment & Scope Decisions
 
@@ -371,9 +448,9 @@ midnight US).
 | Challenge | Deliverable here |
 |---|---|
 | **0 — Foundry setup** | `azd provision` — account, project, model, App Insights, **new resource group** |
-| **1 — build agents via SDK** | 5 persistent Foundry agents via `Azure.AI.Projects`, wired behind `Zynara.Core` interfaces with stub twins |
+| **1 — build agents via SDK** | 4 persistent reasoning agents (incl. the Critic) via `Azure.AI.Projects`, wired behind `Zynara.Core` interfaces with stub twins; agents reason and challenge one another (§3.1) |
 | **2 — agent-keyed traces** | nested `invoke_agent <name>` + `chat <model>` spans under one `pipeline.run` trace, trace id on the `submissions` document |
-| **3 — evaluate an agent** | `evidence-gap-agent`, portal Coherence/Fluency + `Zynara.Eval` CI gate on classification accuracy over the labelled case set |
+| **3 — evaluate an agent** | `evidence-gap-agent`, portal Coherence/Fluency + `Zynara.Eval` CI gate on the safety-shaped metric suite (§7.3): precision/recall, mandatory false-negative rate, citation accuracy, hallucination rate, safe-abstention rate, unsafe-automation rate (hard-gated to 0) |
 | **4 — persistent assets + portal workflow** | agents visible as assets; a 2–3 node portal workflow, the conditional Gate/appeal steps in the Durable orchestrator |
 | **AI governance** | cost metering is built (dashboard Cost tab); the enforcement layer — quota / rate limits / spend caps / model allow-list — plus versioning and live drift monitoring are enumerated in §7.1 as production hardening, not built for the demo |
 
@@ -384,6 +461,15 @@ midnight US).
 | **Innovation** | Precedent-driven appeal recommendation grounded in **recorded outcomes** — nobody productises the "80% of appeals win, 11.5% are filed" gap. The region switch proves generality *live*, not as a claim. |
 | **Usability** | Pre-computed demo playback (zero inference lag), one intuitive queue→review→send flow, the region switch, an accessibility pass, and a recorded 3-minute video as the fallback if a live demo breaks. |
 | **Impact** | The Recovery £ stat computes, from the clinic's own live data, `denied × (1 − appeal rate) × win probability × mean claim value = £ left unclaimed` — Impact as a number, not an assertion. Shown on the Review Queue. |
+
+### 11.1 The four questions the review says we must answer to win
+
+| Question | Where it is answered |
+|---|---|
+| **1. Do the agents make better decisions *together* than one generalist?** | §3.1 (the argument) + §7.3 (the measured comparison — agreement, mandatory false-negative rate, safe-abstention rate vs. a single-prompt baseline on the labelled set). |
+| **2. Does the system know when it is uncertain?** | The `Abstain` route (D4): Low-quality evidence + Weak/None precedent support, or a Critic `Abstain`, and the system declines to advise rather than guessing. Measured as the **safe-abstention rate** (§7.3). |
+| **3. Why should a human trust the recommendation?** | Evidence-first review workspace (P1-1): every criterion shows the clinical statement that satisfies it, the policy clause and version, the precedents considered with their similarity, the Critic's flags, and the Gate's working. Nothing is a black-box number. |
+| **4. Is the business value measurable, not a marketing figure?** | The Recovery £ is shown *with its assumptions and a confidence level* (P2-1); the demo pipeline is instrumented for before/after (P2-2 — case-prep time, criteria-check time, reviewer effort, cost per case), and any estimated manual baseline is labelled as an estimate. |
 
 ## 12. Technology Decisions
 
@@ -408,10 +494,11 @@ take days).
 **Rejected.** A single generalist agent orchestrating via connected agents —
 non-deterministic call order, no seam for the human, no auditable Gate.
 
-### TD-2 · The 5 deterministic checks are Durable Activity Functions, not orchestrator helper methods
+### TD-2 · The pipeline steps are Durable Activity Functions, not orchestrator helper methods
 
-**Decision.** `NeedsAuthCheck`, `EvidenceGapMatch`, `AppealMatch`, `ExpiryMath`,
-`PolicyDiff` each ship as their own Durable **activity function**.
+**Decision.** `NeedsAuthCheck`, `EvidenceGapMatch`, `AppealMatch` and
+`CriticCheck` each ship as their own Durable **activity function** (as do the
+advisory `ExpiryMath` / `PolicyDiff`).
 
 **Justification — four concrete properties, none of which a helper method gives:**
 

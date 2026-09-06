@@ -8,9 +8,10 @@ _Design of record. Companion: `TDD.md` (implementation-level), `DECISIONS.md`
 
 ## 1. One line
 
-A five-agent system that gets a clinician's treatment request **approved by the
-insurer on the first pass**, and **drafts the winning appeal** when it isn't —
-with a human approving every outbound action.
+A team of reasoning agents — one of which only challenges the others — that gets a
+clinician's treatment request **approved by the insurer on the first pass**, and
+**drafts the winning appeal** when it isn't, with a deterministic gate deciding
+and a human approving every outbound action.
 
 ## 2. The business problem
 
@@ -51,8 +52,9 @@ Service appeals) already exists. **The system is payer-agnostic by design** (see
 
 ## 4. Solution overview
 
-One request flows through a deterministic pipeline; specialised agents do the
-reasoning at each step; a human approves anything that leaves the building.
+One request flows through a deterministic pipeline; reasoning agents build and
+then challenge the case; the deterministic Gate picks one of four routes; a human
+approves anything that leaves the building.
 
 ```mermaid
 flowchart LR
@@ -60,29 +62,33 @@ flowchart LR
 
     subgraph Pipeline [Care Approval IQ pipeline]
       direction LR
-      N[1 · Needs-Auth check] -->|auth required| G[2 · Evidence Gap]
+      N[Needs-Auth] -->|auth required| G[Evidence Gap]
       N -->|not required| STOP1[log · no action]
-      G --> P[3 · Appeal Builder]
-      P --> GATE{Deterministic Gate<br/>complete? · confidence? · value?}
-      GATE -->|clean, high-confidence| AUTO[auto-submit draft]
-      GATE -->|gap or low-confidence| REV[human review queue]
+      G --> P[Appeal Match + Builder]
+      P --> C[Critic<br/>tries to disprove it]
+      C --> GATE{Deterministic Gate<br/>4 routes}
+      GATE -->|clean, Critic-cleared| AUTO[auto-submit draft]
+      GATE -->|gap · over-limit · Critic block| REV[human review queue]
+      GATE -->|too little to advise| ABS[abstain]
       REV --> H[[Reviewer approves / edits]]
       AUTO --> H
       H --> SUB[submit to payer]
       SUB --> D{Decision}
       D -->|approved| DONE[track to procedure date]
       D -->|denied| P
-      P -->|fact pattern historically wins| APP[appeal draft] --> H
+      P -->|fact pattern historically wins| APP[appeal draft] --> C
     end
 
-    E[4 · Expiry Watch] -.watches all approved auths.-> DONE
-    PD[5 · Policy Drift] -.watches payer policy docs.-> G
+    E[Expiry Watch<br/>deterministic monitor] -.watches all approved auths.-> DONE
+    PD[Policy Drift<br/>deterministic monitor] -.watches payer policy docs.-> G
 ```
 
-## 5. The five agents
+## 5. The agents and the monitors
 
-Each agent has a **distinct kind of reasoning**, not a distinct topic. All five
-serve every procedure type and both regions.
+**Four reasoning agents** — each a distinct kind of reasoning, not a distinct
+topic — and **two deterministic monitors**. All serve every procedure type and
+both regions. The agents build *and challenge* a case; deterministic code
+decides; a human authorises (DECISIONS.md D5, D6).
 
 ### 5.1 Needs-Auth check
 - **Responsibility:** does *this payer + plan* require prior authorisation for
@@ -104,7 +110,9 @@ serve every procedure type and both regions.
   at (scrolling notes for "conservative treatment tried, and for how long").
 - **Tools / data:** the payer's criteria for the procedure (Foundry File Search
   over the `policies/` Blob container), the patient's clinical note.
-- **In → out:** request + criteria → `{ met[], missing[], conflicts[], readiness }`.
+- **In → out:** request + criteria → per-criterion `{ status: documented | partial
+  | missing | contradicted, evidence: "<clinical quote>" }` + an overall evidence
+  quality (high / medium / low). No single averaged "readiness" number (D4).
 
 ### 5.3 Appeal Builder  *(the differentiator)*
 - **Responsibility:** find past submissions with a similar fact pattern; report
@@ -117,46 +125,56 @@ serve every procedure type and both regions.
 - **Tools / data:** the outcomes metadata (`submissions` + `outcomes` in Cosmos)
   for the deterministic shortlist, the precedent narratives via File Search, the
   payer policy text.
-- **In → out:** case + gap report → `{ precedents[], recommendation, appealDraft? }`.
+- **In → out:** case + gap report → ranked `PrecedentMatch[]` (each with a
+  similarity score and the facts that matched) + `{ verdict, citedPrecedentIds,
+  appealDraft? }`.
 
-### 5.4 Expiry Watch  *(runs continuously)*
-- **Responsibility:** every approved authorisation has a validity window. Flag any
-  where the window will close before the procedure is scheduled — forcing a
-  full re-submission.
-- **Why it can't merge:** cross-system (auth record ⇄ scheduling), invisible until
-  it bites, entirely preventable, and nobody watches it by hand.
-- **Tools / data:** the auth record, the scheduling feed; deterministic date math,
-  agent-narrated alert.
-- **In → out:** approved auths → `EarlyWarning{ authId, expiresAt, procedureDate, daysOfMargin }`.
+### 5.4 Critic  *(the challenger — D5)*
+- **Responsibility:** try to **disprove** the assembled recommendation before the
+  Gate. Seven checks: every claim supported? · cited clause supports it? ·
+  precedents genuinely comparable? · contradictory evidence? · mandatory
+  criterion missing? · recommendation stronger than the evidence? · should the
+  system abstain?
+- **Why it can't merge:** a generalist producing its own answer will not flag its
+  own over-reach. The Critic's only job is scepticism, and its verdict can force
+  a human or an abstention regardless of the numbers.
+- **Tools / data:** the whole assembled case; File Search to verify citations.
+- **In → out:** assembled case → `{ verdict: clear | concerns | block | abstain,
+  flags[], summary }`.
 
-### 5.5 Policy Drift  *(runs continuously)*
-- **Responsibility:** watch each payer's published policy documents; when criteria
-  change, identify which in-flight or template requests now fail, and draft the
-  delta.
-- **Why it can't merge:** diffing regulatory/policy prose against a body of
-  existing templates is genuinely impossible to do manually at any scale.
-- **Tools / data:** versioned payer policy documents; deterministic diff, agent
-  explains the operational impact.
-- **In → out:** new policy version → `DriftAlert{ payer, procedure, changedCriterion, affectedTemplates[] }`.
+### 5.5 Expiry Watch  *(deterministic monitor — D6)*
+- **What:** deterministic date arithmetic — flag any approved authorisation whose
+  validity window closes before the scheduled procedure. Runs continuously as an
+  advisory timer; raises an `EarlyWarning`. Not an agent; a thin narrator call is
+  optional, for the alert wording only.
+
+### 5.6 Policy Drift  *(deterministic monitor — D6)*
+- **What:** deterministic text diff of two policy versions — the added/removed
+  criteria and the request templates now affected. Runs continuously; raises a
+  `DriftAlert`. Not an agent; narrator optional.
 
 ## 6. Why multi-agent, not one agent
 
-1. **Different reasoning modes.** Rule lookup, free-text comprehension against a
-   rubric, corpus-level pattern matching, date arithmetic, and document diffing
-   are not one skill. A single prompt doing all five is worse at each.
-2. **Independent evaluation.** The Evidence Gap agent is evaluated in isolation
-   in the Foundry portal (Challenge 3) against a labelled dataset — impossible if
-   its logic is entangled with four other jobs.
-3. **Conditional, cost-aware invocation.** Appeal matching and drafting
-   are the expensive steps; they run only when the Gate and the flow warrant it,
-   not on every request.
-4. **A seam for the human.** The Gate sits *between* reasoning and action. A
-   monolithic agent that both decides and submits leaves nowhere for approval to
-   live — and this is a domain where an unsupervised action has real
-   consequences.
-5. **Auditability.** Each agent's output is a separate, cited record: which
-   criterion, which precedent, which clause. A regulator (or the Financial
-   Ombudsman Service) can follow the trail.
+1. **Different reasoning modes.** Ambiguous-contract reading, free-text
+   comprehension against a rubric, corpus-level pattern matching, and adversarial
+   self-review are different skills. One prompt doing all of them is worse at each.
+2. **A dedicated challenger.** The Critic never builds — it only tries to
+   disprove. It catches over-strong conclusions, non-comparable precedents and
+   hidden contradictions that a generalist producing its own answer will not
+   flag on itself. Its verdict can force a human or an abstention.
+3. **Independent evaluation.** `evidence-gap` is scored in isolation (Challenge 3)
+   against a labelled dataset — precision, recall, mandatory false-negative rate.
+   Only possible because its job is not entangled with three others.
+4. **A seam for the human and the Gate.** The deterministic Gate sits *between*
+   reasoning and action. A monolithic agent that both decides and submits leaves
+   nowhere for the Gate — or the reviewer — to live.
+5. **Auditability.** Each agent's output is a separate cited record: which
+   criterion, which precedent, which clause, what the Critic challenged. A
+   regulator (or the Financial Ombudsman Service) can follow the whole trail.
+
+The measurable claim — the agents together beat a single-prompt baseline on the
+labelled set (agreement, mandatory false-negative rate, safe-abstention rate) —
+is what the evaluation is built to prove (TDD §7.3).
 
 ## 7. The hybrid principle
 
@@ -164,21 +182,27 @@ Carried from the team's prior project. **Deterministic code owns every value tha
 drives a decision or an outbound action; agents produce the prose and the
 judgement over unstructured text.**
 
-| Decision-driving (deterministic) | Agent-produced (narrative / comprehension) |
+| Decision-driving (deterministic) | Agent-produced (narrative / comprehension / challenge) |
 |---|---|
 | auth-required yes/no, procedure code | plain-language reading of ambiguous plan text |
-| readiness score, gate route | the "what's missing and why it matters" write-up |
-| precedent similarity ranking | the appeal argument prose |
-| expiry date math, margin in days | the alert wording |
-| policy diff (added/removed criteria) | the operational-impact explanation |
+| mandatory pass/fail, supporting counts, evidence-quality → **Gate route** (D4) | per-criterion status + the "what's missing and why it matters" write-up |
+| precedent similarity ranking, precedent-support level | the appeal argument prose |
+| the Gate reads the Critic's verdict | the Critic's seven-check challenge |
+| expiry date math, policy diff (added/removed criteria) | the alert wording only (D6) |
 
 Stub and Foundry implementations of each agent are interchangeable; they differ
 only in the prose. Tests and CI run against the stubs, offline.
 
 ## 8. The human gate & responsible AI
 
-- **Gate rule:** `readiness ≥ threshold AND no missing criteria AND value ≤ auto-limit`
-  → auto-submit draft; otherwise → human review. An exact-threshold case passes.
+- **Gate — structured, four routes (D4):** it weighs a decision model, not one
+  number. Any unmet **mandatory** criterion or a contradiction → `HumanReview`
+  (never averaged away, never silently resolved); a Critic `Block` → `HumanReview`
+  regardless of the numbers; Low-quality evidence + Weak/None precedent support,
+  or a Critic `Abstain` → **`Abstain`** (the system declines to advise); value
+  over the auto-limit → `HumanReview`; an undocumented supporting criterion,
+  Medium evidence or a Critic `Concerns` → `Strengthen`; otherwise → `AutoSubmit`.
+  Every route is shown with its working.
 - **Sole outbound path:** one adapter submits to payers and files appeals.
   Nothing else in the system performs an outbound action.
 - **Every action is reviewer-approved** — submit and appeal both.
@@ -219,12 +243,11 @@ flowchart TB
       ADP[Zynara.SubmissionAdapter<br/>sole outbound path to payers]
       API[API Proxy<br/>read models + reviewer actions]
     end
-    subgraph AI [Azure AI Foundry]
+    subgraph AI [Azure AI Foundry · 4 reasoning agents]
       A1[needs-auth-agent]
       A2[evidence-gap-agent]
       A3[appeal-builder-agent]
-      A4[expiry-watch-agent]
-      A5[policy-drift-agent]
+      A4[critic-agent]
       FS[File Search index]
     end
     subgraph State
@@ -235,11 +258,11 @@ flowchart TB
 
     U[clinician request<br/>fields + clinical note / denial letter attached] -->|POST /api/requests| ORC
     DASH -->|/api| API
-    ORC --> A1 & A2 & A3 & A4 & A5
+    ORC --> A1 & A2 & A3 & A4
     ORC --> COS
     ORC --> ADP
     API --> COS
-    A2 & A3 --> FS
+    A2 & A3 & A4 --> FS
     FS -. indexes .-> BLOB
     ADP -->|portal / X12 / FHIR / fax| PAYER[payer]
     ORC -. managed identity .-> AI

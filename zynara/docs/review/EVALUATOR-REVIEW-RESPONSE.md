@@ -2,7 +2,17 @@
 
 Source: `../design/Care_Approval_IQ_Agent_a_Thon_Evaluator_Review.docx`
 (independent architect-track review, 2026-09-06).
-**Status: plan only — no work started. Awaiting go + the decisions in §D.**
+
+**Progress (2026-09-06):**
+- **P0-3 done** — structured decision model, mandatory criteria never averaged,
+  the `Abstain` route (D4). Code + 30 Core tests.
+- **P0-2 done** — the Critic agent, seven checks, verdict feeds the Gate (D5).
+  Code + 18 Agent tests.
+- **P0-1 done (docs)** — TDD reframed (§3.1 "why multi-agent", §7.3 eval suite,
+  §11.1 "the four questions"), ARCHITECTURE §5/§6/§8/§10 + both mermaids,
+  `DECISIONS.md` started (D1–D6). Diagram SVG + P0-4 (eval build) still open.
+- **D-2 taken** — expiry-watch / policy-drift demoted to deterministic monitors
+  (D6).
 
 ---
 
