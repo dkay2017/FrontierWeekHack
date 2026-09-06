@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Zynara.Core\Zynara.Core.csproj" />
     <ProjectReference Include="..\Zynara.Agents\Zynara.Agents.csproj" />
+    <ProjectReference Include="..\Zynara.Data\Zynara.Data.csproj" />
   </ItemGroup>
 
   <ItemGroup>

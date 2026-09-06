@@ -18,13 +18,17 @@ param reasoningPrincipalId string
 param submissionPrincipalId string
 
 var databaseName = 'careapproval'
+// Must match Zynara.Data.CosmosNames.All.
 var containers = [
-  { name: 'requests', partitionKey: '/requestId' }
-  { name: 'submissions', partitionKey: '/requestId' }
-  { name: 'outcomes', partitionKey: '/requestId' }
-  { name: 'caseAudit', partitionKey: '/requestId' } // append-only reviewer + agent trail (D15)
-  { name: 'agentCalls', partitionKey: '/day' }      // cost meter
-  { name: 'denialCohorts', partitionKey: '/payerPlan' } // Estimated Recoverable Value inputs (D12)
+  { name: 'criteria', partitionKey: '/payerPlan' }
+  { name: 'payerRules', partitionKey: '/payerPlan' }
+  { name: 'precedents', partitionKey: '/payerPlan' }
+  { name: 'policyVersions', partitionKey: '/policyRef' }
+  { name: 'denialCohorts', partitionKey: '/payerPlan' }  // Estimated Recoverable Value inputs (D12)
+  { name: 'cases', partitionKey: '/requestId' }          // assembled case + append-only audit trail (D15)
+  { name: 'authRecords', partitionKey: '/requestId' }
+  { name: 'earlyWarnings', partitionKey: '/id' }
+  { name: 'agentCalls', partitionKey: '/day' }           // cost meter
 ]
 
 resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {

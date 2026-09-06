@@ -20,3 +20,6 @@ Thumbs.db
 
 # node (dashboard)
 node_modules/
+
+# bicep build output
+infra/main.json

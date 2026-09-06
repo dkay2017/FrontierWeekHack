@@ -1,9 +1,11 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Zynara.Agents;
 using Zynara.Core;
 using Zynara.Core.Abstractions;
 using Zynara.Core.Demo;
+using Zynara.Data;
 
 // Compute layer (Architecture §4 · TDD §12 TD-1..TD-3).
 //
@@ -20,9 +22,12 @@ var host = new HostBuilder()
         services.AddZynaraAgents(context.Configuration);   // stub by default; foundry via ZYNARA_AGENTS
         services.AddZynaraCore();                          // spokes + Gate + pipeline
 
-        // Slice 4 has no Cosmos yet — an in-memory store seeded with the demo world.
-        // Zynara.Data will register the Cosmos-backed IZynaraStore in its place.
-        services.AddSingleton<IZynaraStore>(_ => DemoWorld.Seed(new InMemoryZynaraStore()));
+        // COSMOS_ENDPOINT set → the Cosmos-backed store; otherwise the in-memory demo world.
+        var cosmos = context.Configuration["COSMOS_ENDPOINT"];
+        if (!string.IsNullOrWhiteSpace(cosmos))
+            services.AddZynaraData(cosmos, context.Configuration["COSMOS_DATABASE"] ?? CosmosNames.Database);
+        else
+            services.AddSingleton<IZynaraStore>(_ => DemoWorld.Seed(new InMemoryZynaraStore()));
     })
     .Build();
 

@@ -30,8 +30,9 @@ services:
     dist: .
 
 hooks:
+  # After provision (Cosmos + identities exist), before deploy: create the
+  # containers and seed the demo reference data. Idempotent.
   postprovision:
     shell: sh
     continueOnError: false
-    run: >
-      dotnet run --project tools/Zynara.DemoDump -- src/Zynara.Dashboard/demo-cases.json
+    run: dotnet run --project tools/Zynara.DbDeploy

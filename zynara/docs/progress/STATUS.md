@@ -280,12 +280,12 @@ needs the same restyle port.
 the user chose: **de-risk spike → `Zynara.Data` → grow eval set → video last.**
 
 1. **De-risk spike — `tools/Zynara.FoundrySpike` built, not yet run.** Runs the
-   whole pipeline against the HOSTED agents for 2 scenarios and prints what each
-   produced. Needs a Foundry project + `az login`. Runbook:
-   `docs/runbooks/foundry-spike.md`. **User to execute.**
-2. **`Zynara.Data`** — Cosmos-backed `IZynaraStore` + `ICaseRepository`; the real
-   `IAgentCallRecorder`. Replaces the in-memory seeds in the orchestrator +
-   api-proxy `Program.cs`.
+   whole pipeline against the HOSTED agents for 2 scenarios. Needs a Foundry
+   project + `az login`. Runbook: `docs/runbooks/foundry-spike.md`. **User to run.**
+2. ~~`Zynara.Data`~~ **done (D20)** — Cosmos-backed `IZynaraStore` +
+   `ICaseRepository` + real cost meter; `CosmosJson` round-trip tested;
+   `tools/Zynara.DbDeploy` seeder (azd hook); orchestrator + api-proxy wire it on
+   `COSMOS_ENDPOINT`. Not run against live Cosmos (no emulator here). **100 tests.**
 3. **Grow the labelled eval set** 8 → ~20; 2–3 real payer policy files for File Search.
 4. **Video + pitch + 5-point doc** — last.
 

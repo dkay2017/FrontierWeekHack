@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Zynara.Agents;
@@ -6,6 +7,7 @@ using Zynara.Core;
 using Zynara.Core.Abstractions;
 using Zynara.Core.Demo;
 using Zynara.Core.View;
+using Zynara.Data;
 
 // Experience layer read API (evaluator P1-1 / P1-2). It runs a request through
 // Zynara.Core's pipeline, projects the result to a reviewer CaseView, and serves
@@ -19,15 +21,23 @@ var host = new HostBuilder()
     {
         services.AddZynaraAgents(context.Configuration);
         services.AddZynaraCore();
-        services.AddSingleton<IZynaraStore>(_ => DemoWorld.Seed(new InMemoryZynaraStore()));
-        // ICaseRepository defaults to InMemoryCaseRepository (registered by AddZynaraCore).
+
+        var cosmos = context.Configuration["COSMOS_ENDPOINT"];
+        if (!string.IsNullOrWhiteSpace(cosmos))
+            services.AddZynaraData(cosmos, context.Configuration["COSMOS_DATABASE"] ?? CosmosNames.Database);
+        else
+            services.AddSingleton<IZynaraStore>(_ => DemoWorld.Seed(new InMemoryZynaraStore()));
+        // ICaseRepository: Cosmos when wired, else InMemory (AddZynaraCore default).
     })
     .Build();
 
+var cosmosWired = !string.IsNullOrWhiteSpace(host.Services.GetRequiredService<IConfiguration>()["COSMOS_ENDPOINT"]);
+
 await host.Services.EnsureZynaraAgentsAsync();
 
-// Pre-run the demo scenarios so the review queue has content on first load.
-if (Environment.GetEnvironmentVariable("ZYNARA_SKIP_DEMO_SEED") != "true")
+// Offline demo only: pre-run the scenarios so the review queue has content on
+// first load. Skipped when Cosmos is wired (the orchestrator writes real cases).
+if (Environment.GetEnvironmentVariable("ZYNARA_SKIP_DEMO_SEED") != "true" && !cosmosWired)
 {
     using var scope = host.Services.CreateScope();
     var cases = scope.ServiceProvider.GetRequiredService<CaseService>();

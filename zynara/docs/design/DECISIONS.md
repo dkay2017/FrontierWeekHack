@@ -5,6 +5,28 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D20 · Zynara.Data — Cosmos-backed store, case repository, cost meter
+
+**2026-09-06.** `src/Zynara.Data` (`Microsoft.Azure.Cosmos` 3.62, STJ serializer,
+`DefaultAzureCredential`):
+
+- `CosmosZynaraStore : IZynaraStore` — reference data (criteria / rules /
+  precedents / policy versions / denial cohorts) + the advisory early-warnings.
+- `CosmosCaseRepository : ICaseRepository` — one doc per request id in `cases`
+  (the assembled case + its audit trail, D15).
+- `CosmosAgentCallRecorder : IAgentCallRecorder` — the real cost meter, one doc
+  per hosted-agent call partitioned by day.
+- Docs are the domain records serialised straight through (`CosmosJson.WithId`) +
+  an `id` — no wrapper types. `Zynara.Data.Tests` round-trips a full `CaseRecord`.
+- `DataSeeder` + `tools/Zynara.DbDeploy` (the azd `postprovision` hook) — create
+  the 9 containers (`CosmosNames.All`, matched to `infra/modules/data.bicep`) and
+  seed the demo reference data if empty.
+- `AddZynaraData(endpoint, database)`. The orchestrator + api-proxy `Program.cs`
+  call it when `COSMOS_ENDPOINT` is set, otherwise keep the in-memory `DemoWorld`.
+- `Directory.Build.props` sets `AzureCosmosDisableNewtonsoftJsonCheck` repo-wide.
+
+**100 tests green.** Not run against a live Cosmos (no emulator in the Codespace).
+
 ## D19 · infra/ skeleton + CI — identity boundary only (no private networking)
 
 **2026-09-06.** Evaluator P1-4 / §13. `infra/main.bicep` (+ 5 modules) —
