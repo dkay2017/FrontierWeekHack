@@ -96,6 +96,11 @@ as the safety net, not a bottleneck.
 
 ## 4. Technical Architecture
 
+![Care Approval IQ — technical architecture](Care-Approval-IQ-Architecture_Design.png)
+
+*(`Care-Approval-IQ-Architecture_Design.svg` is the authoritative source; the
+`.png` beside it is the same diagram rasterised at 2× for Word / PDF export.)*
+
 Five layers along the request path — Intake is the request contract plus the
 orchestrator app's HTTP starter (no separate Function App, no queue) — plus three
 cross-cutting concerns.
