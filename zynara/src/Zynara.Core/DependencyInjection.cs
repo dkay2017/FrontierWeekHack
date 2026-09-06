@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Zynara.Core.Abstractions;
 using Zynara.Core.Gating;
+using Zynara.Core.Impact;
 using Zynara.Core.Pipeline;
 using Zynara.Core.Recovery;
 using Zynara.Core.View;
@@ -37,6 +38,9 @@ public static class DependencyInjection
 
         // Estimated Recoverable Value (P2-1) — reads the denial-history cohorts.
         services.AddScoped<RecoveryService>();
+
+        // Before / after benchmark (P2-2) — measured pipeline metrics vs a labelled estimate.
+        services.AddScoped<BenchmarkService>();
 
         return services;
     }

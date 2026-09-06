@@ -5,6 +5,7 @@ using Zynara.Agents;
 using Zynara.Core;
 using Zynara.Core.Abstractions;
 using Zynara.Core.Demo;
+using Zynara.Core.Impact;
 using Zynara.Core.Profiles;
 using Zynara.Core.Recovery;
 using Zynara.Core.View;
@@ -42,12 +43,14 @@ foreach (var scenario in DemoCatalog.All)
     views.Add((await cases.RunAsync(scenario.Request)).View);
 
 var recovery = await sp.GetRequiredService<RecoveryService>().GetAsync();
+var benchmark = await sp.GetRequiredService<BenchmarkService>().GetAsync();
 
 var payload = new
 {
     scenarios = DemoCatalog.All.Select(s => new { s.Id, s.Label, s.Expectation }),
     cases = views,
     recovery,
+    benchmark,
     profiles = RegulatoryProfiles.All,
 };
 

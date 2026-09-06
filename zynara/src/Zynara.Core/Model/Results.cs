@@ -125,4 +125,18 @@ public sealed record PipelineResult(
 {
     /// <summary>True when needs-auth resolved to "not required" — nothing further ran.</summary>
     public bool StoppedEarly => !NeedsAuth.AuthRequired;
+
+    /// <summary>What this run actually did — the measured half of the before/after benchmark (P2-2).</summary>
+    public PipelineMetrics Metrics { get; init; } = PipelineMetrics.Empty;
+}
+
+/// <summary>Measured facts about one pipeline run. Every field is counted, not estimated (evaluator §16).</summary>
+public sealed record PipelineMetrics(
+    int CriteriaChecked,
+    int EvidenceGapsFound,
+    int PrecedentsConsidered,
+    int ReasoningStepsRun,
+    long AssembledInMs)
+{
+    public static readonly PipelineMetrics Empty = new(0, 0, 0, 0, 0);
 }

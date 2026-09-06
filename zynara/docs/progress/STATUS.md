@@ -237,6 +237,16 @@ needs the same restyle port.
 - Still open for P1-3: Cosmos `caseAudit` container (with `Zynara.Data`), real
   Entra app-role binding (with `infra/`).
 
+## Done — 2026-09-06 — P2-2
+
+- **Before / after benchmark** (D16). `AuthPipeline` records `PipelineMetrics`
+  (criteria checked · evidence gaps found · precedents considered · reasoning
+  steps · assembled-ms — all counted). `BenchmarkService` aggregates across the
+  corpus and pairs each row with a **labelled manual estimate + its basis**.
+  `GET /api/benchmark`. Dashboard "Cost" tab → **Impact** (Recoverable Value +
+  before/after). No improvement % claimed. `Zynara.Core.Tests` +2.
+  **88 tests green.**
+
 ## Next — remaining P1 / P2 (resume point)
 
 > Full re-read of the COMPLETE evaluator review (text + 4 flowcharts) logged in

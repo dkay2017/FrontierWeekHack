@@ -5,6 +5,21 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D16 · Before / after benchmark — measured pipeline, labelled manual estimate
+
+**2026-09-06.** Evaluator P2-2 / §16. `AuthPipeline` now records
+`PipelineMetrics` per run (criteria checked, evidence gaps found, precedents
+considered, reasoning steps, assembled-in-ms — all counted, none estimated).
+`BenchmarkService` aggregates these across the case corpus and pairs each row
+with a **manual estimate that is marked as an estimate and carries its basis**
+(AMA prior-auth burden survey, the appeals-gap statistic, etc.). `GET /api/benchmark`;
+dashboard "Cost" tab → **Impact** (Estimated Recoverable Value + the before/after
+table). **No improvement percentage is claimed** (guardrail §18).
+Touched: `Zynara.Core/Model/Results.cs` (`PipelineMetrics`), `Pipeline/AuthPipeline.cs`,
+`Zynara.Core/Impact/*`, Core DI, `Zynara.ApiProxy/BenchmarkFunctions.cs`,
+`tools/Zynara.DemoDump`, `src/Zynara.Dashboard/standalone.html`,
+`Zynara.Core.Tests` (+2).
+
 ## D15 · Reviewer roles + approval authority + a case audit trail
 
 **2026-09-06.** Evaluator P1-3 / §13 (+ review notes #4 tiered thresholds, #5
