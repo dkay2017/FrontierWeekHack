@@ -53,7 +53,12 @@ public sealed record CaseView(
     GateView? Gate,
     string? DraftBody,
     string? AppealDraft,
-    IReadOnlyList<HumanControl> Controls);
+    IReadOnlyList<HumanControl> Controls,
+    string ApproveAuthority,
+    IReadOnlyList<AuditView> Audit);
+
+/// <summary>One audit-trail line for the reviewer (evaluator §13).</summary>
+public sealed record AuditView(string Kind, string Actor, string At, string Detail);
 
 public sealed record NeedsAuthView(
     bool AuthRequired,

@@ -3,6 +3,7 @@ using Zynara.Agents;
 using Zynara.Core;
 using Zynara.Core.Abstractions;
 using Zynara.Core.Agents;
+using Zynara.Core.Authority;
 using Zynara.Core.Demo;
 using Zynara.Core.View;
 
@@ -108,15 +109,46 @@ public class CaseViewTests
     }
 
     [Fact]
-    public async Task Decision_is_recorded_against_the_case()
+    public async Task Decision_is_recorded_with_the_reviewer_role_and_an_audit_line()
     {
         var service = BuildService();
         await service.RunAsync(DemoCatalog.All.Single(s => s.Id == "demo-ready").Request);
 
-        var updated = await service.RecordDecisionAsync("demo-ready", "approve-send", "reviewer@zynara", "looks good");
+        var outcome = await service.RecordDecisionAsync(
+            "demo-ready", "approve-send", "reviewer@zynara", ReviewerRole.Reviewer, "looks good");
 
-        Assert.NotNull(updated);
-        Assert.Equal("approve-send", updated!.Decision!.Action);
-        Assert.Equal("reviewer@zynara", updated.Decision.By);
+        Assert.True(outcome is { Found: true, Allowed: true });
+        Assert.Equal("approve-send", outcome.Record!.Decision!.Action);
+        Assert.Equal(ReviewerRole.Reviewer, outcome.Record.Decision.Role);
+        Assert.Contains(outcome.Record.Audit, a => a.Kind == "decision" && a.Detail.Contains("approve-send"));
+    }
+
+    [Fact]
+    public async Task A_coordinator_cannot_approve_an_appeal_and_the_refusal_is_audited()
+    {
+        var service = BuildService();
+        await service.RunAsync(DemoCatalog.All.Single(s => s.Id == "demo-appeal").Request);
+
+        var outcome = await service.RecordDecisionAsync(
+            "demo-appeal", "approve-send", "coord@zynara", ReviewerRole.Coordinator, null);
+
+        Assert.True(outcome is { Found: true, Allowed: false });
+        Assert.Equal(ReviewerRole.SeniorReviewer, outcome.Refusal!.Required);
+
+        var record = await service.GetAsync("demo-appeal");
+        Assert.Contains(record!.Audit, a => a.Detail.StartsWith("REFUSED"));
+        Assert.Null(record.Decision);
+    }
+
+    [Fact]
+    public async Task The_view_reports_the_authority_needed_to_approve()
+    {
+        var service = BuildService();
+        var ready = await service.RunAsync(DemoCatalog.All.Single(s => s.Id == "demo-ready").Request);
+        var appeal = await service.RunAsync(DemoCatalog.All.Single(s => s.Id == "demo-appeal").Request);
+
+        Assert.Equal("Coordinator", ready.View.ApproveAuthority);      // AutoSubmit, low value
+        Assert.Equal("SeniorReviewer", appeal.View.ApproveAuthority);  // appeal → at least Senior
+        Assert.NotEmpty(ready.View.Audit);
     }
 }

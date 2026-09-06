@@ -351,6 +351,21 @@ In scope — built and demonstrated:
   usage → price table → sum; a few lines, carried from the prior project.)
 - **No PHI in scope.** Request ids and procedure codes only in telemetry, logs,
   and the trace tree; clinical notes are synthetic for the demo.
+- **Reviewer roles + approval authority** (`ApprovalAuthority`, built). Four roles
+  (Coordinator → Reviewer → Senior Reviewer → Medical Director). The authority
+  needed to **approve &amp; send** is the higher of the route tier
+  (AutoSubmit/Strengthen → Coordinator, HumanReview → Reviewer, Abstain → Senior)
+  and the **financial-risk tier** (≤ £500 → Coordinator, ≤ £5k → Reviewer,
+  ≤ £25k → Senior, above → Medical Director); an appeal is always at least a
+  Senior sign-off. The Gate's auto-limit is just the bottom tier — above it a
+  case escalates to a more senior human, not to a bigger number. A refused
+  decision is itself written to the audit trail. *(Demo: the role is a header /
+  a picker; production maps to Entra ID app roles.)*
+- **Append-only case audit trail** (`CaseRecord.Audit`, built). Every pipeline
+  run records the agent implementation **and version** behind each reasoning step
+  (`evidence-gap · foundry hosted/gpt-5.4`); every reviewer action records the
+  identity, role, timestamp and note; every refusal records the reason. Shown to
+  the reviewer in the case drawer.
 - **Disclaimer, shown in-product:** *Care Approval IQ is decision support, not
   coverage or medical advice. A person makes every decision.*
 

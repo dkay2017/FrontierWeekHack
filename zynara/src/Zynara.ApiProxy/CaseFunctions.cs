@@ -2,6 +2,7 @@ using System.Net;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
+using Zynara.Core.Authority;
 using Zynara.Core.Model;
 using Zynara.Core.View;
 
@@ -34,7 +35,13 @@ public sealed class CaseFunctions(CaseService cases, ILogger<CaseFunctions> log)
         var record = await cases.GetAsync(id);
         return record is null
             ? await Json.Error(req, HttpStatusCode.NotFound, $"no case '{id}'.")
-            : await Json.Ok(req, new { view = record.View, decision = record.Decision, runAt = record.RunAt });
+            : await Json.Ok(req, new
+            {
+                view = record.View,
+                decision = record.Decision,
+                audit = record.Audit,
+                runAt = record.RunAt,
+            });
     }
 
     [Function("RunCase")]
@@ -68,12 +75,23 @@ public sealed class CaseFunctions(CaseService cases, ILogger<CaseFunctions> log)
         if (body is null || string.IsNullOrWhiteSpace(body.Action))
             return await Json.Error(req, HttpStatusCode.BadRequest, "a decision with an 'action' is required.");
 
-        var record = await cases.RecordDecisionAsync(id, body.Action, body.By, body.Note);
-        return record is null
-            ? await Json.Error(req, HttpStatusCode.NotFound, $"no case '{id}'.")
-            : await Json.Ok(req, CaseSummary.From(record));
+        // Demo stand-in for Entra ID app roles: the reviewer's role + id come in headers.
+        var role = req.Headers.TryGetValues("X-Reviewer-Role", out var rv)
+            && Enum.TryParse<ReviewerRole>(rv.FirstOrDefault(), ignoreCase: true, out var parsed)
+            ? parsed : ReviewerRole.Reviewer;
+        var by = req.Headers.TryGetValues("X-Reviewer-Id", out var iv) ? iv.FirstOrDefault() : body.By;
+
+        var outcome = await cases.RecordDecisionAsync(id, body.Action, by, role, body.Note);
+
+        if (!outcome.Found)
+            return await Json.Error(req, HttpStatusCode.NotFound, $"no case '{id}'.");
+        if (!outcome.Allowed)
+            return await Json.Error(req, HttpStatusCode.Forbidden, outcome.Refusal!.Reason);
+
+        log.LogInformation("Case {RequestId}: {Role} {Action}.", id, role, body.Action);
+        return await Json.Ok(req, new { summary = CaseSummary.From(outcome.Record!), audit = outcome.Record!.Audit });
     }
 }
 
-/// <summary>Body of <c>POST /api/cases/{id}/decision</c>. RBAC / authority checks land with P1-3.</summary>
+/// <summary>Body of <c>POST /api/cases/{id}/decision</c>. Role + id also accepted via X-Reviewer-* headers.</summary>
 public sealed record DecisionRequest(string Action, string? Note, string? By);

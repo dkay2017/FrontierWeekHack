@@ -80,11 +80,20 @@ Nothing here overturns a decision. Items 1 and 3 are the substantive ones.
   projection + precedent panel; `Zynara.ApiProxy` read API; `Zynara.Dashboard`
   static review workspace; `tools/Zynara.DemoDump`.
 - **P2-5 done** (D11) — `docs/runbooks/demo-script.md` + the `demo-appeal-critic`
-  scenario (visible Critic catch). 69 tests green.
+  scenario (visible Critic catch).
+- **P2-1 done** (D12) — Estimated Recoverable Value with the formula + confidence
+  shown; own dashboard tab.
+- **P1-5 done** (D14) — Policy + Regulatory Profile (`RegulatoryProfile` + 7
+  dimensions + `/api/profiles` + a low-key header panel).
+- **P1-3 done** (D15) — reviewer roles + tiered approval authority + append-only
+  case audit trail (agent impl + version, reviewer id/role/time/note, refusals).
+  Also covers review notes #4 (tiered thresholds) + #5 (agent version in audit).
+  **86 tests green.**
 
-**Remaining:** P1-3, P1-4, P1-5, P2-1, P2-2, P2-3. Order: P2-1/P2-2 measured
-value → P1-5 profile → P1-3 RBAC/audit → P1-4 infra isolation → P2-3
-(claims extraction + intra-evidence contradiction).
+**Remaining:** P1-4 (infra identity isolation), P2-2 (before/after
+instrumentation), P2-3 (claims extraction + intra-evidence contradiction), plus
+review note #3 (policy-citation + appeal-verdict eval metrics). Cosmos
+`caseAudit` + real Entra roles land with `Zynara.Data` / `infra/`.
 
 ---
 

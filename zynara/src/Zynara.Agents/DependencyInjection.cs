@@ -42,6 +42,7 @@ public static class DependencyInjection
         services.AddSingleton(options);
         services.AddSingleton(sp => new FoundryAgentClient(sp.GetRequiredService<FoundryAgentOptions>()));
         services.AddSingleton<FoundryAgentProvisioner>();
+        services.AddSingleton<IAgentRoster>(AgentRoster.Foundry(options.Model));
 
         // Cost metering: the data layer registers the real recorder; this keeps the
         // agents resolvable when no data layer is wired (tests, provisioner console).
@@ -66,6 +67,7 @@ public static class DependencyInjection
     private static IServiceCollection AddStubs(IServiceCollection services)
     {
         services.TryAddSingleton<IAgentCallRecorder, NullAgentCallRecorder>();
+        services.AddSingleton<IAgentRoster>(AgentRoster.Stub());
         services.AddSingleton<INeedsAuthAgent, StubNeedsAuthAgent>();
         services.AddSingleton<IEvidenceGapAgent, StubEvidenceGapAgent>();
         services.AddSingleton<IAppealBuilderAgent, StubAppealBuilderAgent>();

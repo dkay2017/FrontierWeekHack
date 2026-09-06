@@ -5,6 +5,34 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D15 · Reviewer roles + approval authority + a case audit trail
+
+**2026-09-06.** Evaluator P1-3 / §13 (+ review notes #4 tiered thresholds, #5
+agent version in the audit record).
+
+- `ApprovalAuthority` (`Zynara.Core/Authority`) — four ranked roles
+  (Coordinator/Reviewer/SeniorReviewer/MedicalDirector). The role required to
+  **approve & send** = max(route tier, financial-risk tier); an appeal is always
+  ≥ Senior. The Gate's auto-limit is the bottom tier — over it a case escalates
+  to a more senior human, not a bigger number.
+- `CaseRecord.Audit` — append-only `AuditEntry` list: the pipeline run + each
+  reasoning step's agent implementation **and version** (via `IAgentRoster` in
+  `Zynara.Agents`: stub → `deterministic`, foundry → `hosted/<model>`), every
+  reviewer action (identity · role · timestamp · note), and every **refusal**
+  with its reason.
+- `CaseService.RecordDecisionAsync` returns a `DecisionOutcome` (found / allowed /
+  refusal); `Zynara.ApiProxy` reads the role from `X-Reviewer-Role` (demo
+  stand-in for Entra app roles) → 403 on refusal; `GET /api/cases/{id}` now
+  returns `audit`. `CaseView` gains `ApproveAuthority` + `Audit`.
+- Dashboard: a role picker in the masthead; the case drawer shows the audit trail
+  and disables "Approve & send" (with "needs Senior reviewer") when the current
+  role is below the required authority.
+
+Touched: `Zynara.Core/Authority/*`, `Zynara.Core/Agents/IAgentRoster.cs`,
+`Zynara.Core/Model/CaseRecord.cs`, `Zynara.Core/View/*`, `Zynara.Agents`
+(`AgentRoster` + DI), `Zynara.ApiProxy/CaseFunctions.cs`,
+`src/Zynara.Dashboard/standalone.html`, `Zynara.Core.Tests` (+9), TDD §7.
+
 ## D14 · "Region switch" → Policy + Regulatory Profile
 
 **2026-09-06.** Evaluator P1-5 / §9. The UK ⇄ US control is reframed as a

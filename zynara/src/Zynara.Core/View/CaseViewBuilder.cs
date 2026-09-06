@@ -1,4 +1,5 @@
 using Zynara.Core.Agents;
+using Zynara.Core.Authority;
 using Zynara.Core.Model;
 
 namespace Zynara.Core.View;
@@ -11,7 +12,9 @@ namespace Zynara.Core.View;
 /// </summary>
 public static class CaseViewBuilder
 {
-    public static CaseView Build(PipelineResult result, Request request, Criteria? criteria)
+    public static CaseView Build(
+        PipelineResult result, Request request, Criteria? criteria,
+        IReadOnlyList<AuditEntry>? audit = null)
     {
         var policyRef = result.NeedsAuth.PolicyRef ?? criteria?.PolicyRef ?? "unknown";
         var policyVersion = criteria?.Version ?? "unknown";
@@ -44,7 +47,19 @@ public static class CaseViewBuilder
             Gate: gate,
             DraftBody: result.Draft?.Body,
             AppealDraft: result.Appeal?.Recommendation.AppealDraft,
-            Controls: Controls(status, result));
+            Controls: Controls(status, result),
+            ApproveAuthority: ApproveAuthority(result, request).ToString(),
+            Audit: (audit ?? Array.Empty<AuditEntry>())
+                .Select(a => new AuditView(a.Kind, a.Actor, a.At.ToString("u"), a.Detail)).ToList());
+    }
+
+    private static ReviewerRole ApproveAuthority(PipelineResult result, Request request)
+    {
+        var route = result.Gate?.Route ?? GateRoute.HumanReview;
+        var need = Authority.ApprovalAuthority.RequiredToApprove(route, request.EstimatedValue);
+        if (!string.IsNullOrWhiteSpace(request.DenialLetter) && need < ReviewerRole.SeniorReviewer)
+            need = ReviewerRole.SeniorReviewer;
+        return need;
     }
 
     private static CaseStatus ToStatus(PipelineResult r)

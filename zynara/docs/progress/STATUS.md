@@ -222,6 +222,21 @@ needs the same restyle port.
   → a small profile panel (kept low-key, guardrail §18). `Zynara.Core.Tests` +2.
   **77 tests green.** TDD §7.2 rewritten. Artifact republished.
 
+## Done — 2026-09-06 — P1-3
+
+- **RBAC + approval authority + audit trail** (D15). `Zynara.Core/Authority` —
+  `ApprovalAuthority`: 4 ranked roles, required-to-approve = max(route tier,
+  financial-risk tier), appeal ≥ Senior. `CaseRecord.Audit` (append-only):
+  pipeline run + each step's agent **impl + version** (`IAgentRoster`) + reviewer
+  actions (id · role · time · note) + refusals with reason.
+  `RecordDecisionAsync` → `DecisionOutcome`; `Zynara.ApiProxy` reads
+  `X-Reviewer-Role` → 403 on refusal. `CaseView` +`ApproveAuthority` +`Audit`.
+  Dashboard: masthead role picker; drawer audit-trail section; "Approve & send"
+  disabled ("needs Senior reviewer") below the required authority. Also fixed the
+  draft submission/appeal toggle. `Zynara.Core.Tests` +9. **86 tests green.**
+- Still open for P1-3: Cosmos `caseAudit` container (with `Zynara.Data`), real
+  Entra app-role binding (with `infra/`).
+
 ## Next — remaining P1 / P2 (resume point)
 
 > Full re-read of the COMPLETE evaluator review (text + 4 flowcharts) logged in
