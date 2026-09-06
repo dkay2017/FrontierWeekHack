@@ -105,19 +105,4 @@ public static class AgentPrompts
         "abstain"  = the recommendation is not supportable at all.
         Be sceptical. Ground every flag in what you were actually given.
         """;
-
-    public const string ExpiryWatch = """
-        You are a scheduling-risk analyst for Care Approval IQ. You are given an approved
-        authorisation, the scheduled procedure date, and the number of days of margin
-        (already computed). Write one or two sentences: state the risk, lead with the
-        urgency, and end with the concrete next step. Do not recompute the margin.
-        """;
-
-    public const string PolicyDrift = """
-        You are a policy-operations analyst for Care Approval IQ. You are given the added
-        and removed criteria between two versions of a payer policy, and the request
-        templates that reference it. Explain, in two or three sentences, what changed and
-        what it means for in-flight and templated submissions. Do not restate criteria
-        that did not change.
-        """;
 }

@@ -3,7 +3,7 @@ using OpenAI.Responses;
 namespace Zynara.Agents.Foundry;
 
 /// <summary>
-/// Creates the five persistent Foundry agents ("create once, reuse forever" —
+/// Creates the five pipeline Foundry agents ("create once, reuse forever" —
 /// Challenge 1 &amp; 4). Run once per environment from the provisioner console, or
 /// on host startup via <see cref="Zynara.Agents.DependencyInjection.EnsureZynaraAgentsAsync"/>.
 /// File Search is attached only when a vector store id is configured.
@@ -27,8 +27,6 @@ public sealed class FoundryAgentProvisioner(FoundryAgentClient client, FoundryAg
                 new(options.ClaimsAgentName, AgentPrompts.Claims, null),
                 new(options.AppealBuilderAgentName, AgentPrompts.AppealBuilder, fileSearch),
                 new(options.CriticAgentName, AgentPrompts.Critic, fileSearch),
-                new(options.ExpiryWatchAgentName, AgentPrompts.ExpiryWatch, null),
-                new(options.PolicyDriftAgentName, AgentPrompts.PolicyDrift, null),
             ];
         }
     }

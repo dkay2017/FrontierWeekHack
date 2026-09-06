@@ -297,7 +297,11 @@ the user chose: **de-risk spike → `Zynara.Data` → grow eval set → video la
    note-self-contradiction. Every metric at 100%, route agreement 100% vs
    baseline 55%, unsafe automation 0 vs baseline 5. **100 tests green.**
    Still open: 2–3 real payer policy files for File Search.
-4. **Video + pitch + 5-point doc** — last.
+4. **Foundry cleanup — ✅ (D22).** Only the five pipeline agents are provisioned;
+   `expiry-watch` / `policy-drift` no longer created as hosted agents (stub twin
+   in both modes). User to delete the stale agents from the portal, then re-run
+   the spike with `VECTOR_STORE_ID` set.
+5. **Video + pitch + 5-point doc** — last.
 
 Also open (lower priority): `Zynara.Submission` adapter, port the light style to
 `Zynara.Dashboard/index.html`, the architecture SVG band.

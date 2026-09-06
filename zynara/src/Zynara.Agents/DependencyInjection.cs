@@ -13,9 +13,13 @@ public static class DependencyInjection
     public const string ModeVariable = "ZYNARA_AGENTS";
 
     /// <summary>
-    /// Registers the five agent ports (<see cref="INeedsAuthAgent"/> /
-    /// <see cref="IEvidenceGapAgent"/> / <see cref="IAppealBuilderAgent"/> /
-    /// <see cref="IExpiryWatchAgent"/> / <see cref="IPolicyDriftAgent"/>).
+    /// Registers the agent ports. Five run as hosted Foundry agents in
+    /// <c>foundry</c> mode — <see cref="INeedsAuthAgent"/> /
+    /// <see cref="IEvidenceGapAgent"/> / <see cref="IClaimExtractionAgent"/> /
+    /// <see cref="IAppealBuilderAgent"/> / <see cref="ICriticAgent"/>.
+    /// <see cref="IExpiryWatchAgent"/> / <see cref="IPolicyDriftAgent"/> are
+    /// deterministic monitors (D6): the stub twin is the implementation in both
+    /// modes and no Foundry agent is provisioned for them.
     ///
     /// <c>ZYNARA_AGENTS=foundry</c> wires the hosted Foundry agents (needs
     /// <c>az login</c> + <c>PROJECT_ENDPOINT</c>); anything else — the default —
@@ -53,8 +57,12 @@ public static class DependencyInjection
         services.AddScoped<IClaimExtractionAgent, FoundryClaimExtractionAgent>();
         services.AddScoped<IAppealBuilderAgent, FoundryAppealBuilderAgent>();
         services.AddScoped<ICriticAgent, FoundryCriticAgent>();
-        services.AddScoped<IExpiryWatchAgent, FoundryExpiryWatchAgent>();
-        services.AddScoped<IPolicyDriftAgent, FoundryPolicyDriftAgent>();
+
+        // expiry-watch / policy-drift are deterministic monitors (D6), not hosted
+        // agents — the stub twin *is* the narrator. Kept resolvable for the
+        // (unwired) monitor spokes; no Foundry agent is provisioned for them.
+        services.AddScoped<IExpiryWatchAgent, StubExpiryWatchAgent>();
+        services.AddScoped<IPolicyDriftAgent, StubPolicyDriftAgent>();
         return services;
     }
 

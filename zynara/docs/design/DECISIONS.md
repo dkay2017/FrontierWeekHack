@@ -5,6 +5,21 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D22 · Foundry provisions only the five pipeline agents
+
+**2026-09-06.** `expiry-watch` and `policy-drift` are deterministic monitors
+(D6) — the pipeline never calls them and the stub twin *is* the narrator. They
+were still being registered as hosted agents and created in the Foundry project,
+so the portal showed seven agents where the architecture has five. Now
+`FoundryAgentProvisioner.Specs` and `FoundryAgentOptions.AllAgentNames` list
+only needs-auth, evidence-gap, claims-extraction, appeal-builder, critic; in
+`foundry` mode `IExpiryWatchAgent` / `IPolicyDriftAgent` resolve to their stubs.
+The interfaces, `ExpiryMath` / `PolicyDiff` spokes and stubs stay for the
+(unwired) Early Warnings feature.
+Touched: `Zynara.Agents/Foundry/{FoundryAgentProvisioner,FoundryAgentOptions,AgentPrompts}.cs`,
+`Zynara.Agents/DependencyInjection.cs`, deleted `Foundry/Foundry{ExpiryWatch,PolicyDrift}Agent.cs`,
+`tests/Zynara.Agents.Tests/FoundryResponseTests.cs`.
+
 ## D21 · Eval set grown to 20 labelled cases
 
 **2026-09-06.** `eval/Zynara.Eval/cases/` 8 → 20. New coverage: US region,

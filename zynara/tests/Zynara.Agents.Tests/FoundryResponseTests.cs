@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Zynara.Agents.Foundry;
+using Zynara.Agents.Stubs;
 using Zynara.Core.Agents;
 using Zynara.Core.Model;
 
@@ -127,7 +128,12 @@ public class FoundryResponseTests
         Assert.IsType<FoundryClaimExtractionAgent>(sp.GetRequiredService<IClaimExtractionAgent>());
         Assert.IsType<FoundryAppealBuilderAgent>(sp.GetRequiredService<IAppealBuilderAgent>());
         Assert.IsType<FoundryCriticAgent>(sp.GetRequiredService<ICriticAgent>());
-        Assert.Equal(7, sp.GetRequiredService<FoundryAgentProvisioner>().Specs.Count);
+
+        // expiry-watch / policy-drift are deterministic monitors — stub in both modes,
+        // and not provisioned as Foundry agents.
+        Assert.IsType<StubExpiryWatchAgent>(sp.GetRequiredService<IExpiryWatchAgent>());
+        Assert.IsType<StubPolicyDriftAgent>(sp.GetRequiredService<IPolicyDriftAgent>());
+        Assert.Equal(5, sp.GetRequiredService<FoundryAgentProvisioner>().Specs.Count);
     }
 
     [Fact]

@@ -17,8 +17,6 @@ public sealed class FoundryAgentOptions
     public string ClaimsAgentName { get; init; } = "claims-extraction-agent";
     public string AppealBuilderAgentName { get; init; } = "appeal-builder-agent";
     public string CriticAgentName { get; init; } = "critic-agent";
-    public string ExpiryWatchAgentName { get; init; } = "expiry-watch-agent";
-    public string PolicyDriftAgentName { get; init; } = "policy-drift-agent";
 
     /// <summary>
     /// Vector store id for File Search grounding (Blob corpus). Null until the
@@ -29,6 +27,6 @@ public sealed class FoundryAgentOptions
     public IReadOnlyList<string> AllAgentNames =>
     [
         NeedsAuthAgentName, EvidenceGapAgentName, ClaimsAgentName, AppealBuilderAgentName,
-        CriticAgentName, ExpiryWatchAgentName, PolicyDriftAgentName,
+        CriticAgentName,
     ];
 }
