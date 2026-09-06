@@ -6,10 +6,13 @@ The reviewer workspace (Static Web App) — evidence-first, not approve-button-f
 ## Run
 
 - **Offline (default):** open `index.html` (or serve the folder). It loads
-  `demo-cases.json` — five pre-computed `CaseView`s covering every Gate route.
+  `demo-cases.json` — the pre-computed `CaseView`s covering every Gate route.
 - **Live API:** `index.html?api=http://localhost:7071` — fetches from
   `Zynara.ApiProxy` (`/api/cases`, `/api/cases/{id}`, `/api/demo/scenarios`,
   `/api/demo/scenarios/{id}/run`, `/api/cases/{id}/decision`).
+- **`standalone.html`** — the same review console with the demo data inlined and
+  an IBM Plex type treatment; no fetch, no server. This is the version published
+  as an artifact for review. `index.html` stays the app that talks to the API.
 
 `demo-cases.json` is generated from `Zynara.Core.Demo` — regenerate it whenever
 the projection or the demo scenarios change.
