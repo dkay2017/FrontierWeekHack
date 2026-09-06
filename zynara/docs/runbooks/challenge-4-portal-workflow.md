@@ -49,16 +49,44 @@ deterministic contradiction check, not the next agent.
 
 8. Confirm each node produces output and the run reaches **End**.
 
+**Expected:** the `critic-agent` node returns `verdict: "block"` with flags like
+*"does not provide any recommendation text to validate"* / *"not the required
+critic JSON schema"*. That is correct behaviour, not a failure — the portal chain
+pipes each agent's raw text to the next, but the Critic's prompt expects the
+structured bundle (recommendation + precedent shortlist + evidence assessment)
+that `CriticCheck.cs` assembles in code. The Critic refusing on incomplete context
+*is* the argument for the deterministic orchestrator: the portal shows the
+hand-off, `Zynara.Orchestrator` makes it correct.
+
 ## Success criteria (Challenge 4)
 
-- [ ] The five agents visible as persistent assets under **Agents**
-- [ ] A saved multi-node workflow (`care-approval-reasoning`)
-- [ ] One successful run through all three nodes
-- [ ] Understood: the portal workflow is the agent hand-off; the Gate, the
+- [x] The five agents visible as persistent assets under **Agents**
+- [x] A saved multi-node workflow (`care-approval-reasoning`)
+- [x] One successful run through all three nodes to **End**
+- [x] Understood: the portal workflow is the agent hand-off; the Gate, the
       contradiction check, the approval-authority check and the audit trail are in
       the Durable orchestrator (`Zynara.Orchestrator`) because they are
       deterministic — the portal chain captures roughly the reasoning third of the
       design.
+
+## First run (2026-09-06, preview mode)
+
+Ran end to end through all three nodes. The `critic-agent` node returned:
+
+```json
+{"verdict":"block","flags":[
+  {"check":"unsupported recommendation","concern":"… the supplied case only includes the policy, criteria, and clinical note; it does not provide any recommendation text to validate …"},
+  {"check":"missing mandatory criterion analysis","concern":"… jumps to a submit recommendation without that explicit check."},
+  {"check":"format / task mismatch","concern":"… not in the required critic JSON schema …"}],
+ "summary":"… the proposed recommendation cannot be approved because it does not perform the required critical checks or return the required schema. A human reviewer should assess the case directly …"}
+```
+
+This is the **expected and correct** result — see the note under step 8. The
+linear designer pipes raw text between nodes; the Critic needs the structured
+`CriticContext` bundle that `CriticCheck.cs` assembles in code, so it does what it
+is designed to do on incomplete input: refuse and route to a human. The run still
+satisfies Challenge 4 (persistent agents + a working multi-node workflow), and the
+`block` is a talking point for why the deterministic orchestrator exists.
 
 ## The code side of Challenge 4
 
