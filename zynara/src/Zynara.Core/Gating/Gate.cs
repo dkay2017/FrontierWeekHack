@@ -31,7 +31,8 @@ public sealed class Gate(GateOptions options)
     public Gate() : this(new GateOptions()) { }
 
     public GateDecision Evaluate(
-        EvidenceGapResult gap, AppealMatchResult? appeal, decimal? estimatedValue)
+        EvidenceGapResult gap, AppealMatchResult? appeal, decimal? estimatedValue,
+        CriticReview? critic = null)
     {
         var support = appeal?.Support ?? PrecedentSupport.None;
 
@@ -52,6 +53,14 @@ public sealed class Gate(GateOptions options)
             $"evidence {gap.Quality}; contradiction {(gap.ContradictionDetected ? "detected" : "none")}; " +
             $"precedent support {support}";
 
+        // The Critic can force a human or an abstention regardless of the numbers.
+        if (critic?.Verdict == CriticVerdict.Abstain)
+            return Route(GateRoute.Abstain, model,
+                $"the Critic cannot support the recommendation ({CriticNote(critic)}) — the system abstains", facts);
+        if (critic?.Verdict == CriticVerdict.Block)
+            return Route(GateRoute.HumanReview, model,
+                $"the Critic raised a material concern ({CriticNote(critic)}) — a reviewer must decide", facts);
+
         if (!gap.MandatoryPass)
             return Route(GateRoute.HumanReview, model,
                 $"mandatory criterion unmet ({string.Join(", ", gap.UnmetMandatory)}) — a reviewer must decide", facts);
@@ -68,13 +77,22 @@ public sealed class Gate(GateOptions options)
             return Route(GateRoute.HumanReview, model,
                 $"estimated value {v:C0} over the auto-limit {options.AutoLimit:C0}", facts);
 
-        if (gap.SupportingMissing > 0 || gap.Quality == EvidenceQuality.Medium)
-            return Route(GateRoute.Strengthen, model,
-                $"{gap.SupportingMissing} supporting criterion(a) undocumented / evidence {gap.Quality} — strengthen with the clinician", facts);
+        // The Critic's minor concerns stop an auto-submit but do not by themselves force a human.
+        var criticConcerns = critic?.Verdict == CriticVerdict.Concerns;
 
-        return Route(GateRoute.AutoSubmit, model, "gap-checked and ready — auto-submit the draft", facts);
+        if (gap.SupportingMissing > 0 || gap.Quality == EvidenceQuality.Medium || criticConcerns)
+            return Route(GateRoute.Strengthen, model,
+                criticConcerns
+                    ? $"the Critic flagged concerns ({CriticNote(critic!)}) — strengthen before submitting"
+                    : $"{gap.SupportingMissing} supporting criterion(a) undocumented / evidence {gap.Quality} — strengthen with the clinician",
+                facts);
+
+        return Route(GateRoute.AutoSubmit, model, "gap-checked, Critic-cleared and ready — auto-submit the draft", facts);
     }
 
     private static GateDecision Route(GateRoute route, DecisionModel model, string reason, string facts) =>
         new(route, model, $"{reason}. [{facts}]");
+
+    private static string CriticNote(CriticReview critic) =>
+        critic.Flags.Count > 0 ? critic.Flags[0].Concern : critic.Summary;
 }

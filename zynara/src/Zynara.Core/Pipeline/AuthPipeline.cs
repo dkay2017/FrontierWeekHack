@@ -8,16 +8,16 @@ namespace Zynara.Core.Pipeline;
 
 /// <summary>
 /// The prior-authorisation sequence as pure code:
-/// <c>needs-auth → evidence gap → appeal match → Gate → draft</c>.
+/// <c>needs-auth → evidence gap → appeal match → Critic → Gate → draft</c>.
 /// The Durable Functions orchestrator (slice 4) runs the same spokes as activities
 /// for retry isolation and replay; this class is the single-process reference used
 /// locally and in tests, and the body the orchestrator's steps delegate to.
-/// (The Critic step — evaluator P0-2 — slots in between appeal match and the Gate.)
 /// </summary>
 public sealed class AuthPipeline(
     NeedsAuthCheck needsAuth,
     EvidenceGapMatch evidenceGap,
     AppealMatch appealMatch,
+    CriticCheck critic,
     Gate gate,
     IZynaraStore store)
 {
@@ -25,18 +25,19 @@ public sealed class AuthPipeline(
     {
         var na = await needsAuth.RunAsync(request, ct);
         if (!na.AuthRequired)
-            return new PipelineResult(request.Id, na, null, null, null, null);
+            return new PipelineResult(request.Id, na, null, null, null, null, null);
 
         var gap = await evidenceGap.RunAsync(request, ct);
         var appeal = await appealMatch.RunAsync(request, gap.Assessment, ct);
-        var decision = gate.Evaluate(gap, appeal, request.EstimatedValue);
+        var review = await critic.RunAsync(request, na, gap, appeal, ct);
+        var decision = gate.Evaluate(gap, appeal, request.EstimatedValue, review);
 
         var criteria = await store.GetCriteriaAsync(
             request.PayerPlan, request.Procedure, request.Region, ct);
 
         var draft = DraftBuilder.Build(request, na, gap, appeal, criteria);
 
-        return new PipelineResult(request.Id, na, gap, appeal, decision, draft);
+        return new PipelineResult(request.Id, na, gap, appeal, review, decision, draft);
     }
 }
 

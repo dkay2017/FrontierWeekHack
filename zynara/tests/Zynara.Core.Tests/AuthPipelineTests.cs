@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Zynara.Agents;
 using Zynara.Core.Abstractions;
+using Zynara.Core.Agents;
 using Zynara.Core.Model;
 using Zynara.Core.Pipeline;
 
@@ -61,8 +62,10 @@ public class AuthPipelineTests
         var result = await BuildPipeline(Seeded()).RunAsync(Sample.Request(note));
 
         Assert.Equal(GateRoute.HumanReview, result.Gate!.Route);
-        Assert.Contains("mandatory criterion unmet", result.Gate.Reason);
-        Assert.NotNull(result.Draft);        // a draft is still assembled for the reviewer
+        Assert.Contains("c1", result.Gate.Reason);           // the unmet mandatory criterion is named
+        Assert.NotNull(result.Critic);
+        Assert.Equal(CriticVerdict.Block, result.Critic!.Verdict);   // the Critic caught it too
+        Assert.NotNull(result.Draft);                        // a draft is still assembled for the reviewer
     }
 
     [Fact]

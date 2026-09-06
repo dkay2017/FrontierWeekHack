@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddScoped<NeedsAuthCheck>();
         services.AddScoped<EvidenceGapMatch>();
         services.AddScoped<AppealMatch>();
+        services.AddScoped<CriticCheck>();
         services.AddScoped<ExpiryMath>();
         services.AddScoped<PolicyDiff>();
         services.AddScoped<AuthPipeline>();

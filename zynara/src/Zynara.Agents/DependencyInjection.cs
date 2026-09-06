@@ -50,6 +50,7 @@ public static class DependencyInjection
         services.AddScoped<INeedsAuthAgent, FoundryNeedsAuthAgent>();
         services.AddScoped<IEvidenceGapAgent, FoundryEvidenceGapAgent>();
         services.AddScoped<IAppealBuilderAgent, FoundryAppealBuilderAgent>();
+        services.AddScoped<ICriticAgent, FoundryCriticAgent>();
         services.AddScoped<IExpiryWatchAgent, FoundryExpiryWatchAgent>();
         services.AddScoped<IPolicyDriftAgent, FoundryPolicyDriftAgent>();
         return services;
@@ -68,6 +69,7 @@ public static class DependencyInjection
         services.AddSingleton<INeedsAuthAgent, StubNeedsAuthAgent>();
         services.AddSingleton<IEvidenceGapAgent, StubEvidenceGapAgent>();
         services.AddSingleton<IAppealBuilderAgent, StubAppealBuilderAgent>();
+        services.AddSingleton<ICriticAgent, StubCriticAgent>();
         services.AddSingleton<IExpiryWatchAgent, StubExpiryWatchAgent>();
         services.AddSingleton<IPolicyDriftAgent, StubPolicyDriftAgent>();
         return services;

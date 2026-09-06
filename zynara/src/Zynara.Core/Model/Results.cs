@@ -119,6 +119,7 @@ public sealed record PipelineResult(
     NeedsAuthResult NeedsAuth,
     EvidenceGapResult? Gap,
     AppealMatchResult? Appeal,
+    CriticReview? Critic,
     GateDecision? Gate,
     SubmissionDraft? Draft)
 {

@@ -136,6 +136,56 @@ public sealed record AppealRecommendation(
     string Text);
 
 // ---------------------------------------------------------------------------
+// critic — the second reasoning agent in the loop (evaluator P0-2). It does not
+// build anything; it tries to *disprove* the recommendation the pipeline has
+// assembled, and it can force the case to a human or to abstention. This is what
+// makes the system multi-agent rather than five specialised prompts: agents
+// reason and challenge one another, deterministic code decides, humans authorise.
+// ---------------------------------------------------------------------------
+public interface ICriticAgent
+{
+    Task<CriticReview> ReviewAsync(CriticContext context, CancellationToken ct = default);
+}
+
+/// <summary>Everything the Critic weighs — the assembled case, before the Gate.</summary>
+public sealed record CriticContext(
+    Request Request,
+    string NeedsAuthNote,
+    EvidenceGapAssessment Evidence,
+    IReadOnlyList<string> UnmetMandatory,
+    IReadOnlyList<PrecedentMatch> Precedents,
+    AppealRecommendation Recommendation);
+
+public enum CriticVerdict
+{
+    /// <summary>No material concern — proceed to the Gate.</summary>
+    Clear,
+
+    /// <summary>Minor concerns — proceed, but the case can no longer auto-submit.</summary>
+    Concerns,
+
+    /// <summary>A material problem — the case must go to a human.</summary>
+    Block,
+
+    /// <summary>The recommendation is not supportable — the system should decline to advise.</summary>
+    Abstain,
+}
+
+/// <summary>One thing the Critic challenged.</summary>
+public sealed record CriticFlag(string Check, string Concern);
+
+/// <summary>
+/// The Critic's verdict on the assembled case. The seven checks (review §11):
+/// every claim supported? · cited clause supports the claim? · precedents genuinely
+/// comparable? · contradictory evidence? · a mandatory criterion missing? ·
+/// recommendation stronger than the evidence allows? · should the system abstain?
+/// </summary>
+public sealed record CriticReview(
+    CriticVerdict Verdict,
+    IReadOnlyList<CriticFlag> Flags,
+    string Summary);
+
+// ---------------------------------------------------------------------------
 // expiry-watch — narrates a cross-system expiry risk. ExpiryMath owns the date
 // arithmetic and the margin; the agent only phrases the alert.
 // ---------------------------------------------------------------------------
