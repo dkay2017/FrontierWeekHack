@@ -5,6 +5,19 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D13 · Document extraction is an upstream assumption, not in scope
+
+**2026-09-06.** The pipeline starts *after* extraction. We assume, done by
+processes outside this design: payer criteria already structured into the
+versioned `Criteria` list (no policy-PDF → criteria ingestion agent — `PolicyDiff`
+only diffs structured versions); the clinical note and denial letter already
+plain text (no OCR / EHR-document parsing); precedent metadata and denial-history
+cohorts already rolled up in Cosmos. What the pipeline owns is *reading* that
+text against the structured criteria and grounding the agents in the corpus via
+Foundry File Search. Documented in TDD §2.1; to be shown on the architecture
+diagram as a shaded "upstream / not built" band.
+Touched: TDD §2.1. **TODO: architecture SVG — add the upstream band.**
+
 ## D12 · Estimated Recoverable Value — the concept, with the working shown
 
 **2026-09-06.** Evaluator P2-1 / §14. "Recovery £" is renamed **Estimated

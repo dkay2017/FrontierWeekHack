@@ -247,6 +247,9 @@ needs the same restyle port.
   2–3 real payer policy files for File Search.
 - P2-3 — dedicated contradiction-detection flow + reviewer UI (the dimension is
   already in the decision model; this is the flow + surface).
+- **Architecture SVG** — add a shaded "upstream / not built" band for the
+  extraction assumptions now written up in TDD §2.1 (D13): policy-PDF → criteria
+  ingestion, clinical-note / denial-letter OCR, precedent + cohort roll-up.
 
 ## Timeline (18 days)
 

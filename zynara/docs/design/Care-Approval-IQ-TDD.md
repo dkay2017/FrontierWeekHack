@@ -65,6 +65,25 @@ free-text clinical note · payer + plan · (post-decision) the denial letter.
 - Clinical decision-making — the system is decision *support*, never medical or
   coverage advice; a person decides
 
+### 2.1 Upstream assumptions — the workflow starts *after* document extraction
+
+The pipeline assumes these are done by processes **outside this design**. They
+are stated here and will be marked on the architecture diagram (a shaded
+"upstream / not built" band).
+
+| Assumption | What we assume is already done | Owner | Status |
+|---|---|---|---|
+| **Payer criteria are structured data** | Each policy PDF has already been turned into the versioned `Criteria` list (`Criterion(Id, Text, Mandatory)`) in Cosmos. There is **no policy-PDF → criteria ingestion agent** — `PolicyDiff` only *diffs* successive structured versions. | Payer-config / clinical-ops curation (human-approved) | not built; production needs an ingestion tool |
+| **The clinical note is text** | `Request.ClinicalNote` arrives as plain text. Any OCR / PDF / EHR-document parsing has happened upstream. | Intake / document service | not built; `string` in the demo |
+| **The denial letter is text** | Same — the letter body is plain text; `AppealMatch` then scans it deterministically for reason codes. | Intake / document service | not built; `string` in the demo |
+| **Precedent metadata is structured** | Past cases already have `Precedent` records (codes, clauses, outcome, fact-pattern narrative) in Cosmos + the narratives in Blob/File Search. | Case-history ETL | not built; seeded in `DemoWorld` |
+| **Denial-history cohorts are pre-aggregated** | `DenialCohort` counts (denied / appealed / won / not-appealed / mean claim value) are rolled up from the case record; the Estimated Recoverable Value consumes them, it does not compute them from raw claims. | Reporting roll-up | not built; seeded in `DemoWorld` |
+
+What the pipeline **does** own: reading that already-extracted text against the
+already-structured criteria (`evidence-gap`), matching precedents (`AppealMatch` +
+`appeal-builder`), and grounding the agents in the policy/precedent corpus via
+**Foundry File Search**.
+
 ## 3. Solution Overview
 
 Care Approval IQ is a multi-agent system on:
