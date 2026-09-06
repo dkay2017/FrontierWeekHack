@@ -30,6 +30,7 @@ public class CaseViewTests
     [InlineData("demo-strengthen", CaseStatus.NeedsStrengthening)]
     [InlineData("demo-review-mandatory", CaseStatus.NeedsHumanReview)]
     [InlineData("demo-appeal", CaseStatus.NeedsHumanReview)]
+    [InlineData("demo-appeal-critic", CaseStatus.NeedsHumanReview)]
     [InlineData("demo-abstain", CaseStatus.SystemAbstained)]
     public async Task Demo_scenarios_reach_their_scripted_status(string id, CaseStatus expected)
     {
@@ -61,6 +62,26 @@ public class CaseViewTests
         Assert.Contains(view.Precedents, p => p is { WonOnAppeal: true, DroveRecommendation: true });
         Assert.True(view.Precedents[0].Similarity > 0);
         Assert.NotNull(view.AppealDraft);
+    }
+
+    [Fact]
+    public async Task Critic_challenges_an_over_reaching_appeal_and_steers_to_request_evidence()
+    {
+        var record = await BuildService().RunAsync(
+            DemoCatalog.All.Single(s => s.Id == "demo-appeal-critic").Request);
+        var view = record.View;
+
+        // the appeal-builder still found winning precedents and drafted the appeal…
+        Assert.NotNull(view.AppealDraft);
+        Assert.Contains(view.Precedents, p => p is { WonOnAppeal: true, DroveRecommendation: true });
+
+        // …but the Critic flags it and the reviewer is steered to ask for evidence, not file
+        Assert.NotNull(view.Critic);
+        Assert.Equal(Zynara.Core.Agents.CriticVerdict.Concerns, view.Critic!.Verdict);
+        Assert.NotEmpty(view.Critic.Flags);
+        Assert.Contains("Critic challenged", view.Headline);
+        Assert.Contains(view.Controls, c => c is { Action: "request-evidence", Primary: true });
+        Assert.DoesNotContain(view.Controls, c => c is { Action: "approve-send", Primary: true });
     }
 
     [Fact]

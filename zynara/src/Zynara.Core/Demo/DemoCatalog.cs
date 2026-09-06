@@ -83,6 +83,25 @@ public static class DemoCatalog
             }),
 
         new DemoScenario(
+            "demo-appeal-critic",
+            "Denied — the Critic challenges an over-reaching appeal",
+            "Comparable cases won, but only one of three criteria is evidenced → the Critic flags that " +
+            "the appeal recommendation is firmer than the record supports; the reviewer is steered to " +
+            "request evidence, not file.",
+            new Request
+            {
+                Id = "demo-appeal-critic",
+                Procedure = DemoWorld.Procedure,
+                PayerPlan = DemoWorld.Payer,
+                Region = Region.UK,
+                EstimatedValue = 350m,
+                ClinicalNote =
+                    "Physiotherapy completed for six weeks. MRI of the lumbar spine requested.",
+                DenialLetter =
+                    "Prior authorisation denied under code MN-01: conservative treatment not evidenced.",
+            }),
+
+        new DemoScenario(
             "demo-abstain",
             "Thin record, no precedent — the system abstains",
             "Rarer procedure with no comparable history and low-quality evidence → the system declines to advise.",

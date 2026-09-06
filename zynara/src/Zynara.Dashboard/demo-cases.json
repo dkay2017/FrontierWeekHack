@@ -21,6 +21,11 @@
       "expectation": "Denial on record; two comparable cases won on appeal \u2192 precedent-backed appeal, human-approved."
     },
     {
+      "id": "demo-appeal-critic",
+      "label": "Denied \u2014 the Critic challenges an over-reaching appeal",
+      "expectation": "Comparable cases won, but only one of three criteria is evidenced \u2192 the Critic flags that the appeal recommendation is firmer than the record supports; the reviewer is steered to request evidence, not file."
+    },
+    {
       "id": "demo-abstain",
       "label": "Thin record, no precedent \u2014 the system abstains",
       "expectation": "Rarer procedure with no comparable history and low-quality evidence \u2192 the system declines to advise."
@@ -459,13 +464,8 @@
       "draftBody": "Prior-authorisation request \u2014 MRI lumbar spine (CCSD-72148)\nPayer / plan: Bupa/Comprehensive  \u00B7  Region: UK  \u00B7  Policy: bupa-mri-ls-v3\n\nMandatory criteria: UNMET \u2014 c1\nSupporting criteria documented (2/2):\n  - radiculopathy documented on examination\n  - imaging changes management\n\nClinical summary:\n  Radiculopathy documented on examination. Imaging changes management and would determine the surgical approach.\n\nOutstanding for the reviewer: 1 undocumented.\n\nAppeal analysis: 1 criterion(a) undocumented \u2014 close the gaps with the clinician before submitting. (precedent support: Strong).",
       "controls": [
         {
-          "action": "approve-send",
-          "label": "Approve \u0026 send",
-          "primary": true
-        },
-        {
-          "action": "reject",
-          "label": "Reject",
+          "action": "request-evidence",
+          "label": "Request more evidence",
           "primary": true
         },
         {
@@ -474,9 +474,14 @@
           "primary": false
         },
         {
-          "action": "request-evidence",
-          "label": "Request more evidence",
+          "action": "approve-send",
+          "label": "Approve \u0026 send",
           "primary": false
+        },
+        {
+          "action": "reject",
+          "label": "Reject",
+          "primary": true
         }
       ]
     },
@@ -638,6 +643,157 @@
           "action": "request-evidence",
           "label": "Request more evidence",
           "primary": false
+        }
+      ]
+    },
+    {
+      "requestId": "demo-appeal-critic",
+      "procedure": "MRI lumbar spine",
+      "payerPlan": "Bupa/Comprehensive",
+      "region": "UK",
+      "status": "NeedsHumanReview",
+      "headline": "The Critic challenged the recommendation \u2014 the recommendation is firmer than Low-quality evidence supports. A reviewer decides.",
+      "aiAction": "Assembled the case and routed it to a human \u2014 it did not act.",
+      "auth": {
+        "authRequired": true,
+        "requiredCode": "CCSD-72148",
+        "policyRef": "bupa-mri-ls-v3",
+        "ambiguous": false,
+        "note": "Bupa/Comprehensive requires prior authorisation for MRI lumbar spine (code CCSD-72148, bupa-mri-ls-v3)."
+      },
+      "criteria": [
+        {
+          "id": "c1",
+          "text": "physiotherapy completed for six weeks",
+          "mandatory": true,
+          "status": "Documented",
+          "evidenceStatement": "Physiotherapy completed for six weeks",
+          "source": "clinical note",
+          "policyRef": "bupa-mri-ls-v3",
+          "policyVersion": "v3"
+        },
+        {
+          "id": "c2",
+          "text": "radiculopathy documented on examination",
+          "mandatory": false,
+          "status": "Missing",
+          "source": "not found in the clinical note",
+          "policyRef": "bupa-mri-ls-v3",
+          "policyVersion": "v3"
+        },
+        {
+          "id": "c3",
+          "text": "imaging changes management",
+          "mandatory": false,
+          "status": "Missing",
+          "source": "not found in the clinical note",
+          "policyRef": "bupa-mri-ls-v3",
+          "policyVersion": "v3"
+        }
+      ],
+      "precedents": [
+        {
+          "caseId": "P-1",
+          "similarity": 0.514,
+          "matchedFacts": [
+            "completed",
+            "conservative",
+            "denied",
+            "evidenced",
+            "physiotherapy",
+            "treatment",
+            "under",
+            "weeks"
+          ],
+          "initiallyDenied": true,
+          "wonOnAppeal": true,
+          "clausesCited": [
+            "2.1"
+          ],
+          "decidedOn": "2026-03-01",
+          "narrative": "Patient completed eight weeks of physiotherapy with radiculopathy documented on examination and imaging expected to change management. Initially denied under MN-01 (conservative treatment not evidenced); authorised on appeal under clause 2.1.",
+          "droveRecommendation": true
+        },
+        {
+          "caseId": "P-2",
+          "similarity": 0.4,
+          "matchedFacts": [
+            "denied",
+            "physiotherapy",
+            "requested",
+            "weeks"
+          ],
+          "initiallyDenied": true,
+          "wonOnAppeal": true,
+          "clausesCited": [
+            "2.1"
+          ],
+          "decidedOn": "2026-04-01",
+          "narrative": "Six weeks of physiotherapy, radiculopathy on examination, MRI requested to plan surgical management. Denied MN-01, overturned on appeal citing clause 2.1 and the documented neurological deficit.",
+          "droveRecommendation": true
+        },
+        {
+          "caseId": "P-9",
+          "similarity": 0.167,
+          "matchedFacts": [
+            "denied",
+            "physiotherapy",
+            "treatment"
+          ],
+          "initiallyDenied": true,
+          "wonOnAppeal": false,
+          "clausesCited": [],
+          "decidedOn": "2026-02-01",
+          "narrative": "Physiotherapy and radiculopathy noted but imaging not shown to change management. Denied MN-02; appeal unsuccessful \u2014 the record did not establish that the scan would alter the treatment plan.",
+          "droveRecommendation": false
+        }
+      ],
+      "critic": {
+        "verdict": "Concerns",
+        "flags": [
+          {
+            "check": "recommendation-strength",
+            "concern": "the recommendation is firmer than Low-quality evidence supports"
+          }
+        ],
+        "summary": "1 concern(s) \u2014 proceed with a human, do not auto-submit."
+      },
+      "conflicts": [],
+      "confidence": "Low",
+      "gate": {
+        "route": "HumanReview",
+        "reason": "an appeal always goes to a reviewer before it is filed. [mandatory all met; supporting 0 documented / 0 partial / 2 missing; evidence Low; contradiction none; precedent support Strong]",
+        "mandatoryPass": true,
+        "unmetMandatory": [],
+        "supportingDocumented": 0,
+        "supportingPartial": 0,
+        "supportingMissing": 2,
+        "evidenceQuality": "Low",
+        "contradictionDetected": false,
+        "precedentSupport": "Strong"
+      },
+      "draftBody": "Prior-authorisation request \u2014 MRI lumbar spine (CCSD-72148)\nPayer / plan: Bupa/Comprehensive  \u00B7  Region: UK  \u00B7  Policy: bupa-mri-ls-v3\n\nMandatory criteria: all met\nSupporting criteria documented (0/2):\n  - physiotherapy completed for six weeks\n\nClinical summary:\n  Physiotherapy completed for six weeks. MRI of the lumbar spine requested.\n\nOutstanding for the reviewer: 2 undocumented.\n\nAppeal analysis: 2 comparable case(s) won on appeal (win rate 67 %). Recommend appeal, citing the precedents below. (precedent support: Strong).",
+      "appealDraft": "Re: appeal of the denied prior-authorisation request for MRI lumbar spine.\n\nWe respectfully appeal this denial. The clinical record meets the plan\u0027s published criteria for this procedure, and the payer\u0027s own recorded outcomes support authorisation:\n  - Case P-1 (2026-03-01, 0.51 similarity): a comparable fact pattern, initially denied then authorised on appeal under 2.1.\n  - Case P-2 (2026-04-01, 0.40 similarity): a comparable fact pattern, initially denied then authorised on appeal under 2.1.\n\nWe ask that the authorisation be granted. [Reviewer to add case-specific detail.]",
+      "controls": [
+        {
+          "action": "request-evidence",
+          "label": "Request more evidence",
+          "primary": true
+        },
+        {
+          "action": "edit",
+          "label": "Edit the draft",
+          "primary": false
+        },
+        {
+          "action": "approve-send",
+          "label": "Approve \u0026 send",
+          "primary": false
+        },
+        {
+          "action": "reject",
+          "label": "Reject",
+          "primary": true
         }
       ]
     },

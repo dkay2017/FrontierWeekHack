@@ -4,8 +4,8 @@
 current at every checkpoint and **commit + push** — uncommitted work is lost on a
 Codespace rebuild.
 
-_Last updated: 2026-09-06 (session 6 — P0 + slice 4 + P1-1/P1-2 reviewer
-dashboard). Deadline: **2026-09-23 midnight US**.
+_Last updated: 2026-09-06 (session 6 — P0 + slice 4 + P1-1/P1-2 dashboard +
+P2-5 demo script). Deadline: **2026-09-23 midnight US**.
 Submission: 3-min video (required) + repo + architecture doc + TDD + dashboard UI._
 
 ## What this is
@@ -179,26 +179,39 @@ P0-2 (Critic agent) → P0-1 (reframe docs) → P0-4 (eval suite). **All P0 done
   projection logic is covered by `CaseService`/`CaseViewBuilder` tests, HTTP layer
   is thin. Same posture as the orchestrator.
 
+## Done — session 6 tail (2026-09-06) — P2-5
+
+- **`docs/runbooks/demo-script.md`** — 3-minute beat sheet on the review's golden
+  path, WOW = the Critic overturning a plausible-looking appeal.
+- **6th demo scenario `demo-appeal-critic`** — winning precedents + appeal draft,
+  but only 1/3 criteria evidenced → Critic `Concerns` → HumanReview.
+- **`CaseViewBuilder.Controls`** now weighs the Critic verdict + evidence quality:
+  Critic uneasy / Low evidence → *"Request more evidence"* is primary, *"Approve
+  & send"* de-emphasised. Headline leads with the Critic's concern. (D11)
+- `Zynara.Core.Tests` +2. **69 tests green.**
+
 ## Next — remaining P1 / P2 (resume point)
 
 > Full re-read of the COMPLETE evaluator review (text + 4 flowcharts) logged in
-> `docs/review/EVALUATOR-REVIEW-RESPONSE.md` — 7 open notes; #1 (demo needs a
-> visible Critic catch) and #3 (policy-citation + appeal-verdict eval metrics)
-> are the substantive ones.
+> `docs/review/EVALUATOR-REVIEW-RESPONSE.md` — 7 open notes; #3 (policy-citation +
+> appeal-verdict eval metrics) is the main one still open (#1 done via
+> `demo-appeal-critic`).
 
-1. **`docs/runbooks/demo-script.md`** — denial → evidence case → Critic blocks an
-   unsupported claim → correction → Gate → human approve → send → audit trail.
-   Needs a **6th demo scenario** where the Critic catches a plausible-looking
-   appeal (precedents not genuinely comparable / draft overclaims). (P2-5)
-2. **`Zynara.ApiProxy` + dashboard** — measured "Estimated Recoverable Value"
-   with the formula + confidence; pipeline instrumentation for before/after.
-   (P2-1, P2-2)
-3. **`config/profiles/`** — "Policy + Regulatory Profile" model + control rename.
-   (P1-5)
-4. **`Zynara.Core` audit model + `Zynara.ApiProxy` Entra roles + Cosmos
-   `caseAudit`** — RBAC, approval authority, audit trail. (P1-3)
-5. **`infra/` Bicep** — enforce the reasoning-agent ↔ payer-connectivity identity
+1. **"Estimated Recoverable Value"** — `Zynara.Core` model (denied count ·
+   not-appealed · comparable win rate · avg recoverable value · estimate ·
+   confidence · the formula) + a dashboard tile + pipeline instrumentation for a
+   before/after table. (P2-1, P2-2)
+2. **`config/profiles/`** — "Policy + Regulatory Profile" model + control rename
+   (keep it low-key — guardrail §18). (P1-5)
+3. **`Zynara.Core` audit model + `Zynara.ApiProxy` Entra roles + Cosmos
+   `caseAudit`** — RBAC, approval authority tiered by risk, audit trail incl.
+   agent name + version. (P1-3, + review notes #4/#5)
+4. **`infra/` Bicep** — enforce the reasoning-agent ↔ payer-connectivity identity
    boundary. (P1-4)
+5. **P2-3** — claims extraction + intra-evidence contradiction check + reviewer
+   surface (review note #2).
+6. **Eval** — add policy-citation accuracy + appeal-verdict agreement; grow the
+   dataset 8 → ~20 (review note #3).
 
 ## Pending (infra / data — interleave as needed)
 

@@ -5,6 +5,26 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D11 · Demo golden path + a visible Critic "catch"
+
+**2026-09-06.** Evaluator P2-5 / §15. `docs/runbooks/demo-script.md` — a 3-minute
+beat sheet built around the review's golden path, ending on the memorable line
+("…challenged its own recommendation…"). Needed a scenario the earlier five
+lacked: the Critic overturning a *plausible-looking* recommendation.
+
+- New **`demo-appeal-critic`** scenario: a denial with two comparable cases that
+  won on appeal (appeal-builder drafts and recommends filing), but only one of
+  three criteria is evidenced → Critic `Concerns` (*recommendation firmer than
+  Low-quality evidence supports*) → Gate `HumanReview`.
+- `CaseViewBuilder.Controls` now weighs the **Critic verdict + evidence quality**:
+  when the Critic is uneasy or evidence is Low, *"Request more evidence"* becomes
+  the primary action and *"Approve & send"* is de-emphasised — the reviewer is
+  steered to fix the case, not sign off on it.
+- Headline leads with the Critic's concern when it raised one.
+
+Touched: `Zynara.Core/Demo/DemoCatalog.cs`, `Zynara.Core/View/CaseViewBuilder.cs`,
+`demo-cases.json`, `Zynara.Core.Tests` (+2), `docs/runbooks/demo-script.md`.
+
 ## D10 · Reviewer read model + a self-contained experience API
 
 **2026-09-06.** Evaluator P1-1 / P1-2. A pure projection —

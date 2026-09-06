@@ -11,14 +11,10 @@ supersedes the earlier `..._Review.docx` which had mangled tables).
 The scored findings and the plan below are unchanged. The complete text and the
 four flow diagrams surfaced these still-open points:
 
-1. **The demo has no visible Critic "catch"** (§15 + golden-path flowchart). The
-   WOW moment the review scripts is the Critic challenging a *plausible-looking*
-   recommendation and forcing a correction / evidence request. Our five demo
-   scenarios don't show this — `demo-review-mandatory` has a Critic `Block` but
-   only on a trivial "mandatory missing". **Add a 6th scenario:** an
-   appeal-worthy-looking denial where the shortlisted precedents are **not
-   genuinely comparable** (low similarity) or the draft overclaims → Critic
-   `Concerns`/`Block` → "request evidence". Build with **P2-5**.
+1. ~~The demo has no visible Critic "catch"~~ **DONE (D11)** — `demo-appeal-critic`:
+   winning precedents + a drafted appeal, but only 1/3 criteria evidenced → Critic
+   `Concerns` → HumanReview, with *"Request more evidence"* as the primary control.
+   `docs/runbooks/demo-script.md` builds the 3-minute demo around it.
 
 2. **Intra-evidence contradiction is not covered.** P0-3 gave us "evidence
    contradicts a *criterion*". The review's flowchart is claims-extraction →
@@ -82,11 +78,13 @@ Nothing here overturns a decision. Items 1 and 3 are the substantive ones.
 
 - **P1-1 + P1-2 done** (D10) — `Zynara.Core.View.CaseView` evidence-first
   projection + precedent panel; `Zynara.ApiProxy` read API; `Zynara.Dashboard`
-  static review workspace; `tools/Zynara.DemoDump`. 67 tests green.
+  static review workspace; `tools/Zynara.DemoDump`.
+- **P2-5 done** (D11) — `docs/runbooks/demo-script.md` + the `demo-appeal-critic`
+  scenario (visible Critic catch). 69 tests green.
 
-**Remaining:** P1-3, P1-4, P1-5, P2-1, P2-2, P2-3, P2-5 (P2-4 = D6). Order:
-P2-5 demo script → P2-1/P2-2 measured value → P1-5 profile → P1-3 RBAC/audit →
-P1-4 infra isolation. P2-3 (contradiction flow/UI) folds into the dashboard.
+**Remaining:** P1-3, P1-4, P1-5, P2-1, P2-2, P2-3. Order: P2-1/P2-2 measured
+value → P1-5 profile → P1-3 RBAC/audit → P1-4 infra isolation → P2-3
+(claims extraction + intra-evidence contradiction).
 
 ---
 

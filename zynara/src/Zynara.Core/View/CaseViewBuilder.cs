@@ -44,7 +44,7 @@ public static class CaseViewBuilder
             Gate: gate,
             DraftBody: result.Draft?.Body,
             AppealDraft: result.Appeal?.Recommendation.AppealDraft,
-            Controls: Controls(status));
+            Controls: Controls(status, result));
     }
 
     private static CaseStatus ToStatus(PipelineResult r)
@@ -143,6 +143,9 @@ public static class CaseViewBuilder
             "need more evidence before this is ready.",
         CaseStatus.NeedsHumanReview when conflicts.Count > 0 =>
             $"A reviewer must decide: {conflicts[0]}",
+        CaseStatus.NeedsHumanReview when r.Critic?.Verdict == CriticVerdict.Concerns
+            && r.Critic.Flags.Count > 0 =>
+            $"The Critic challenged the recommendation — {r.Critic.Flags[0].Concern}. A reviewer decides.",
         CaseStatus.NeedsHumanReview when r.Appeal?.Recommendation.AppealDraft is { Length: > 0 } =>
             $"This is an appeal — a reviewer signs off before it is filed. " +
             $"{r.Appeal!.Shortlist.Count(m => m.Precedent.AppealOutcome == AppealOutcome.AppealWon)} " +
@@ -180,39 +183,50 @@ public static class CaseViewBuilder
         return ConfidenceLevel.Medium;
     }
 
-    private static IReadOnlyList<HumanControl> Controls(CaseStatus status) => status switch
+    private static IReadOnlyList<HumanControl> Controls(CaseStatus status, PipelineResult r)
     {
-        CaseStatus.NotRequired => new HumanControl[]
+        var edit = new HumanControl("edit", "Edit the draft", false);
+        var reject = new HumanControl("reject", "Reject", false);
+        var requestEvidence = new HumanControl("request-evidence", "Request more evidence", false);
+        var approve = new HumanControl("approve-send", "Approve & send", false);
+
+        // The Critic's challenge (or Low-quality evidence) steers the reviewer toward
+        // asking for more evidence rather than signing off.
+        var criticUneasy = r.Critic?.Verdict is CriticVerdict.Concerns or CriticVerdict.Block;
+        var thinEvidence = (r.Gap?.Quality ?? EvidenceQuality.Low) == EvidenceQuality.Low;
+
+        return status switch
         {
-            new("acknowledge", "Acknowledge", true),
-        },
-        CaseStatus.ReadyToSubmit => new HumanControl[]
-        {
-            new("approve-send", "Approve & send", true),
-            new("edit", "Edit the draft", false),
-            new("request-evidence", "Request more evidence", false),
-            new("reject", "Reject", false),
-        },
-        CaseStatus.NeedsStrengthening => new HumanControl[]
-        {
-            new("request-evidence", "Request more evidence", true),
-            new("edit", "Edit the draft", false),
-            new("approve-send", "Approve & send anyway", false),
-            new("reject", "Reject", false),
-        },
-        CaseStatus.NeedsHumanReview => new HumanControl[]
-        {
-            new("approve-send", "Approve & send", true),
-            new("reject", "Reject", true),
-            new("edit", "Edit the draft", false),
-            new("request-evidence", "Request more evidence", false),
-        },
-        CaseStatus.SystemAbstained => new HumanControl[]
-        {
-            new("request-evidence", "Request more evidence", true),
-            new("reject", "Reject", true),
-            new("edit", "Edit and decide manually", false),
-        },
-        _ => Array.Empty<HumanControl>(),
-    };
+            CaseStatus.NotRequired => new[] { new HumanControl("acknowledge", "Acknowledge", true) },
+
+            CaseStatus.ReadyToSubmit => new[]
+            {
+                approve with { Primary = true }, edit, requestEvidence, reject,
+            },
+
+            CaseStatus.NeedsStrengthening => new[]
+            {
+                requestEvidence with { Primary = true }, edit,
+                approve with { Label = "Approve & send anyway" }, reject,
+            },
+
+            CaseStatus.NeedsHumanReview when criticUneasy || thinEvidence => new[]
+            {
+                requestEvidence with { Primary = true }, edit, approve, reject with { Primary = true },
+            },
+
+            CaseStatus.NeedsHumanReview => new[]
+            {
+                approve with { Primary = true }, reject with { Primary = true }, edit, requestEvidence,
+            },
+
+            CaseStatus.SystemAbstained => new[]
+            {
+                requestEvidence with { Primary = true }, reject with { Primary = true },
+                edit with { Label = "Edit and decide manually" },
+            },
+
+            _ => Array.Empty<HumanControl>(),
+        };
+    }
 }
