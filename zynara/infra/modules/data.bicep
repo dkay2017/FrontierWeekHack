@@ -26,6 +26,7 @@ var containers = [
   { name: 'policyVersions', partitionKey: '/policyRef' }
   { name: 'denialCohorts', partitionKey: '/payerPlan' }  // Estimated Recoverable Value inputs (D12)
   { name: 'cases', partitionKey: '/requestId' }          // assembled case + append-only audit trail (D15)
+  { name: 'submissions', partitionKey: '/requestId' }    // one outbound submission per approved case (S-1)
   { name: 'authRecords', partitionKey: '/requestId' }
   { name: 'earlyWarnings', partitionKey: '/id' }
   { name: 'agentCalls', partitionKey: '/day' }           // cost meter

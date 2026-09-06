@@ -32,6 +32,7 @@ public static class DependencyInjection
 
         services.AddSingleton<IZynaraStore, CosmosZynaraStore>();
         services.AddSingleton<ICaseRepository, CosmosCaseRepository>();
+        services.AddSingleton<ISubmissionStore, CosmosSubmissionStore>();
         services.AddScoped<IAgentCallRecorder, CosmosAgentCallRecorder>();
 
         return services;

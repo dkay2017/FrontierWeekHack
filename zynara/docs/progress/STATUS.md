@@ -311,7 +311,7 @@ the user chose: **de-risk spike → `Zynara.Data` → grow eval set → video la
 
 | # | Item | Size | Note |
 |---|---|---|---|
-| S-1 | **`Zynara.Submission`** — the outbound adapter project | M | `azure.yaml` + `infra/` already reference `src/Zynara.Submission`; project does not exist. The "sole outbound path". A stub adapter (log + persist `submissions` doc, no real payer call) is enough for the demo. |
+| ~~S-1~~ | **`Zynara.Submission`** — the outbound adapter — ✅ **done (D27)** | — | Function app on `id-submission` (KV secret + Cosmos write, no Foundry). `POST /api/submit/{id}` sends only a reviewer-approved case, once (idempotent). `SubmissionService` + `CosmosSubmissionStore` + `submissions` container. Stub payer gateway by default; `KeyVaultPayerGateway` reads the credential to prove the boundary. **108 tests.** |
 | ~~S-2~~ | **Challenge 2 — agent-keyed traces** — ✅ **done (D26)** | — | `ZynaraTelemetry` ActivitySource: `pipeline.run → spoke.* → invoke_agent * → chat *`. Azure Monitor OTel exporter wired in both Function hosts (gated on `APPLICATIONINSIGHTS_CONNECTION_STRING`). `TelemetryTests` assert the tree. **102 tests.** Visual check at deploy (S-4). |
 | S-3 | **Challenge 4 — Foundry portal workflow** | S | 2–3 node portal workflow (manual, in the portal, like the vector store). Agents-as-assets half is done via the provisioner. |
 | S-4 | **Challenge 0 — `azd provision` / deploy** | M | Never run against a live subscription. Needs a real RG + the `Zynara.DbDeploy` hook + `Zynara.Submission` to build. |
@@ -320,6 +320,7 @@ the user chose: **de-risk spike → `Zynara.Data` → grow eval set → video la
 | S-7 | **Pitch + 5-point doc** | M | Submission artifact. |
 | S-8 | **Video** | M | **Last**, per the user. |
 | S-9 | 2–3 real payer policy files for File Search | S | Corpus is synthetic Bupa today. |
+| S-10 | **Challenge 3 — Foundry *portal* evaluation** | S | `eval/Zynara.Eval` (CI, 20 cases, hard-gated) covers the code half. The portal half is missing: an `eval_portal.jsonl` dataset for `evidence-gap-agent` + a runbook + the manual `ai.azure.com → Evaluations → Create` run (Coherence/Fluency), as done for TireForge (`tireforge/docs/runbooks/challenge-3-portal-evaluation.md`). |
 
 ## Timeline (18 days)
 

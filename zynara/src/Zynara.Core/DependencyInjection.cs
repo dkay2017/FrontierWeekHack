@@ -5,6 +5,7 @@ using Zynara.Core.Gating;
 using Zynara.Core.Impact;
 using Zynara.Core.Pipeline;
 using Zynara.Core.Recovery;
+using Zynara.Core.Submission;
 using Zynara.Core.View;
 
 namespace Zynara.Core;
@@ -42,6 +43,12 @@ public static class DependencyInjection
 
         // Before / after benchmark (P2-2) — measured pipeline metrics vs a labelled estimate.
         services.AddScoped<BenchmarkService>();
+
+        // Submission Adapter (the sole outbound path). In-memory store + stub payer
+        // gateway by default; Zynara.Data + Zynara.Submission override both.
+        services.TryAddSingleton<ISubmissionStore, InMemorySubmissionStore>();
+        services.TryAddSingleton<IPayerGateway, StubPayerGateway>();
+        services.AddScoped<SubmissionService>();
 
         return services;
     }

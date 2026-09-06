@@ -18,8 +18,8 @@ services:
     language: dotnet
     host: function
   submission:
-    # The Submission Adapter — the sole outbound path to a payer (not yet built;
-    # the infra provisions its identity + subnet so the boundary is real from day one).
+    # The Submission Adapter — the sole outbound path to a payer. Runs under
+    # id-submission: Key Vault Secrets User + Cosmos write, and no Foundry.
     project: src/Zynara.Submission
     language: dotnet
     host: function

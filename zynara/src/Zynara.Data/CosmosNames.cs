@@ -14,6 +14,7 @@ public static class CosmosNames
 
     // operational state
     public const string Cases = "cases";                     // pk /requestId — the assembled case + its audit trail (D15)
+    public const string Submissions = "submissions";         // pk /requestId — one outbound submission per approved case
     public const string AuthRecords = "authRecords";         // pk /requestId
     public const string EarlyWarnings = "earlyWarnings";     // pk /id
     public const string AgentCalls = "agentCalls";           // pk /day — the cost meter
@@ -26,6 +27,7 @@ public static class CosmosNames
         (PolicyVersions, "/policyRef"),
         (DenialCohorts, "/payerPlan"),
         (Cases, "/requestId"),
+        (Submissions, "/requestId"),
         (AuthRecords, "/requestId"),
         (EarlyWarnings, "/id"),
         (AgentCalls, "/day"),

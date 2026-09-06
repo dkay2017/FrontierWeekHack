@@ -57,12 +57,30 @@ public class CosmosJsonTests
     }
 
     [Fact]
+    public void Submission_record_round_trips_through_a_cosmos_document()
+    {
+        var original = new SubmissionRecord(
+            "req-77", "Bupa/Comprehensive", "MRI lumbar spine", "CCSD-72148",
+            SubmissionStatus.Submitted, "PAYER-req-77",
+            DateTimeOffset.Parse("2026-09-06T10:00:00Z"), "reviewer@zynara", "payer-api:simulated",
+            "intake accepted");
+
+        var doc = CosmosJson.WithId(original, original.RequestId);
+        Assert.Equal("req-77", (string?)doc["id"]);
+
+        var back = CosmosJson.To<SubmissionRecord>(JsonNode.Parse(doc.ToJsonString())!.AsObject())!;
+
+        Assert.Equal(original, back);
+    }
+
+    [Fact]
     public void Container_names_match_the_bicep_list()
     {
-        // 9 containers, each with a partition-key path.
-        Assert.Equal(9, CosmosNames.All.Count);
+        // 10 containers, each with a partition-key path.
+        Assert.Equal(10, CosmosNames.All.Count);
         Assert.All(CosmosNames.All, c => Assert.StartsWith("/", c.PartitionKey));
         Assert.Contains(CosmosNames.All, c => c.Name == CosmosNames.Cases && c.PartitionKey == "/requestId");
+        Assert.Contains(CosmosNames.All, c => c.Name == CosmosNames.Submissions && c.PartitionKey == "/requestId");
     }
 
     [Fact]

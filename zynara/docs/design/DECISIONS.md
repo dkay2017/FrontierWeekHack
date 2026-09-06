@@ -5,6 +5,30 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D27 · `Zynara.Submission` — the outbound adapter (S-1)
+
+**2026-09-06.** The infra + `azure.yaml` referenced `src/Zynara.Submission` but
+the project did not exist. Built it as the sole outbound path:
+
+- `Zynara.Core`: `SubmissionRecord` / `SubmissionStatus`, `ISubmissionStore`
+  (+ in-memory), `IPayerGateway` + `StubPayerGateway` (deterministic ack), and
+  `SubmissionService.SubmitAsync` — enforces the two safety rules: **only a case
+  a reviewer marked `approve-send` is sent**, and a **second call is idempotent**
+  (returns the existing record, never re-sends). Emits a `submission.send` span.
+- `Zynara.Data`: `CosmosSubmissionStore`, `submissions` container (pk
+  `/requestId`) added to `CosmosNames` + `infra/modules/data.bicep`.
+- `Zynara.Submission` (Function app): `POST /api/submit/{requestId}` (function
+  auth), `GET /api/submissions[/{id}]`. `KeyVaultPayerGateway` reads
+  `payer-integration-credential` from Key Vault to prove the identity boundary,
+  then acknowledges (the real X12/FHIR call is out of scope, marked in code).
+  Wired for Cosmos + Key Vault + the OTel exporter on config; stub gateway +
+  in-memory stores otherwise. No `PROJECT_ENDPOINT` — this app never calls a model.
+
+`SubmissionServiceTests` (5) + a Cosmos round-trip. **108 tests green.**
+Touched: `Zynara.Core/{Model/SubmissionRecord,Abstractions/ISubmissionStore,
+Submission/*}.cs`, `Zynara.Core/DependencyInjection.cs`, `Zynara.Data/*`,
+new `src/Zynara.Submission/*`, `Zynara.sln`, `azure.yaml`, `infra/modules/data.bicep`.
+
 ## D26 · Challenge 2 — agent-keyed traces (`ZynaraTelemetry` ActivitySource)
 
 **2026-09-06.** Designed in the TDD (§10) but not built. Added
