@@ -887,5 +887,48 @@
         }
       ]
     }
-  ]
+  ],
+  "recovery": {
+    "total": {
+      "scope": "all scopes (2)",
+      "denied": 58,
+      "notAppealed": 21,
+      "appealed": 32,
+      "appealsWon": 21,
+      "comparableWinRate": 0.65625,
+      "meanClaimValue": 560,
+      "estimatedRecoverableValue": 7164,
+      "confidence": "High",
+      "formula": "21 not appealed \u00D7 66% blended win rate \u00D7 \u00A3560 mean claim value = \u00A37,164",
+      "window": "denials on record, Sep 2025 \u2013 Sep 2026"
+    },
+    "byScope": [
+      {
+        "scope": "Bupa/Comprehensive \u00B7 MRI lumbar spine \u00B7 UK",
+        "denied": 46,
+        "notAppealed": 15,
+        "appealed": 27,
+        "appealsWon": 19,
+        "comparableWinRate": 0.7037037037037037,
+        "meanClaimValue": 540,
+        "estimatedRecoverableValue": 5700,
+        "confidence": "High",
+        "formula": "15 not appealed \u00D7 70% comparable win rate \u00D7 \u00A3540 mean claim value = \u00A35,700",
+        "window": "denials on record, Sep 2025 \u2013 Sep 2026"
+      },
+      {
+        "scope": "Bupa/Comprehensive \u00B7 MR arthrogram shoulder \u00B7 UK",
+        "denied": 12,
+        "notAppealed": 6,
+        "appealed": 5,
+        "appealsWon": 2,
+        "comparableWinRate": 0.4,
+        "meanClaimValue": 610,
+        "estimatedRecoverableValue": 1464,
+        "confidence": "Low",
+        "formula": "6 not appealed \u00D7 40% comparable win rate \u00D7 \u00A3610 mean claim value = \u00A31,464",
+        "window": "denials on record, Sep 2025 \u2013 Sep 2026"
+      }
+    ]
+  }
 }

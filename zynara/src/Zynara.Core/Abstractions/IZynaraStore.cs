@@ -29,6 +29,9 @@ public interface IZynaraStore
     /// <summary>All stored versions of a policy document, oldest first (PolicyDiff).</summary>
     Task<IReadOnlyList<PolicyVersion>> GetPolicyVersionsAsync(string policyRef, CancellationToken ct = default);
 
+    /// <summary>Denial-history summaries per payer + procedure — the inputs to Estimated Recoverable Value.</summary>
+    Task<IReadOnlyList<DenialCohort>> GetDenialCohortsAsync(CancellationToken ct = default);
+
     // --- writes ------------------------------------------------------------------
 
     Task SaveEarlyWarningAsync(EarlyWarning warning, CancellationToken ct = default);

@@ -74,6 +74,20 @@ public static class DemoWorld
             DenialReasonCodes: new[] { "MN-02" }, ClausesCited: Array.Empty<string>(),
             DecidedOn: new DateOnly(2026, 2, 1)));
 
+        // Denial-history cohorts — the inputs to Estimated Recoverable Value (P2-1).
+        // Synthetic aggregates; in production the system rolls these up from the case record.
+        store.AddDenialCohort(new DenialCohort(
+            Payer, Procedure, Region.UK,
+            Denied: 46, Appealed: 27, AppealsWon: 19, NotAppealed: 15,
+            MeanClaimValue: 540m,
+            WindowStart: new DateOnly(2025, 9, 1), WindowEnd: new DateOnly(2026, 9, 1)));
+
+        store.AddDenialCohort(new DenialCohort(
+            Payer, RareProcedure, Region.UK,
+            Denied: 12, Appealed: 5, AppealsWon: 2, NotAppealed: 6,
+            MeanClaimValue: 610m,
+            WindowStart: new DateOnly(2025, 9, 1), WindowEnd: new DateOnly(2026, 9, 1)));
+
         return store;
     }
 }

@@ -5,6 +5,7 @@ using Zynara.Agents;
 using Zynara.Core;
 using Zynara.Core.Abstractions;
 using Zynara.Core.Demo;
+using Zynara.Core.Recovery;
 using Zynara.Core.View;
 
 // Regenerates the dashboard's offline dataset: runs every DemoCatalog scenario
@@ -28,10 +29,13 @@ var views = new List<CaseView>();
 foreach (var scenario in DemoCatalog.All)
     views.Add((await cases.RunAsync(scenario.Request)).View);
 
+var recovery = await sp.GetRequiredService<RecoveryService>().GetAsync();
+
 var payload = new
 {
     scenarios = DemoCatalog.All.Select(s => new { s.Id, s.Label, s.Expectation }),
     cases = views,
+    recovery,
 };
 
 var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions(JsonSerializerDefaults.Web)

@@ -5,6 +5,24 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D12 · Estimated Recoverable Value — the concept, with the working shown
+
+**2026-09-06.** Evaluator P2-1 / §14. "Recovery £" is renamed **Estimated
+Recoverable Value** and rebuilt so every assumption is visible:
+`RecoveryEstimator` (pure) turns a `DenialCohort` (denied · appealed · won ·
+not-appealed · mean claim value · window — an aggregate the system rolls up from
+the case record) into a `RecoveryEstimate` where
+`value = notAppealed × (won / appealed) × meanClaimValue`, always carrying that
+formula string and a `RecoveryConfidence` (High/Medium/Low) set by the sample
+size. `RecoveryService` returns the portfolio total + each payer/procedure scope;
+`GET /api/recovery` serves it; the dashboard gets its own **Recoverable value**
+tab (headline number, the four inputs, the arithmetic, confidence, the by-scope
+table). No invented improvement figure (guardrail §18).
+Touched: `Zynara.Core/Model/DenialCohort.cs`, `Zynara.Core/Recovery/*`,
+`IZynaraStore` + `InMemoryZynaraStore`, Core DI, `DemoWorld` (2 cohorts),
+`Zynara.ApiProxy/RecoveryFunctions.cs`, `tools/Zynara.DemoDump`,
+`src/Zynara.Dashboard/standalone.html`, `Zynara.Core.Tests` (+6), TDD §11.
+
 ## D11 · Demo golden path + a visible Critic "catch"
 
 **2026-09-06.** Evaluator P2-5 / §15. `docs/runbooks/demo-script.md` — a 3-minute

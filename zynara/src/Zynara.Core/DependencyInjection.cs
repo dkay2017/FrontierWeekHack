@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Zynara.Core.Abstractions;
 using Zynara.Core.Gating;
 using Zynara.Core.Pipeline;
+using Zynara.Core.Recovery;
 using Zynara.Core.View;
 
 namespace Zynara.Core;
@@ -33,6 +34,9 @@ public static class DependencyInjection
         // Zynara.Data overrides ICaseRepository with the Cosmos-backed one.
         services.TryAddSingleton<ICaseRepository, InMemoryCaseRepository>();
         services.AddScoped<CaseService>();
+
+        // Estimated Recoverable Value (P2-1) — reads the denial-history cohorts.
+        services.AddScoped<RecoveryService>();
 
         return services;
     }

@@ -14,6 +14,7 @@ public sealed class InMemoryZynaraStore : IZynaraStore
     private readonly List<Precedent> _precedents = new();
     private readonly Dictionary<string, AuthRecord> _auths = new();
     private readonly Dictionary<string, List<PolicyVersion>> _policyVersions = new();
+    private readonly List<DenialCohort> _cohorts = new();
 
     /// <summary>Early warnings raised during a run — inspect these in tests.</summary>
     public List<EarlyWarning> EarlyWarnings { get; } = new();
@@ -22,6 +23,8 @@ public sealed class InMemoryZynaraStore : IZynaraStore
     public InMemoryZynaraStore AddCriteria(Criteria criteria) { _criteria.Add(criteria); return this; }
     public InMemoryZynaraStore AddPrecedent(Precedent precedent) { _precedents.Add(precedent); return this; }
     public InMemoryZynaraStore AddAuth(AuthRecord auth) { _auths[auth.RequestId] = auth; return this; }
+
+    public InMemoryZynaraStore AddDenialCohort(DenialCohort cohort) { _cohorts.Add(cohort); return this; }
 
     public InMemoryZynaraStore AddPolicyVersion(PolicyVersion version)
     {
@@ -58,6 +61,9 @@ public sealed class InMemoryZynaraStore : IZynaraStore
         string policyRef, CancellationToken ct = default) =>
         Task.FromResult<IReadOnlyList<PolicyVersion>>(
             _policyVersions.GetValueOrDefault(policyRef)?.ToList() ?? new List<PolicyVersion>());
+
+    public Task<IReadOnlyList<DenialCohort>> GetDenialCohortsAsync(CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<DenialCohort>>(_cohorts.ToList());
 
     public Task SaveEarlyWarningAsync(EarlyWarning warning, CancellationToken ct = default)
     {

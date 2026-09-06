@@ -52,8 +52,9 @@ free-text clinical note · payer + plan · (post-decision) the denial letter.
   swaps the criteria set, terminology and appeal-escalation path
 - Grounding: every recommendation cites the policy clause and the precedent
   case ids that drove it
-- The **Recovery £ figure** — the appeals-gap statistic turned into the clinic's
-  own number — shown as a headline stat on the Review Queue (not its own tab)
+- The **Estimated Recoverable Value** — the appeals-gap statistic turned into the payer's
+  own number (`not-appealed × comparable-win-rate × mean-claim-value`), shown with
+  its inputs and a confidence level on its own dashboard tab
 
 **Explicitly out of scope (see §8):**
 - Real payer EHR/FHIR integration (synthetic + public-policy-excerpt data for the
@@ -153,7 +154,7 @@ cross-cutting concerns.
 | 2 | **Compute · Orchestration** (Azure Durable Functions) | `Zynara.Orchestrator` (the orchestrator function — sequences `NeedsAuthCheck → EvidenceGapMatch → AppealMatch → CriticCheck`, keyed on request id) as **Durable Activity Functions** — deterministic wrappers, no LLM in the wrapper — for the reasons in §12 · TD-2. `ExpiryMath` / `PolicyDiff` run as advisory timers. Owns the Gate. |
 | 3 | **AI Foundry · Agent Service** | four reasoning agents — `needs-auth-agent` · `evidence-gap-agent` · `appeal-builder-agent` · **`critic-agent`** — each behind a `Zynara.Core` interface with a deterministic stub twin. `ExpiryMath` / `PolicyDiff` narrator calls are optional and thin (D6). |
 | 4 | **Data** | Submission Adapter (Azure Function · the only path to payer portal / X12 / FHIR / fax) → **Azure Cosmos DB** serverless (operational state): `requests · submissions · outcomes · auths · earlyWarnings · agentCalls`, plus `precedents` / `policies` **metadata** → **Azure Blob Storage** (the unstructured corpus: policy docs, denial PDFs, precedent narratives) → **Foundry File Search** (vector index the agents query). Split rationale: §12 · TD-4, TD-5. |
-| 5 | **Experience** | Reviewer (human) → Dashboard (`Zynara.Dashboard`, Static Web App Standard + linked backend; tabs = **Review Queue** (drafts · appeals · HITL · Recovery £ stat) · **Early Warnings** (expiry-watch · policy-drift) · **Cost** (£/$ per request · agent · day), with a **UK ⇄ US** header control) → **API Proxy** (Azure Function; read models + reviewer approve/reject actions) |
+| 5 | **Experience** | Reviewer (human) → Dashboard (`Zynara.Dashboard`, Static Web App Standard + linked backend; tabs = **Review Queue** (drafts · appeals · HITL · Estimated Recoverable Value) · **Early Warnings** (expiry-watch · policy-drift) · **Cost** (£/$ per request · agent · day), with a **UK ⇄ US** header control) → **API Proxy** (Azure Function; read models + reviewer approve/reject actions) |
 
 **Cross-cutting (applies to every layer):**
 - **Security & Identity** — managed identity first: Cosmos DB (data-plane RBAC —
@@ -288,7 +289,7 @@ in code.
 **Experience** — Reviewer (human); Dashboard (`Zynara.Dashboard`, Static Web App
 Standard + `linkedBackends` → apiproxy, same-origin `/api`): three tabs —
 **Review Queue** (the HITL list: pending draft submissions and appeals to approve
-or edit, with the Recovery £ stat as a headline number), **Early Warnings**
+or edit, with the Estimated Recoverable Value as a headline number), **Early Warnings**
 (`expiry-watch` + `policy-drift` output), and **Cost** (£/$ per request · per
 agent · per day, off `agentCalls`); the **UK ⇄ US** region switch is a header
 control, not a tab. **API Proxy** (Function; read models + reviewer
@@ -419,7 +420,7 @@ midnight US).
   1. HTTP starter → Orchestrator → NeedsAuth + Gap + AppealMatch → Gate →
      Submission Adapter → Cosmos/Blob (the core mission), with `needs-auth` +
      `evidence-gap` + `appeal-builder` agents
-  2. Dashboard Review Queue + Reviewer loop + the Recovery £ stat, on real
+  2. Dashboard Review Queue + Reviewer loop + the Estimated Recoverable Value, on real
      (synthetic) data
   3. Region switch (UK ⇄ US)
   4. `expiry-watch` + `policy-drift` agents and the Early Warnings tab
@@ -460,7 +461,7 @@ midnight US).
 |---|---|
 | **Innovation** | Precedent-driven appeal recommendation grounded in **recorded outcomes** — nobody productises the "80% of appeals win, 11.5% are filed" gap. The region switch proves generality *live*, not as a claim. |
 | **Usability** | Pre-computed demo playback (zero inference lag), one intuitive queue→review→send flow, the region switch, an accessibility pass, and a recorded 3-minute video as the fallback if a live demo breaks. |
-| **Impact** | The Recovery £ stat computes, from the clinic's own live data, `denied × (1 − appeal rate) × win probability × mean claim value = £ left unclaimed` — Impact as a number, not an assertion. Shown on the Review Queue. |
+| **Impact** | **Estimated Recoverable Value** (`RecoveryEstimator`, built) computes, from the payer's own denial history, `not-appealed × comparable-win-rate × mean-claim-value` per payer/procedure scope and as a portfolio total — Impact as a number **with every input on the surface** and a confidence level set by the sample size. Shown on its own dashboard tab. |
 
 ### 11.1 The four questions the review says we must answer to win
 
@@ -469,7 +470,7 @@ midnight US).
 | **1. Do the agents make better decisions *together* than one generalist?** | §3.1 (the argument) + §7.3 (the measured comparison — agreement, mandatory false-negative rate, safe-abstention rate vs. a single-prompt baseline on the labelled set). |
 | **2. Does the system know when it is uncertain?** | The `Abstain` route (D4): Low-quality evidence + Weak/None precedent support, or a Critic `Abstain`, and the system declines to advise rather than guessing. Measured as the **safe-abstention rate** (§7.3). |
 | **3. Why should a human trust the recommendation?** | Evidence-first review workspace (P1-1): every criterion shows the clinical statement that satisfies it, the policy clause and version, the precedents considered with their similarity, the Critic's flags, and the Gate's working. Nothing is a black-box number. |
-| **4. Is the business value measurable, not a marketing figure?** | The Recovery £ is shown *with its assumptions and a confidence level* (P2-1); the demo pipeline is instrumented for before/after (P2-2 — case-prep time, criteria-check time, reviewer effort, cost per case), and any estimated manual baseline is labelled as an estimate. |
+| **4. Is the business value measurable, not a marketing figure?** | **Estimated Recoverable Value** is built (`RecoveryEstimator` + `GET /api/recovery` + the dashboard tab): the headline number, the four inputs, the arithmetic spelled out, and a confidence level — no invented improvement figure (P2-1 done). Before/after instrumentation of the pipeline (P2-2 — case-prep time, criteria-check time, reviewer effort, cost per case) is still open, with any estimated manual baseline labelled as an estimate. |
 
 ## 12. Technology Decisions
 

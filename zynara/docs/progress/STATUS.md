@@ -44,8 +44,8 @@ source of truth):
   AppealMatch / Critic / Draft), each wrapping one spoke (TD-2). ExpiryMath +
   PolicyDiff run as advisory monitors, outside the pipeline (D6).
 - Deterministic **Durable orchestrator owns the Gate** (TD-1) — built, session 5.
-- Dashboard = Static Web App, 3 tabs: Review Queue (+ Recovery £ stat) · Early
-  Warnings · Cost. UK⇄US is a header control.
+- Dashboard = Static Web App, 3 tabs: Review Queue · Early Warnings ·
+  Recoverable value. UK⇄US is a header control.
 - Cost metering **is in scope**; the AI-governance enforcement layer, private
   networking, CI/CD deploy pipeline, HA/DR etc. are **named in TDD §7.1**, not
   built.
@@ -200,6 +200,18 @@ needs the same restyle port.
   & send"* de-emphasised. Headline leads with the Critic's concern. (D11)
 - `Zynara.Core.Tests` +2. **69 tests green.**
 
+## Done — 2026-09-06 — P2-1
+
+- **Estimated Recoverable Value** (D12). `Zynara.Core/Recovery` — `RecoveryEstimator`
+  (pure: `notAppealed × winRate × meanClaimValue`, always carries the formula
+  string + a confidence level from sample size), `RecoveryService`, `DenialCohort`
+  model, `IZynaraStore.GetDenialCohortsAsync`, `DemoWorld` seeds 2 cohorts.
+  `Zynara.ApiProxy` `GET /api/recovery`. `tools/Zynara.DemoDump` includes it.
+  Dashboard: renamed the Cost tab → **Recoverable value** (headline number, the
+  4 inputs, the arithmetic, confidence, by-scope table). `Zynara.Core.Tests` +6.
+  **75 tests green.** Artifact republished.
+- Demo total: £7,164 (High confidence) — MRI-LS £5,700 + MR-arthrogram £1,464.
+
 ## Next — remaining P1 / P2 (resume point)
 
 > Full re-read of the COMPLETE evaluator review (text + 4 flowcharts) logged in
@@ -207,7 +219,9 @@ needs the same restyle port.
 > appeal-verdict eval metrics) is the main one still open (#1 done via
 > `demo-appeal-critic`).
 
-1. **"Estimated Recoverable Value"** — `Zynara.Core` model (denied count ·
+1. **P2-2** — before/after instrumentation of the pipeline (case-prep time,
+   criteria-check time, reviewer effort, cost per case); label any estimated
+   manual baseline.
    not-appealed · comparable win rate · avg recoverable value · estimate ·
    confidence · the formula) + a dashboard tile + pipeline instrumentation for a
    before/after table. (P2-1, P2-2)
