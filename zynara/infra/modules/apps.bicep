@@ -105,6 +105,7 @@ resource orchestrator 'Microsoft.Web/sites@2024-04-01' = {
       minTlsVersion: '1.2'
       appSettings: concat(commonSettings, [
         { name: 'AzureWebJobsStorage__clientId', value: reasoningClientId }
+        { name: 'AZURE_CLIENT_ID', value: reasoningClientId }
         { name: 'WEBSITE_CONTENTSHARE', value: orchestratorName }
       ], reasoningExtra)
     }
@@ -128,6 +129,7 @@ resource apiProxy 'Microsoft.Web/sites@2024-04-01' = {
       cors: { allowedOrigins: [ '*' ] }
       appSettings: concat(commonSettings, [
         { name: 'AzureWebJobsStorage__clientId', value: reasoningClientId }
+        { name: 'AZURE_CLIENT_ID', value: reasoningClientId }
         { name: 'WEBSITE_CONTENTSHARE', value: apiProxyName }
       ], reasoningExtra)
     }
@@ -150,6 +152,7 @@ resource submission 'Microsoft.Web/sites@2024-04-01' = {
       minTlsVersion: '1.2'
       appSettings: concat(commonSettings, [
         { name: 'AzureWebJobsStorage__clientId', value: submissionClientId }
+        { name: 'AZURE_CLIENT_ID', value: submissionClientId }
         { name: 'WEBSITE_CONTENTSHARE', value: submissionName }
         { name: 'KEY_VAULT_URI', value: keyVaultUri }
       ])
