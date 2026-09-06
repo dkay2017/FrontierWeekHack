@@ -308,6 +308,16 @@ the user chose: **de-risk spike → `Zynara.Data` → grow eval set → video la
    (7 docs). User to add `precedent-P-3.md` / `P-4.md` to vector store
    `vs_Aw9xAi58sHDnWqxN5kDy5jFJ` and re-run the spike.
 
+### Live data connection — ✅ verified locally (2026-09-06)
+
+`func start` runs `Zynara.ApiProxy` in-memory; `index.html?api=http://localhost:7071`
+loads the queue / recovery / benchmark / profiles from it. Confirmed end to end:
+every endpoint shape matches the dashboard, `POST /demo/scenarios/{id}/run`
+re-runs the pipeline, `POST /cases/{id}/decision` enforces `ApprovalAuthority`
+and appends to the audit trail. No Azure, no Cosmos needed. See
+`docs/runbooks/local-demo.md`. (Cosmos + hosted-agent paths still only proven by
+their own tests / the spike — full stack together is S-4.)
+
 ### Still open (not evaluator findings — build + submission work)
 
 | # | Item | Size | Note |
