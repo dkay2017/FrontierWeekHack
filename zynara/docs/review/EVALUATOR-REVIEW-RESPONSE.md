@@ -91,16 +91,19 @@ Nothing here overturns a decision. Items 1 and 3 are the substantive ones.
   the note-against-itself contradiction flow (review note #2).
 - **Eval note #3 done** (D18) — policy-citation accuracy + strategy-verdict
   agreement added; clause hallucination hard-gated.
-- **P1-4 done** (D19) — `infra/main.bicep` + 6 modules encode the identity +
-  network boundary (§13): one managed identity per component, `snet-compute` NSG
-  denies egress to the submission subnet + the payer CIDR, `id-submission` is the
-  only identity with the payer secret and it has no Foundry. `az bicep build`
-  clean; `.github/workflows/zynara-ci.yml` runs build + test + the eval gate.
-  **94 tests green.**
+- **P1-4 done** (D19) — `infra/main.bicep` + 5 modules encode the **identity**
+  boundary (§13): one user-assigned managed identity per component; `id-reasoning`
+  → Foundry + Cosmos + Blob, `id-submission` → the payer secret + Cosmos write and
+  **no Foundry**, `id-dashboard` → nothing. Local auth off everywhere, one secret
+  in Key Vault. Private networking (VNet / private endpoints / NSGs) is **not
+  built** — it is TDD §7.1 production hardening, per the review guardrail against
+  adding Azure services for an enterprise look (D19). `az bicep build` clean;
+  `.github/workflows/zynara-ci.yml` runs build + test + the eval gate.
 
-**Every evaluator P0 / P1 / P2 finding is addressed.** Not deployed to a live
-subscription; `Zynara.Data` (Cosmos wiring) + `Zynara.Submission` (the adapter
-itself) are the remaining build work, not review items.
+**Every evaluator P0 / P1 / P2 finding is addressed.** Remaining build work (not
+review items): `Zynara.Submission` (the outbound adapter project), agent-keyed
+traces (Challenge 2), the Foundry portal workflow (Challenge 4), and an `azd`
+deploy to a live subscription (Challenge 0).
 
 ---
 
