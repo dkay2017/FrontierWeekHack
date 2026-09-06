@@ -276,19 +276,21 @@ needs the same restyle port.
 
 ## Next — remaining (resume point)
 
-**Every evaluator P0 / P1 / P2 finding is addressed.** What's left is the rest of
-the build, not review items:
+**Every evaluator P0 / P1 / P2 finding is addressed.** Remaining, in the order
+the user chose: **de-risk spike → `Zynara.Data` → grow eval set → video last.**
 
-1. **`Zynara.Data`** — Cosmos-backed `IZynaraStore` + `ICaseRepository`; the real
+1. **De-risk spike — `tools/Zynara.FoundrySpike` built, not yet run.** Runs the
+   whole pipeline against the HOSTED agents for 2 scenarios and prints what each
+   produced. Needs a Foundry project + `az login`. Runbook:
+   `docs/runbooks/foundry-spike.md`. **User to execute.**
+2. **`Zynara.Data`** — Cosmos-backed `IZynaraStore` + `ICaseRepository`; the real
    `IAgentCallRecorder`. Replaces the in-memory seeds in the orchestrator +
    api-proxy `Program.cs`.
-2. **`Zynara.Submission`** — the Submission Adapter (its identity + subnet exist
-   in infra; the project doesn't).
 3. **Grow the labelled eval set** 8 → ~20; 2–3 real payer policy files for File Search.
-4. **`Zynara.Dashboard/index.html`** — port the light house style from `standalone.html`.
-5. **Architecture SVG** — "upstream / not built" band (TDD §2.1 / D13) + the contradiction step.
-6. Real end-to-end run — needs Azurite + Functions Core Tools (not in the Codespace).
-7. Video + pitch + 5-point doc.
+4. **Video + pitch + 5-point doc** — last.
+
+Also open (lower priority): `Zynara.Submission` adapter, port the light style to
+`Zynara.Dashboard/index.html`, the architecture SVG band.
 
 ## Timeline (18 days)
 
