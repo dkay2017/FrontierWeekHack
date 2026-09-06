@@ -333,6 +333,48 @@ their own tests / the spike — full stack together is S-4.)
 | S-9 | 2–3 real payer policy files for File Search | S | Corpus is synthetic Bupa today. |
 | ~~S-10~~ | **Challenge 3 — Foundry *portal* evaluation** — ✅ **done (D28)** | — | `eval/portal/eval_portal.jsonl` (15 turns for `evidence-gap-agent`) + `build_dataset.py` + `docs/runbooks/challenge-3-portal-evaluation.md`. User runs it in the portal (Evaluate → Evaluations → Create → Agent → Coherence/Fluency), like the vector store. |
 
+## TODO — resume point for session 9
+
+**Finish S-4 (deploy), then S-7, then S-8.**
+
+### A · Make the live deploy demo-ready
+1. **Scenario-runner control in the dashboard** (`src/Zynara.Dashboard/index.html`).
+   The old dark `index.html` had a "Run a scenario ▾" dropdown; the light rebuild
+   (S-5) dropped it. Add it back: `<select>` of `DATA.scenarios` in the masthead →
+   `POST {api}/api/demo/scenarios/{id}/run` → re-`boot()`. This is the "create an
+   entry" page. ~20 lines. Re-inject the snapshot + republish the artifact.
+2. **Populate the live queue** — `POST /api/demo/scenarios/{id}/run` for all 7
+   scenarios against `func-zynara-apiproxy-itbahognjguwy` (via the SWA URL) so the
+   dashboard has content. (`demo-ready` already fired — 1 case in Cosmos.)
+3. **Orchestrator persist gap** — `AuthOrchestrator` returns `PipelineResult` but
+   never writes a `CaseRecord`. Decide: (a) add a `PersistCaseActivity` that calls
+   `CaseService`-style save so `POST /api/requests` also populates the queue, or
+   (b) declare the api-proxy scenario-run the demo entry path and document it.
+4. **Verify the decision + submission flow live** — approve a case
+   (`POST /api/cases/{id}/decision`, `X-Reviewer-Role`), check the audit trail,
+   then `POST /api/submit/{id}` on the submission app, check the `submissions`
+   container.
+5. **Easy Auth note** — the SWA linked backend auto-enabled it on the api-proxy
+   (direct calls 401, SWA proxy works). Document in the deploy runbook, or drop
+   the linked backend + Free SWA + `?api=` if direct access is wanted.
+6. **Flip to hosted agents** — `azd env set AGENTSMODE foundry` + re-provision.
+   The deployed apps already point at the `care-approval` project (= the spike
+   project), so the 5 agents + vector store `vs_Aw9xAi58sHDnWqxN5kDy5jFJ` are
+   already there. Set `VECTOR_STORE_ID` in the azd env first. Then re-run the
+   orchestrator E2E test and watch the traces land in App Insights (Challenge 2
+   visual proof).
+7. **Write `docs/runbooks/deploy.md`** — the `azd up` steps + every shakedown fix
+   from D30 + the live URLs.
+
+### B · Submission artifacts
+8. **S-7 — pitch + 5-point doc.** The four review questions (§20), the challenge
+   mapping, the eval numbers, the live URL.
+9. **S-6 — architecture SVG** (other session owns the file): `appeal-builder` →
+   `precedent-strategist`, add the contradiction step, add the "upstream / not
+   built" band.
+10. **S-9 (optional)** — 2–3 real public payer policy docs into the corpus.
+11. **S-8 — the 3-min video.** Last. Script is `docs/runbooks/demo-script.md`.
+
 ## Deploy state — LIVE (2026-09-06, end of session 8)
 
 **Resource group `zynara-spike-rg`** (one RG, alongside the pre-existing Foundry
