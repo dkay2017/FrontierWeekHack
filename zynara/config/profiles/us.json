@@ -1,0 +1,29 @@
+{
+  "id": "us",
+  "region": "US",
+  "name": "United States \u2014 commercial health plan",
+  "shortLabel": "US \u00B7 Commercial",
+  "currency": "USD",
+  "currencySymbol": "$",
+  "terminology": {
+    "prior-auth": "prior authorization",
+    "clinician": "provider",
+    "payer": "health plan",
+    "member": "member",
+    "procedure-code": "CPT / HCPCS code"
+  },
+  "codingConventions": "CPT / HCPCS procedure codes \u00B7 ICD-10-CM diagnosis",
+  "regulators": [
+    "CMS \u2014 Interoperability \u0026 Prior Authorization Final Rule (CMS-0057-F)",
+    "ERISA (self-funded plans)",
+    "HIPAA",
+    "State Departments of Insurance"
+  ],
+  "appealPath": [
+    "Payer internal appeal",
+    "External review by an Independent Review Organization (IRO)",
+    "State DOI / federal (ERISA) review"
+  ],
+  "integrationProfile": "X12 278 today; CMS-0057-F mandates the FHIR Prior Auth API (Da Vinci PAS / CRD / DTR) from Jan 2027.",
+  "policyPack": "Payer medical policies \u002B InterQual / MCG criteria, versioned per procedure in Cosmos."
+}

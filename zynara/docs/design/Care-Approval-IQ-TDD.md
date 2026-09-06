@@ -381,11 +381,27 @@ owning the Gate (TD-1), the pipeline steps as discrete activities (TD-2), the so
 outbound path, the hybrid principle, and Cosmos + Blob + File Search as the store
 split (TD-4, TD-5) — these are scale-independent choices.
 
-### 7.2 Region abstraction as compliance surface
+### 7.2 Policy + Regulatory Profile (not a "region switch")
 
-Payer-specific knowledge is **data, not code** — `policies/<region>/<payer>/<procedure>.md`
-in Blob plus `config/regions.json` — so a compliance reviewer can see and
-version exactly which criteria the system applied, per payer, per region.
+The "UK ⇄ US switch" is a **Policy + Regulatory Profile** (evaluator §9), built as
+`RegulatoryProfile` in `Zynara.Core` and exposed at `GET /api/profiles`. A profile
+carries, per region:
+
+| Dimension | UK | US |
+|---|---|---|
+| Policy pack | per-payer plan rule-sets (Bupa / AXA / Vitality), versioned per procedure | payer medical policies + InterQual / MCG, versioned per procedure |
+| Terminology | prior authorisation · clinician / consultant · insurer · CCSD code | prior authorization · provider · health plan · CPT / HCPCS code |
+| Coding conventions | CCSD · ICD-10 | CPT / HCPCS · ICD-10-CM |
+| Regulators | FCA · Financial Ombudsman Service · UK GDPR / DPA 2018 | CMS (CMS-0057-F) · ERISA · HIPAA · state DOIs |
+| Appeal / escalation path | payer reconsideration → FOS → courts | payer appeal → external IRO → state DOI / ERISA |
+| Integration profile | no mandated PA API — portals + PDF | X12 278 today; FHIR PAS (Da Vinci) mandated from Jan 2027 |
+| Currency | GBP / £ | USD / $ |
+
+Payer-specific knowledge stays **data, not code** — criteria and rules in Cosmos
+keyed by region + payer + procedure, profiles in `config/profiles/*.json` — so a
+compliance reviewer can see and version exactly what the system applied.
+**Not a product centrepiece** (guardrail §18) — a small header panel, not a demo
+beat.
 
 ### 7.3 Evaluation — beyond classification accuracy
 
