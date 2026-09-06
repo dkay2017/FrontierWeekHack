@@ -77,21 +77,49 @@ source of truth):
     `ZYNARA_AGENTS=foundry` reserved for slice 3.
   - 11 tests green (`dotnet test Zynara.sln`).
 
-## Next — session 3
+## Done — session 3 (2026-09-06)
 
-1. **Slice 2 — deterministic spokes + Gate** in `Zynara.Core`: NeedsAuthCheck,
-   EvidenceGapMatch (+ readiness score), AppealMatch (precedent ranking),
-   ExpiryMath, PolicyDiff; the `Gate` rule; the pipeline that sequences them.
-   `IZynaraStore` seam (in-memory impl for tests).
-2. **Slice 3 — Foundry agents** in `Zynara.Agents`: `FoundryAgentClient`,
-   `AgentPrompts`, provisioner, `Foundry{X}Agent` ×5, DI `foundry` mode. Mirror
-   `tireforge/src/TireForge.Agents/Foundry/*`.
-3. **Slice 4 — orchestrator** (`Zynara.Orchestrator` Durable Functions project):
-   HTTP starter + orchestrator + the 5 activity functions.
-4. `infra/` skeleton — `main.bicep` + module stubs (foundry / data / keyvault /
-   apps), `azure.yaml`. CI workflow (build + test + eval gate).
-5. Data plan — 2–3 payer policy files + 5 clinical cases to prove the shape.
-6. `DECISIONS.md` — start the delta log.
+- **Slice 2 — deterministic spokes + Gate** (`Zynara.Core`): `IZynaraStore` +
+  `InMemoryZynaraStore`, `Model/Results.cs`, the 5 spokes (NeedsAuthCheck,
+  EvidenceGapMatch + readiness, AppealMatch, ExpiryMath, PolicyDiff), `Gate`,
+  `AuthPipeline`, `AddZynaraCore()`. 20 tests.
+- **Slice 3 — Foundry agents** (`Zynara.Agents/Foundry`): `FoundryAgentClient`,
+  `FoundryAgentOptions`, `AgentPrompts`, `FoundryAgentProvisioner`,
+  `Foundry{NeedsAuth,EvidenceGap,AppealBuilder,ExpiryWatch,PolicyDrift}Agent`,
+  `FoundryResponse` (testable JSON sanitisers), `ZYNARA_AGENTS=foundry` DI.
+  17 agent tests. **37 tests green total.**
+
+## PIVOT — session 4: independent evaluator review
+
+Full review + plan: **`docs/review/EVALUATOR-REVIEW-RESPONSE.md`**. Overall
+~8.0/10; weak spots = multi-agent justification (6.5) and evaluation evidence
+(6.5). Working the **P0** items before resuming the orchestrator (slice 4),
+because P0-2/P0-3 rework the Gate + evidence model that slice 2 just built.
+
+**Decisions taken:**
+- **D-2 — expiry-watch + policy-drift demoted** to deterministic services with an
+  optional thin AI narrator; they are no longer counted as reasoning "agents"
+  (the review flagged the flaw — date math / text diff should not need an agent).
+- D-3 — P0 first, before slice 4.
+
+**P0 work order:** P0-3 (structured decision model — reworks Gate/evidence) →
+P0-2 (Critic agent) → P0-1 (reframe docs) → P0-4 (eval suite).
+
+## Pending (deferred until P0 is in)
+
+1. **Slice 4 — orchestrator** (`Zynara.Orchestrator` Durable Functions):
+   HTTP starter + orchestrator + activity functions (NeedsAuthCheck /
+   EvidenceGapMatch / AppealMatch / Critic / Gate; ExpiryMath + PolicyDiff as
+   advisory timers).
+2. `infra/` skeleton — `main.bicep` + module stubs, `azure.yaml`; CI (build +
+   test + eval gate); enforce agent↔payer identity isolation (P1-4).
+3. Data plan — labelled clinical-case set for P0-4 (ground truth per criterion +
+   expected route + expected citations); 2–3 payer policy files.
+4. `Zynara.Dashboard` — evidence-first HITL workspace (P1-1) + precedent panel
+   (P1-2).
+5. `Zynara.ApiProxy` — read models + reviewer actions + RBAC (P1-3).
+6. `config/profiles/` — "Policy + Regulatory Profile" (P1-5).
+7. `DECISIONS.md` — start the delta log (record the P0 changes as D1…Dn).
 
 ## Timeline (18 days)
 
