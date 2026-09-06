@@ -42,7 +42,12 @@ public sealed class AuthPipeline(
     }
 }
 
-internal static class DraftBuilder
+/// <summary>
+/// Assembles the reviewer-facing <see cref="SubmissionDraft"/> from the spoke
+/// outputs. Public because the Durable orchestrator's <c>DraftActivity</c> calls it
+/// directly (slice 4) as well as <see cref="AuthPipeline"/>.
+/// </summary>
+public static class DraftBuilder
 {
     public static SubmissionDraft Build(
         Request request,

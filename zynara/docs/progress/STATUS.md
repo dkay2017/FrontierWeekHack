@@ -4,7 +4,8 @@
 current at every checkpoint and **commit + push** — uncommitted work is lost on a
 Codespace rebuild.
 
-_Last updated: 2026-09-06 (session 2). Deadline: **2026-09-23 midnight US**.
+_Last updated: 2026-09-06 (session 5 — P0 complete, slice 4 orchestrator built).
+Deadline: **2026-09-23 midnight US**.
 Submission: 3-min video (required) + repo + architecture doc + TDD + dashboard UI._
 
 ## What this is
@@ -21,12 +22,13 @@ proof-of-concept). Lives in `zynara/` alongside `tireforge/` in the **same
 GitHub repo** (`dkay2017/FrontierWeekHack`); **new Azure resource group**;
 patterns reused, not code.
 
-## The 5 agents
+## The 4 reasoning agents + 2 monitors
 
+**Agents** (each behind a `Zynara.Core` port + deterministic stub twin):
 needs-auth · evidence-gap · appeal-builder (drafts the appeal — the
-differentiator) · expiry-watch · policy-drift. Each behind a `Zynara.Core`
-interface with a deterministic stub twin. Payer-agnostic; **UK ⇄ US region
-switch** in the UI.
+differentiator) · **critic** (tries to disprove the assembled case — D5).
+**Deterministic monitors** (not agents — D6): expiry-watch (date math),
+policy-drift (text diff). Payer-agnostic; **UK ⇄ US region switch** in the UI.
 
 ## Architecture — locked (session 2, 2026-09-06)
 
@@ -38,10 +40,10 @@ source of truth):
 - **No SQL** — **Azure Cosmos DB** (serverless) for operational state (TD-4).
 - **Blob Storage + Foundry File Search** for the unstructured corpus — policy
   docs, denial PDFs, precedent narratives (TD-5).
-- **5 deterministic spokes** = Durable **Activity Functions** (NeedsAuthCheck /
-  EvidenceGapMatch / AppealMatch / ExpiryMath / PolicyDiff), each wrapping one
-  agent call (TD-2).
-- Deterministic **Durable orchestrator owns the Gate** (TD-1).
+- **Pipeline spokes** = Durable **Activity Functions** (NeedsAuth / EvidenceGap /
+  AppealMatch / Critic / Draft), each wrapping one spoke (TD-2). ExpiryMath +
+  PolicyDiff run as advisory monitors, outside the pipeline (D6).
+- Deterministic **Durable orchestrator owns the Gate** (TD-1) — built, session 5.
 - Dashboard = Static Web App, 3 tabs: Review Queue (+ Recovery £ stat) · Early
   Warnings · Cost. UK⇄US is a header control.
 - Cost metering **is in scope**; the AI-governance enforcement layer, private
@@ -117,23 +119,41 @@ P0-2 (Critic agent) → P0-1 (reframe docs) → P0-4 (eval suite). **All P0 done
   Latest: route agreement 100%, unsafe automation 0 (baseline 2), safe
   abstention 1/1, 0 hallucinated references.
 
-Next: resume **slice 4 — the Durable orchestrator** (see Pending #1).
+## Done — session 5 (2026-09-06)
 
-## Pending (deferred until P0 is in)
+- **Slice 4 — Durable orchestrator** (`src/Zynara.Orchestrator`, .NET 8 isolated
+  Functions):
+  - `Program.cs` — `AddZynaraAgents` + `AddZynaraCore` + an in-memory
+    `IZynaraStore` seeded by `DemoWorld` (Cosmos comes with `Zynara.Data`).
+  - `Http/RequestEndpoints.cs` — `POST /api/requests` (the async boundary, keyed
+    on request id, idempotent) + `GET /api/requests/{id}` status probe.
+  - `Orchestration/AuthOrchestrator.cs` — the deterministic hub: sequences the
+    spoke activities with a 3-attempt retry, **owns the Gate** (computed inline),
+    early-stops when auth is not required. Mirrors `AuthPipeline` step for step.
+  - `Orchestration/SpokeActivities.cs` — one Activity Function per spoke
+    (NeedsAuth / EvidenceGap / AppealMatch / Critic / Draft), each a thin adapter
+    over the matching `Zynara.Core.Pipeline` class (TD-2).
+  - `tests/Zynara.Orchestrator.Tests` — `FakeOrchestrationContext` + 3 tests
+    (all spokes in order, early-stop, appeal never auto-submits). **57 tests
+    green total.**
+  - `DraftBuilder` made public so `DraftActivity` can call it.
+- Running locally needs Azurite (`AzureWebJobsStorage=UseDevelopmentStorage=true`)
+  and `func start`; `ZYNARA_AGENTS=stub` by default.
 
-1. **Slice 4 — orchestrator** (`Zynara.Orchestrator` Durable Functions):
-   HTTP starter + orchestrator + activity functions (NeedsAuthCheck /
-   EvidenceGapMatch / AppealMatch / Critic / Gate; ExpiryMath + PolicyDiff as
-   advisory timers).
-2. `infra/` skeleton — `main.bicep` + module stubs, `azure.yaml`; CI (build +
+Next: `infra/` skeleton + CI, then `Zynara.Data` (Cosmos `IZynaraStore`).
+
+## Pending
+
+1. `infra/` skeleton — `main.bicep` + module stubs, `azure.yaml`; CI (build +
    test + eval gate); enforce agent↔payer identity isolation (P1-4).
+2. `Zynara.Data` — Cosmos-backed `IZynaraStore` (replaces the in-memory seed in
+   `Zynara.Orchestrator/Program.cs`); the real `IAgentCallRecorder`.
 3. Data plan — grow the labelled clinical-case set beyond the initial 8
    (`eval/Zynara.Eval/cases/`); 2–3 real payer policy files for File Search.
 4. `Zynara.Dashboard` — evidence-first HITL workspace (P1-1) + precedent panel
    (P1-2).
 5. `Zynara.ApiProxy` — read models + reviewer actions + RBAC (P1-3).
 6. `config/profiles/` — "Policy + Regulatory Profile" (P1-5).
-7. `DECISIONS.md` — start the delta log (record the P0 changes as D1…Dn).
 
 ## Timeline (18 days)
 
