@@ -181,9 +181,15 @@ P0-2 (Critic agent) → P0-1 (reframe docs) → P0-4 (eval suite). **All P0 done
 
 ## Next — remaining P1 / P2 (resume point)
 
+> Full re-read of the COMPLETE evaluator review (text + 4 flowcharts) logged in
+> `docs/review/EVALUATOR-REVIEW-RESPONSE.md` — 7 open notes; #1 (demo needs a
+> visible Critic catch) and #3 (policy-citation + appeal-verdict eval metrics)
+> are the substantive ones.
+
 1. **`docs/runbooks/demo-script.md`** — denial → evidence case → Critic blocks an
    unsupported claim → correction → Gate → human approve → send → audit trail.
-   (P2-5)
+   Needs a **6th demo scenario** where the Critic catches a plausible-looking
+   appeal (precedents not genuinely comparable / draft overclaims). (P2-5)
 2. **`Zynara.ApiProxy` + dashboard** — measured "Estimated Recoverable Value"
    with the formula + confidence; pipeline instrumentation for before/after.
    (P2-1, P2-2)

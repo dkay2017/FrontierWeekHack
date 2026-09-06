@@ -1,7 +1,59 @@
 # Independent Evaluator Review — response & plan
 
-Source: `../design/Care_Approval_IQ_Agent_a_Thon_Evaluator_Review.docx`
-(independent architect-track review, 2026-09-06).
+Source: `../design/Care_Approval_IQ_Agent_a_Thon_Evaluator_Review_COMPLETE.docx`
+(independent architect-track review, 2026-09-06 — full text + 4 flow diagrams;
+supersedes the earlier `..._Review.docx` which had mangled tables).
+
+---
+
+## Full re-read (2026-09-06) — notes after the COMPLETE version + flowcharts
+
+The scored findings and the plan below are unchanged. The complete text and the
+four flow diagrams surfaced these still-open points:
+
+1. **The demo has no visible Critic "catch"** (§15 + golden-path flowchart). The
+   WOW moment the review scripts is the Critic challenging a *plausible-looking*
+   recommendation and forcing a correction / evidence request. Our five demo
+   scenarios don't show this — `demo-review-mandatory` has a Critic `Block` but
+   only on a trivial "mandatory missing". **Add a 6th scenario:** an
+   appeal-worthy-looking denial where the shortlisted precedents are **not
+   genuinely comparable** (low similarity) or the draft overclaims → Critic
+   `Concerns`/`Block` → "request evidence". Build with **P2-5**.
+
+2. **Intra-evidence contradiction is not covered.** P0-3 gave us "evidence
+   contradicts a *criterion*". The review's flowchart is claims-extraction →
+   contradiction check *within the supplied evidence* (statement vs statement),
+   never silently resolved. We have no claims-extraction step. Keep **P2-3**
+   deferred, but do not assume P0-3 already did it.
+
+3. **Eval metric gaps** (§10): (a) **policy-citation accuracy** — we score
+   *precedent*-citation accuracy but not whether the cited *policy clause* is
+   right; (b) **appeal-recommendation agreement** — only covered indirectly via
+   route agreement (no `ExpectedAppealVerdict` label). Add both when the dataset
+   grows 8 → ~20.
+
+4. **Tiered approval thresholds** (§13). The Gate has one `AutoLimit` (£500); the
+   review wants thresholds tiered by financial / operational risk. Fold into
+   **P1-3**.
+
+5. **Agent identity + version in the audit record** (§13). `CaseRecord` doesn't
+   record which agent (name + version) produced each finding. The Foundry
+   provisioner already versions agents — thread it through. Fold into **P1-3**.
+
+6. **Evidence SOURCE granularity** (§8). `CaseView` reports source as "clinical
+   note"; production wants document id + location/span. Add to TDD §7.1
+   production items (provenance).
+
+7. **Framing** (§4 + recommended-model flowchart). The recommended model names a
+   distinct **Precedent Analyst Agent** between Evidence and Appeal Strategist.
+   We fold precedent-comparability reasoning into deterministic `AppealMatch`
+   ranking + `appeal-builder` + Critic check #3 + the precedent panel. D9 keeps
+   our names — fine, but the pitch must be ready to answer "where is the
+   precedent analysis?".
+
+Nothing here overturns a decision. Items 1 and 3 are the substantive ones.
+
+---
 
 **Progress (2026-09-06):**
 - **P0-3 done** — structured decision model, mandatory criteria never averaged,
