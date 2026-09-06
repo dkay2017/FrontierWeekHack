@@ -1,4 +1,5 @@
 using Zynara.Core.Agents;
+using Zynara.Core.Diagnostics;
 using Zynara.Core.Model;
 
 namespace Zynara.Core.Pipeline;
@@ -14,7 +15,11 @@ public sealed class ContradictionCheck(IClaimExtractionAgent agent)
 {
     public async Task<ContradictionResult> RunAsync(Request request, CancellationToken ct = default)
     {
-        var set = await agent.ExtractAsync(request.ClinicalNote ?? "", ct);
+        using var spoke = ZynaraTelemetry.StartSpoke("claims-extraction");
+
+        ClaimSet set;
+        using (ZynaraTelemetry.StartAgentInvoke("claims-extraction"))
+            set = await agent.ExtractAsync(request.ClinicalNote ?? "", ct);
 
         var conflicts = new List<ClaimConflict>();
         var bySubject = set.Claims

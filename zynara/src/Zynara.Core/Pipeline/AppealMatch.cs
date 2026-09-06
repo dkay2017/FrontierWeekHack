@@ -1,5 +1,6 @@
 using Zynara.Core.Abstractions;
 using Zynara.Core.Agents;
+using Zynara.Core.Diagnostics;
 using Zynara.Core.Model;
 
 namespace Zynara.Core.Pipeline;
@@ -23,6 +24,8 @@ public sealed class AppealMatch(IZynaraStore store, IPrecedentStrategistAgent ag
     public async Task<AppealMatchResult> RunAsync(
         Request request, EvidenceGapAssessment gap, CancellationToken ct = default)
     {
+        using var spoke = ZynaraTelemetry.StartSpoke("precedent-match");
+
         var candidates = await store.GetPrecedentsAsync(
             request.PayerPlan, request.Procedure, request.Region, ct);
 
@@ -44,7 +47,11 @@ public sealed class AppealMatch(IZynaraStore store, IPrecedentStrategistAgent ag
             .Take(ShortlistSize)
             .ToList();
 
-        var recommendation = await agent.RecommendAsync(request, gap, shortlist, ct);
+        spoke?.SetTag("zynara.shortlist_size", shortlist.Count);
+
+        StrategyRecommendation recommendation;
+        using (ZynaraTelemetry.StartAgentInvoke("precedent-strategist"))
+            recommendation = await agent.RecommendAsync(request, gap, shortlist, ct);
         var support = DeriveSupport(shortlist);
 
         return new AppealMatchResult(shortlist, recommendation, support);

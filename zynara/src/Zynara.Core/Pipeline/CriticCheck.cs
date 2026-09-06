@@ -1,4 +1,5 @@
 using Zynara.Core.Agents;
+using Zynara.Core.Diagnostics;
 using Zynara.Core.Model;
 
 namespace Zynara.Core.Pipeline;
@@ -11,7 +12,7 @@ namespace Zynara.Core.Pipeline;
 /// </summary>
 public sealed class CriticCheck(ICriticAgent agent)
 {
-    public Task<CriticReview> RunAsync(
+    public async Task<CriticReview> RunAsync(
         Request request,
         NeedsAuthResult needsAuth,
         EvidenceGapResult gap,
@@ -19,6 +20,8 @@ public sealed class CriticCheck(ICriticAgent agent)
         ContradictionResult? contradiction = null,
         CancellationToken ct = default)
     {
+        using var spoke = ZynaraTelemetry.StartSpoke("critic");
+
         var context = new CriticContext(
             Request: request,
             NeedsAuthNote: needsAuth.Note,
@@ -30,6 +33,7 @@ public sealed class CriticCheck(ICriticAgent agent)
             NoteConflicts = contradiction?.Conflicts ?? Array.Empty<ClaimConflict>(),
         };
 
-        return agent.ReviewAsync(context, ct);
+        using (ZynaraTelemetry.StartAgentInvoke("critic"))
+            return await agent.ReviewAsync(context, ct);
     }
 }

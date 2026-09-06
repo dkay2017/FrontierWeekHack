@@ -5,6 +5,31 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D26 · Challenge 2 — agent-keyed traces (`ZynaraTelemetry` ActivitySource)
+
+**2026-09-06.** Designed in the TDD (§10) but not built. Added
+`Zynara.Core.Diagnostics.ZynaraTelemetry` — one `ActivitySource` ("Zynara.Pipeline")
+with helpers that emit a nested span tree: `pipeline.run` (tags: request id,
+procedure, payer, region, is-appeal, route, reasoning steps) → `spoke.<name>`
+(needs-auth · evidence-gap · claims-extraction · precedent-match · critic) →
+`invoke_agent <name>` (only when the spoke actually calls its agent) →
+`chat <model>` (added by `FoundryAgentClient`, hosted path only, tags the token
+counts + tool calls). `AuthPipeline` and the five spokes are instrumented; the
+Durable activities inherit the same spans per invocation.
+
+The Function hosts (`Zynara.Orchestrator`, `Zynara.ApiProxy`) register the source
+with the **Azure Monitor OpenTelemetry exporter**
+(`Azure.Monitor.OpenTelemetry.Exporter` + `OpenTelemetry.Extensions.Hosting`)
+when `APPLICATIONINSIGHTS_CONNECTION_STRING` is set — otherwise the spans are
+still emitted (for tests) but not shipped. `infra/modules/apps.bicep` already
+wires that setting. `TelemetryTests` (2) assert the tree with an `ActivityListener`.
+**102 tests green.** Visual verification in the App Insights transaction view
+happens at deploy (S-4).
+Touched: `Zynara.Core/Diagnostics/ZynaraTelemetry.cs`, `Pipeline/{AuthPipeline,
+NeedsAuthCheck,EvidenceGapMatch,ContradictionCheck,AppealMatch,CriticCheck}.cs`,
+`Zynara.Agents/Foundry/FoundryAgentClient.cs`, both Function `Program.cs` (+2 pkgs each),
+`tests/Zynara.Core.Tests/TelemetryTests.cs`, TDD §7/§10.
+
 ## D25 · Precedent corpus gains first-time-approval cases; support model widened
 
 **2026-09-06.** Follow-on from D24. Every precedent on record was an appeal case,

@@ -181,12 +181,16 @@ cross-cutting concerns.
   Blob (`Storage Blob Data Contributor`). The two unavoidable strings (App
   Insights connection, content-share key) live in Key Vault as
   `@Microsoft.KeyVault` references. No PHI anywhere in scope.
-- **Observability** — App Insights: one W3C trace per request id, a child span
-  per agent (`invoke_agent <name>`) and per model call (`chat <model>`), nested
-  under one `pipeline.run`, trace id on the `submissions` document. Per-agent
-  **cost meter** (£/$ per request · agent · day) off `agentCalls`. An Azure
-  Monitor **Service Health workbook** for live component status. The
-  `Zynara.Eval` CI gate (§12).
+- **Observability** — App Insights via the Azure Monitor OpenTelemetry exporter.
+  `ZynaraTelemetry` (a single `ActivitySource`, `Zynara.Core.Diagnostics`) emits
+  one `pipeline.run` span per request, a `spoke.<name>` child per deterministic
+  spoke, an `invoke_agent <name>` child whenever a spoke calls its agent, and a
+  `chat <model>` grandchild per hosted-model round-trip — so the trace shows
+  exactly where reasoning happened (the stub path has the same tree minus the
+  `chat` spans). Per-agent **cost meter** (£/$ per request · agent · day) off
+  `agentCalls`, each row carrying the trace id. An Azure Monitor **Service Health
+  workbook** for live component status (named, not built). The `Zynara.Eval` CI
+  gate (§12).
 - **Responsible AI** — the Gate routes every gap or low-confidence case to a
   human; the Submission Adapter is the sole actor that touches a payer;
   deterministic code owns every decision value; every recommendation retains its
@@ -502,7 +506,7 @@ midnight US).
 |---|---|
 | **0 — Foundry setup** | `azd provision` — account, project, model, App Insights, **new resource group** |
 | **1 — build agents via SDK** | 4 persistent reasoning agents (incl. the Critic) via `Azure.AI.Projects`, wired behind `Zynara.Core` interfaces with stub twins; agents reason and challenge one another (§3.1) |
-| **2 — agent-keyed traces** | nested `invoke_agent <name>` + `chat <model>` spans under one `pipeline.run` trace, trace id on the `submissions` document |
+| **2 — agent-keyed traces** | **built** — `Zynara.Core.Diagnostics.ZynaraTelemetry` `ActivitySource` emits `pipeline.run` → `spoke.<name>` → `invoke_agent <name>` → `chat <model>` (the last only on the hosted path); tags carry request id, route, per-`chat` token counts. The Function hosts register the source with the Azure Monitor OpenTelemetry exporter when `APPLICATIONINSIGHTS_CONNECTION_STRING` is set; `IAgentCallRecorder` writes the trace id onto each `agentCalls` cost row. `TelemetryTests` asserts the span tree. |
 | **3 — evaluate an agent** | `evidence-gap-agent`, portal Coherence/Fluency + `Zynara.Eval` CI gate on the safety-shaped metric suite (§7.3): precision/recall, mandatory false-negative rate, citation accuracy, hallucination rate, safe-abstention rate, unsafe-automation rate (hard-gated to 0) |
 | **4 — persistent assets + portal workflow** | agents visible as assets; a 2–3 node portal workflow, the conditional Gate/appeal steps in the Durable orchestrator |
 | **AI governance** | cost metering is built (dashboard Cost tab); the enforcement layer — quota / rate limits / spend caps / model allow-list — plus versioning and live drift monitoring are enumerated in §7.1 as production hardening, not built for the demo |

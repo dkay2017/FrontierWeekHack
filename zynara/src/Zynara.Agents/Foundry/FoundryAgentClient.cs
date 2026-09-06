@@ -4,6 +4,7 @@ using Azure.AI.Projects.Agents;
 using Azure.Core;
 using Azure.Identity;
 using OpenAI.Responses;
+using Zynara.Core.Diagnostics;
 
 namespace Zynara.Agents.Foundry;
 
@@ -91,6 +92,9 @@ public sealed class FoundryAgentClient
         var inTokens = 0;
         var outTokens = 0;
 
+        using var chat = ZynaraTelemetry.StartChat(_model);
+        chat?.SetTag("zynara.agent", agentName);
+
         ResponseResult result = (await responses.CreateResponseAsync(userText, null, ct)).Value;
         Accumulate(result.Usage);
 
@@ -113,6 +117,7 @@ public sealed class FoundryAgentClient
             Accumulate(result.Usage);
         }
 
+        ZynaraTelemetry.RecordChatUsage(chat, inTokens, outTokens, toolCalls);
         return new AgentInvocation(result.GetOutputText() ?? "", toolCalls, inTokens, outTokens);
 
         void Accumulate(ResponseTokenUsage? u)

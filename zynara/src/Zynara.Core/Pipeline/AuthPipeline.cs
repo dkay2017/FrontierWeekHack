@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using Zynara.Core.Abstractions;
 using Zynara.Core.Agents;
+using Zynara.Core.Diagnostics;
 using Zynara.Core.Gating;
 using Zynara.Core.Model;
 
@@ -26,13 +27,18 @@ public sealed class AuthPipeline(
     public async Task<PipelineResult> RunAsync(Request request, CancellationToken ct = default)
     {
         var sw = Stopwatch.StartNew();
+        using var run = ZynaraTelemetry.StartPipelineRun(request);
 
         var na = await needsAuth.RunAsync(request, ct);
         if (!na.AuthRequired)
+        {
+            ZynaraTelemetry.RecordRoute(run, GateRoute.AutoSubmit, reasoningSteps: 1);
+            run?.SetTag("zynara.stopped_early", true);
             return new PipelineResult(request.Id, na, null, null, null, null, null)
             {
                 Metrics = new PipelineMetrics(0, 0, 0, ReasoningStepsRun: 1, sw.ElapsedMilliseconds),
             };
+        }
 
         var gap = await evidenceGap.RunAsync(request, ct);
         var conflict = await contradiction.RunAsync(request, ct);
@@ -40,6 +46,7 @@ public sealed class AuthPipeline(
         var review = await critic.RunAsync(request, na, gap, appeal, conflict, ct);
         var isAppeal = !string.IsNullOrWhiteSpace(request.DenialLetter);
         var decision = gate.Evaluate(gap, appeal, request.EstimatedValue, review, isAppeal, conflict);
+        ZynaraTelemetry.RecordRoute(run, decision.Route, reasoningSteps: 5);
 
         var criteria = await store.GetCriteriaAsync(
             request.PayerPlan, request.Procedure, request.Region, ct);

@@ -1,11 +1,15 @@
+using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Zynara.Agents;
 using Zynara.ApiProxy;
 using Zynara.Core;
 using Zynara.Core.Abstractions;
 using Zynara.Core.Demo;
+using Zynara.Core.Diagnostics;
 using Zynara.Core.View;
 using Zynara.Data;
 
@@ -21,6 +25,14 @@ var host = new HostBuilder()
     {
         services.AddZynaraAgents(context.Configuration);
         services.AddZynaraCore();
+
+        // Challenge 2 — agent-keyed traces (see the orchestrator Program.cs).
+        var appInsights = context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+        if (!string.IsNullOrWhiteSpace(appInsights))
+            services.AddOpenTelemetry().WithTracing(t => t
+                .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("zynara-apiproxy"))
+                .AddSource(ZynaraTelemetry.SourceName)
+                .AddAzureMonitorTraceExporter(o => o.ConnectionString = appInsights));
 
         var cosmos = context.Configuration["COSMOS_ENDPOINT"];
         if (!string.IsNullOrWhiteSpace(cosmos))

@@ -312,7 +312,7 @@ the user chose: **de-risk spike → `Zynara.Data` → grow eval set → video la
 | # | Item | Size | Note |
 |---|---|---|---|
 | S-1 | **`Zynara.Submission`** — the outbound adapter project | M | `azure.yaml` + `infra/` already reference `src/Zynara.Submission`; project does not exist. The "sole outbound path". A stub adapter (log + persist `submissions` doc, no real payer call) is enough for the demo. |
-| S-2 | **Challenge 2 — agent-keyed traces** | M | TDD §10 designs `invoke_agent <name>` / `chat <model>` spans under one `pipeline.run` trace, trace id on the case doc. No `ActivitySource` code exists yet — `IAgentCallRecorder` only reads `Activity.Current`. Scored challenge deliverable. |
+| ~~S-2~~ | **Challenge 2 — agent-keyed traces** — ✅ **done (D26)** | — | `ZynaraTelemetry` ActivitySource: `pipeline.run → spoke.* → invoke_agent * → chat *`. Azure Monitor OTel exporter wired in both Function hosts (gated on `APPLICATIONINSIGHTS_CONNECTION_STRING`). `TelemetryTests` assert the tree. **102 tests.** Visual check at deploy (S-4). |
 | S-3 | **Challenge 4 — Foundry portal workflow** | S | 2–3 node portal workflow (manual, in the portal, like the vector store). Agents-as-assets half is done via the provisioner. |
 | S-4 | **Challenge 0 — `azd provision` / deploy** | M | Never run against a live subscription. Needs a real RG + the `Zynara.DbDeploy` hook + `Zynara.Submission` to build. |
 | S-5 | **`Zynara.Dashboard/index.html`** — port to the light house style | S | Still the old 377-line dark version; `standalone.html` is the good one. Replace or re-point. |

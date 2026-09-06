@@ -1,5 +1,6 @@
 using Zynara.Core.Abstractions;
 using Zynara.Core.Agents;
+using Zynara.Core.Diagnostics;
 using Zynara.Core.Model;
 
 namespace Zynara.Core.Pipeline;
@@ -15,11 +16,15 @@ public sealed class EvidenceGapMatch(IZynaraStore store, IEvidenceGapAgent agent
 {
     public async Task<EvidenceGapResult> RunAsync(Request request, CancellationToken ct = default)
     {
+        using var spoke = ZynaraTelemetry.StartSpoke("evidence-gap");
+
         var criteria = await store.GetCriteriaAsync(request.PayerPlan, request.Procedure, request.Region, ct)
             ?? throw new InvalidOperationException(
                 $"No published criteria for {request.PayerPlan} / {request.Procedure} in {request.Region}.");
 
-        var assessment = await agent.AssessAsync(request.ClinicalNote, criteria, ct);
+        EvidenceGapAssessment assessment;
+        using (ZynaraTelemetry.StartAgentInvoke("evidence-gap"))
+            assessment = await agent.AssessAsync(request.ClinicalNote, criteria, ct);
         assessment.Validate(criteria);
 
         var status = assessment.Findings.ToDictionary(f => f.CriterionId, f => f.Status);

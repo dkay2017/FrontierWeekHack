@@ -1,5 +1,6 @@
 using Zynara.Core.Abstractions;
 using Zynara.Core.Agents;
+using Zynara.Core.Diagnostics;
 using Zynara.Core.Model;
 
 namespace Zynara.Core.Pipeline;
@@ -14,6 +15,8 @@ public sealed class NeedsAuthCheck(IZynaraStore store, INeedsAuthAgent agent)
 {
     public async Task<NeedsAuthResult> RunAsync(Request request, CancellationToken ct = default)
     {
+        using var spoke = ZynaraTelemetry.StartSpoke("needs-auth");
+
         var rules = await store.GetPolicyRulesAsync(
             request.PayerPlan, request.Region, request.Procedure, ct);
 
@@ -42,6 +45,8 @@ public sealed class NeedsAuthCheck(IZynaraStore store, INeedsAuthAgent agent)
 
         // No rule at all, or rules disagree — ask the agent to explain, and default
         // to "required" (the safe side: a wasted submission beats an auto-denial).
+        spoke?.SetTag("zynara.ambiguous", true);
+        using var invoke = ZynaraTelemetry.StartAgentInvoke("needs-auth");
         var note = await agent.ExplainAsync(request, rules, ct);
         return new NeedsAuthResult(
             AuthRequired: true,

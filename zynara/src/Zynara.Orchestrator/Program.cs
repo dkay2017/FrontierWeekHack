@@ -1,10 +1,14 @@
+using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Zynara.Agents;
 using Zynara.Core;
 using Zynara.Core.Abstractions;
 using Zynara.Core.Demo;
+using Zynara.Core.Diagnostics;
 using Zynara.Data;
 
 // Compute layer (Architecture §4 · TDD §12 TD-1..TD-3).
@@ -21,6 +25,17 @@ var host = new HostBuilder()
     {
         services.AddZynaraAgents(context.Configuration);   // stub by default; foundry via ZYNARA_AGENTS
         services.AddZynaraCore();                          // spokes + Gate + pipeline
+
+        // Challenge 2 — agent-keyed traces. Export the pipeline ActivitySource
+        // (pipeline.run → spoke.* → invoke_agent * → chat *) to App Insights.
+        // No connection string (local / CI) → the spans are still emitted for the
+        // tests' ActivityListener, just not shipped anywhere.
+        var appInsights = context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+        if (!string.IsNullOrWhiteSpace(appInsights))
+            services.AddOpenTelemetry().WithTracing(t => t
+                .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("zynara-orchestrator"))
+                .AddSource(ZynaraTelemetry.SourceName)
+                .AddAzureMonitorTraceExporter(o => o.ConnectionString = appInsights));
 
         // COSMOS_ENDPOINT set → the Cosmos-backed store; otherwise the in-memory demo world.
         var cosmos = context.Configuration["COSMOS_ENDPOINT"];
