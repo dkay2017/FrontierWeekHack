@@ -29,7 +29,15 @@ public sealed class AppealMatch(IZynaraStore store, IPrecedentStrategistAgent ag
         var caseTokens = Tokens($"{request.ClinicalNote} {request.DenialLetter}");
         var denialCodes = DenialCodes(request.DenialLetter);
 
-        var shortlist = candidates
+        // A precedent that *lost* on appeal is only decision-relevant when we are
+        // weighing whether to appeal. On a fresh submission it is noise, and the
+        // Critic rightly refuses to let a loss stand in as positive support.
+        var isAppeal = !string.IsNullOrWhiteSpace(request.DenialLetter);
+        var relevant = isAppeal
+            ? candidates
+            : candidates.Where(p => p.AppealOutcome != AppealOutcome.AppealLost);
+
+        var shortlist = relevant
             .Select(p => Build(p, caseTokens, denialCodes))
             .OrderByDescending(m => m.Similarity)
             .ThenByDescending(m => m.Precedent.DecidedOn)

@@ -128,23 +128,6 @@
           "decidedOn": "2026-04-01",
           "narrative": "Six weeks of physiotherapy, radiculopathy on examination, MRI requested to plan surgical management. Denied MN-01, overturned on appeal citing clause 2.1 and the documented neurological deficit.",
           "droveRecommendation": true
-        },
-        {
-          "caseId": "P-9",
-          "similarity": 0.208,
-          "matchedFacts": [
-            "imaging",
-            "management",
-            "physiotherapy",
-            "radiculopathy",
-            "would"
-          ],
-          "initiallyDenied": true,
-          "wonOnAppeal": false,
-          "clausesCited": [],
-          "decidedOn": "2026-02-01",
-          "narrative": "Physiotherapy and radiculopathy noted but imaging not shown to change management. Denied MN-02; appeal unsuccessful \u2014 the record did not establish that the scan would alter the treatment plan.",
-          "droveRecommendation": false
         }
       ],
       "critic": {
@@ -313,23 +296,6 @@
           "decidedOn": "2026-03-01",
           "narrative": "Patient completed eight weeks of physiotherapy with radiculopathy documented on examination and imaging expected to change management. Initially denied under MN-01 (conservative treatment not evidenced); authorised on appeal under clause 2.1.",
           "droveRecommendation": true
-        },
-        {
-          "caseId": "P-9",
-          "similarity": 0.278,
-          "matchedFacts": [
-            "alter",
-            "imaging",
-            "management",
-            "physiotherapy",
-            "would"
-          ],
-          "initiallyDenied": true,
-          "wonOnAppeal": false,
-          "clausesCited": [],
-          "decidedOn": "2026-02-01",
-          "narrative": "Physiotherapy and radiculopathy noted but imaging not shown to change management. Denied MN-02; appeal unsuccessful \u2014 the record did not establish that the scan would alter the treatment plan.",
-          "droveRecommendation": false
         }
       ],
       "critic": {
@@ -498,22 +464,6 @@
           "decidedOn": "2026-03-01",
           "narrative": "Patient completed eight weeks of physiotherapy with radiculopathy documented on examination and imaging expected to change management. Initially denied under MN-01 (conservative treatment not evidenced); authorised on appeal under clause 2.1.",
           "droveRecommendation": true
-        },
-        {
-          "caseId": "P-9",
-          "similarity": 0.222,
-          "matchedFacts": [
-            "imaging",
-            "management",
-            "radiculopathy",
-            "would"
-          ],
-          "initiallyDenied": true,
-          "wonOnAppeal": false,
-          "clausesCited": [],
-          "decidedOn": "2026-02-01",
-          "narrative": "Physiotherapy and radiculopathy noted but imaging not shown to change management. Denied MN-02; appeal unsuccessful \u2014 the record did not establish that the scan would alter the treatment plan.",
-          "droveRecommendation": false
         }
       ],
       "critic": {
@@ -694,24 +644,6 @@
           "decidedOn": "2026-04-01",
           "narrative": "Six weeks of physiotherapy, radiculopathy on examination, MRI requested to plan surgical management. Denied MN-01, overturned on appeal citing clause 2.1 and the documented neurological deficit.",
           "droveRecommendation": true
-        },
-        {
-          "caseId": "P-9",
-          "similarity": 0.273,
-          "matchedFacts": [
-            "alter",
-            "imaging",
-            "management",
-            "physiotherapy",
-            "plan",
-            "would"
-          ],
-          "initiallyDenied": true,
-          "wonOnAppeal": false,
-          "clausesCited": [],
-          "decidedOn": "2026-02-01",
-          "narrative": "Physiotherapy and radiculopathy noted but imaging not shown to change management. Denied MN-02; appeal unsuccessful \u2014 the record did not establish that the scan would alter the treatment plan.",
-          "droveRecommendation": false
         }
       ],
       "critic": {
@@ -1371,7 +1303,7 @@
       "cases": 7,
       "avgCriteriaChecked": 3,
       "avgEvidenceGapsFound": 1,
-      "avgPrecedentsConsidered": 2.5714285714285716,
+      "avgPrecedentsConsidered": 2,
       "avgAssembledInMs": 0,
       "unsafeAutomationRate": 0
     },
@@ -1400,7 +1332,7 @@
       {
         "metric": "Comparable precedents reviewed",
         "manual": "ad hoc, if at all",
-        "careApprovalIQ": "2.6 ranked automatically per case, with the matched facts shown",
+        "careApprovalIQ": "2 ranked automatically per case, with the matched facts shown",
         "manualIsEstimate": true,
         "basis": "precedent review is not a standard step in manual pre-auth."
       },

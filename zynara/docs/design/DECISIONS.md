@@ -5,6 +5,19 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D24 · Appeal-losses excluded from the shortlist on a fresh submission
+
+**2026-09-06.** Surfaced by the hosted de-risk spike: on `demo-ready` (no denial,
+every criterion documented) the hosted Critic flagged that a lost precedent
+(P-9) was sitting in the shortlist as "support", and routed the clean case to
+Strengthen instead of AutoSubmit. A precedent that lost on appeal is only
+decision-relevant when weighing whether to *appeal* — on a first submission it is
+noise. `AppealMatch.RunAsync` now filters `AppealOutcome.AppealLost` out of the
+candidate set unless `request.DenialLetter` is present. `avgPrecedentsConsidered`
+in the benchmark drops 2.57 → 2; demo snapshot regenerated.
+Touched: `Zynara.Core/Pipeline/AppealMatch.cs`,
+`Zynara.Dashboard/{demo-cases.json,standalone.html}`, `config/profiles/*`.
+
 ## D23 · `appeal-builder` renamed to `precedent-strategist`
 
 **2026-09-06.** The agent never "builds an appeal" on most cases — it reads the
