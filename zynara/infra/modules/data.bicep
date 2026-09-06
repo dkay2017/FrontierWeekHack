@@ -16,6 +16,8 @@ param cosmosName string
 param corpusStorageName string
 param reasoningPrincipalId string
 param submissionPrincipalId string
+@description('The user/SP running azd — gets Cosmos data-plane access so the postprovision seed hook can create containers. Empty = skip.')
+param deployerPrincipalId string = ''
 
 var databaseName = 'careapproval'
 // Must match Zynara.Data.CosmosNames.All.
@@ -86,6 +88,18 @@ resource submissionCosmos 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignme
   properties: {
     roleDefinitionId: cosmosDataContributor.id
     principalId: submissionPrincipalId
+    scope: cosmos.id
+  }
+}
+
+// The deploying principal — so the azd postprovision seed hook (which runs as the
+// user, not a managed identity) can create the database + containers.
+resource deployerCosmos 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-11-15' = if (!empty(deployerPrincipalId)) {
+  parent: cosmos
+  name: guid(cosmos.id, deployerPrincipalId, 'data-contributor')
+  properties: {
+    roleDefinitionId: cosmosDataContributor.id
+    principalId: deployerPrincipalId
     scope: cosmos.id
   }
 }

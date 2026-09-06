@@ -10,6 +10,7 @@
     "modelDeploymentName": { "value": "${MODEL_DEPLOYMENT_NAME=gpt-5.4}" },
     "vectorStoreId": { "value": "${VECTOR_STORE_ID=}" },
     "agentsMode": { "value": "${AGENTSMODE=stub}" },
+    "deployerPrincipalId": { "value": "${AZURE_PRINCIPAL_ID}" },
     "staticWebAppSku": { "value": "${STATIC_WEB_APP_SKU=Standard}" }
   }
 }

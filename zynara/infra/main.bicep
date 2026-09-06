@@ -47,6 +47,9 @@ param vectorStoreId string = ''
 @allowed([ 'stub', 'foundry' ])
 param agentsMode string = 'stub'
 
+@description('Object id of the user/SP running azd — granted Cosmos data-plane access for the seed hook. azd fills this from AZURE_PRINCIPAL_ID.')
+param deployerPrincipalId string = ''
+
 @description('Static Web App SKU. Standard = linked backend (same-origin /api).')
 @allowed([ 'Free', 'Standard' ])
 param staticWebAppSku string = 'Standard'
@@ -103,6 +106,7 @@ module data './modules/data.bicep' = {
     corpusStorageName: 'zyncorpus${suffix}'
     reasoningPrincipalId: identity.outputs.reasoningPrincipalId
     submissionPrincipalId: identity.outputs.submissionPrincipalId
+    deployerPrincipalId: deployerPrincipalId
   }
 }
 
