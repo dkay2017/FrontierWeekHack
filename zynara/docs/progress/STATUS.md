@@ -179,6 +179,16 @@ P0-2 (Critic agent) → P0-1 (reframe docs) → P0-4 (eval suite). **All P0 done
   projection logic is covered by `CaseService`/`CaseViewBuilder` tests, HTTP layer
   is thin. Same posture as the orchestrator.
 
+## Parked — 2026-09-06 (end of session 6)
+
+Everything committed + pushed. Resume at **"Next — remaining P1 / P2"** below.
+Dashboard: `standalone.html` reworked into the light-first Zynara/TireForge house
+style (masthead + seal logo, aurora ground, tinted cards, table + right-hand
+drawer for the case detail). Published artifact:
+`https://claude.ai/code/artifact/5c26a346-ad1d-41e5-8859-79bc88b9b65b`. User
+approved the direction ("much better"). `index.html` (the live-API version) still
+needs the same restyle port.
+
 ## Done — session 6 tail (2026-09-06) — P2-5
 
 - **`docs/runbooks/demo-script.md`** — 3-minute beat sheet on the review's golden
