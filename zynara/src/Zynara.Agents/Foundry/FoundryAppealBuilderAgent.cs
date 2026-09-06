@@ -1,0 +1,44 @@
+using System.Text;
+using Zynara.Core.Agents;
+using Zynara.Core.Model;
+
+namespace Zynara.Agents.Foundry;
+
+/// <summary>
+/// <c>appeal-builder</c> backed by the hosted agent — the differentiator. Reasons
+/// over the ranked precedent shortlist, recommends submit / strengthen / appeal,
+/// and drafts the appeal when a denial has occurred. The recommendation is
+/// advisory: the deterministic Gate still decides auto-submit vs. review.
+/// Citations and the verdict are sanitised against the shortlist.
+/// </summary>
+public sealed class FoundryAppealBuilderAgent(
+    FoundryAgentClient client, FoundryAgentOptions options, IAgentCallRecorder recorder) : IAppealBuilderAgent
+{
+    public async Task<AppealRecommendation> RecommendAsync(
+        Request request,
+        EvidenceGapAssessment gap,
+        IReadOnlyList<Precedent> shortlist,
+        CancellationToken ct = default)
+    {
+        var denied = !string.IsNullOrWhiteSpace(request.DenialLetter);
+
+        var prompt = new StringBuilder()
+            .AppendLine($"Procedure: {request.Procedure} · payer {request.PayerPlan} · region {request.Region}.")
+            .AppendLine($"Evidence gap: {gap.Missing.Count} missing, {gap.Conflicts.Count} contradicted. {gap.Text}")
+            .AppendLine(denied ? $"Denial letter: {request.DenialLetter}" : "No denial yet.")
+            .AppendLine()
+            .AppendLine("Precedent shortlist (most similar first):");
+        foreach (var p in shortlist)
+            prompt.AppendLine(
+                $"  [{p.CaseId}] {p.FactPattern} — " +
+                $"{(p.InitiallyApproved ? "approved first time" : "initially denied")}, " +
+                $"appeal {p.AppealOutcome}" +
+                (p.ClausesCited.Count > 0 ? $", clauses {string.Join("/", p.ClausesCited)}" : "") +
+                (p.DenialReasonCodes.Count > 0 ? $", codes {string.Join("/", p.DenialReasonCodes)}" : ""));
+
+        var inv = await client.InvokeAsync(options.AppealBuilderAgentName, prompt.ToString(), toolHandler: null, ct);
+        await Usage.RecordAsync(recorder, options.AppealBuilderAgentName, options.Model, inv, request.Id, ct);
+
+        return FoundryResponse.ParseAppeal(inv.Text, shortlist, denied);
+    }
+}
