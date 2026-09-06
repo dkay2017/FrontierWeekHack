@@ -1,20 +1,14 @@
 // Care Approval IQ — infrastructure entry point (subscription scope).
 //
-// The point of this template is the IDENTITY + NETWORK BOUNDARY the evaluator
-// review (§13) asked to see in code:
+// What this build does (TDD §7): managed-identity-first — every component runs
+// under its OWN user-assigned managed identity, and the only residual secret
+// (the payer-integration credential) lives in Key Vault, readable by the
+// Submission Adapter's identity alone. No stored connection strings.
 //
-//   • Every component runs under its OWN user-assigned managed identity.
-//   • The REASONING PLANE (orchestrator + api-proxy) has Foundry inference,
-//     Cosmos data-plane and Blob read — and NO route to the payer network.
-//   • Only the SUBMISSION ADAPTER identity holds the outbound-integration
-//     permission, and it has NO Foundry access.
-//   • The compute subnet's NSG denies egress to the submission subnet and to
-//     the payer address prefix; Cosmos + Storage are reached over private
-//     endpoints in the data subnet.
-//
-// This is a skeleton — a real deployment fills in the payer connectivity
-// (APIM / private link to the clearing house), WAF, and DR. It is not yet
-// wired to a live subscription.
+// What this build does NOT do (production hardening — TDD §7.1, out of scope):
+// private networking (VNet / private endpoints / NSGs), the enforced network
+// boundary between the reasoning plane and payer connectivity, WAF / Front Door,
+// multi-region DR. Named, not built.
 //
 // Deploy (plain az):
 //   az deployment sub create --location swedencentral \
@@ -49,9 +43,6 @@ param modelCapacity int = 10
 @allowed([ 'stub', 'foundry' ])
 param agentsMode string = 'foundry'
 
-@description('CIDR the payer / clearing-house integration lives behind. The reasoning subnet is denied egress to it.')
-param payerAddressPrefix string = '10.20.0.0/16'
-
 @description('Static Web App SKU. Standard = linked backend (same-origin /api).')
 @allowed([ 'Free', 'Standard' ])
 param staticWebAppSku string = 'Standard'
@@ -75,14 +66,7 @@ module identity './modules/identity.bicep' = {
   params: { location: location, tags: allTags, suffix: suffix }
 }
 
-// --- 2 · network — the boundary ------------------------------------------
-module network './modules/network.bicep' = {
-  name: 'network'
-  scope: rg
-  params: { location: location, tags: allTags, environmentName: environmentName, payerAddressPrefix: payerAddressPrefix }
-}
-
-// --- 3 · Foundry stack — account + project + model + observability ---------
+// --- 2 · Foundry stack — account + project + model + observability ---------
 module foundry './modules/foundry.bicep' = {
   name: 'foundry'
   scope: rg
@@ -102,7 +86,7 @@ module foundry './modules/foundry.bicep' = {
   }
 }
 
-// --- 4 · data — Cosmos (TD-4) + Blob corpus (TD-5), private-endpoint only --
+// --- 3 · data — Cosmos (TD-4) + Blob corpus (TD-5), RBAC + local-auth off --
 module data './modules/data.bicep' = {
   name: 'data'
   scope: rg
@@ -111,13 +95,12 @@ module data './modules/data.bicep' = {
     tags: allTags
     cosmosName: 'zynara-cosmos-${suffix}'
     corpusStorageName: 'zyncorpus${suffix}'
-    dataSubnetId: network.outputs.dataSubnetId
     reasoningPrincipalId: identity.outputs.reasoningPrincipalId
     submissionPrincipalId: identity.outputs.submissionPrincipalId
   }
 }
 
-// --- 5 · key vault — the payer-integration secret, readable only by id-submission
+// --- 4 · key vault — the payer-integration secret, readable only by id-submission
 module keyvault './modules/keyvault.bicep' = {
   name: 'keyvault'
   scope: rg
@@ -129,7 +112,7 @@ module keyvault './modules/keyvault.bicep' = {
   }
 }
 
-// --- 6 · apps — Function apps on the right subnet + identity, + the SWA ----
+// --- 5 · apps — Function apps + the SWA -----------------------------------
 module apps './modules/apps.bicep' = {
   name: 'apps'
   scope: rg
@@ -141,8 +124,6 @@ module apps './modules/apps.bicep' = {
     agentsMode: agentsMode
     staticWebAppSku: staticWebAppSku
     hostStorageName: 'zynhost${suffix}'
-    computeSubnetId: network.outputs.computeSubnetId
-    submissionSubnetId: network.outputs.submissionSubnetId
     reasoningIdentityId: identity.outputs.reasoningIdentityId
     submissionIdentityId: identity.outputs.submissionIdentityId
     cosmosEndpoint: data.outputs.cosmosEndpoint

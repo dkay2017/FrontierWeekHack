@@ -5,34 +5,36 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
-## D19 · infra/ skeleton + CI — the identity + network boundary in code
+## D19 · infra/ skeleton + CI — identity boundary only (no private networking)
 
-**2026-09-06.** Evaluator P1-4 / §13. `infra/main.bicep` (+ 6 modules) —
-`az bicep build` clean, not yet deployed. Encodes the boundary:
+**2026-09-06.** Evaluator P1-4 / §13. `infra/main.bicep` (+ 5 modules) —
+`az bicep build` clean, not deployed. **Managed-identity first; no VNet / private
+endpoints / NSGs** — the network isolation is production hardening (TDD §7.1),
+and the review guardrail (§18) is explicit about not adding Azure services for an
+enterprise look. The substance that matters — a reasoning agent cannot reach the
+payer credential — is the **identity split**:
 
-- one **user-assigned managed identity per component** (`identity.bicep`):
-  `id-reasoning` (orchestrator + api-proxy), `id-submission` (the Submission
-  Adapter), `id-dashboard`.
-- `network.bicep` — VNet with `snet-compute` / `snet-submission` / `snet-data`;
-  the **compute NSG denies egress** to `snet-submission` and to
-  `payerAddressPrefix`. Cosmos + Blob reached only over private endpoints.
-- `id-reasoning` gets Cognitive Services User (inference) + Cosmos data-plane +
-  Blob read. `id-submission` gets the payer-integration secret (Key Vault Secrets
-  User) + Cosmos write — and **no Foundry, no Blob**. `id-dashboard` gets nothing.
+- one user-assigned managed identity per component: `id-reasoning`
+  (orchestrator + api-proxy), `id-submission` (the Submission Adapter),
+  `id-dashboard`.
+- `id-reasoning` → Cognitive Services User (inference) + Cosmos data-plane +
+  Blob read. `id-submission` → the payer-integration secret (Key Vault Secrets
+  User) + Cosmos write, and **no Foundry** (its app has no `PROJECT_ENDPOINT`).
+  `id-dashboard` → nothing.
+- No stored connection strings: Cosmos `disableLocalAuth`, Storage
+  `allowSharedKeyAccess: false`, the one secret in Key Vault.
 - `data.bicep` Cosmos containers: requests · submissions · outcomes · **caseAudit**
   (D15) · agentCalls · **denialCohorts** (D12).
-- `azure.yaml` (azd) wires orchestrator / apiproxy / **submission** (identity +
-  subnet provisioned now; the adapter project itself is still to build) /
-  dashboard.
+- `azure.yaml` (azd) wires orchestrator / apiproxy / submission / dashboard.
 
 `.github/workflows/zynara-ci.yml` — build + `dotnet test` (the eval gate runs
-here) + `bicep build` + a check that the committed `demo-cases.json` /
-`config/profiles/` are not stale. `Zynara.DemoDump` made deterministic (fixed
-`TimeProvider`, `AvgAssembledInMs` zeroed in the snapshot) so that check is stable.
+here) + `bicep build` + a stale-snapshot check. `Zynara.DemoDump` made
+deterministic (fixed `TimeProvider`, `AvgAssembledInMs` zeroed in the snapshot)
+so that check is stable.
 
 Touched: `infra/*`, `azure.yaml`, `.github/workflows/zynara-ci.yml`,
 `tools/Zynara.DemoDump`, `Zynara.Core/Impact/BenchmarkService.cs`,
-`src/Zynara.Dashboard/standalone.html`.
+`src/Zynara.Dashboard/standalone.html`, TDD §7.1.
 
 ## D18 · Eval — policy-citation accuracy + appeal-verdict agreement
 

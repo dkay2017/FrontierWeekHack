@@ -1,14 +1,14 @@
 // The compute apps.
 //
-//   orchestrator  ┐ snet-compute, id-reasoning  — Foundry + Cosmos + Blob read,
-//   api-proxy     ┘                                NO payer route
-//   submission      snet-submission, id-submission — payer integration + Cosmos
-//                                                    write, NO Foundry
-//   dashboard       Static Web App (static content only)
+//   orchestrator ┐ id-reasoning  — Foundry inference + Cosmos + Blob read
+//   api-proxy    ┘
+//   submission     id-submission — the payer-integration secret + Cosmos write,
+//                                  NO Foundry (deliberately no PROJECT_ENDPOINT)
+//   dashboard      Static Web App (static content only)
 //
-// One Elastic Premium plan (EP1 supports regional VNet integration). One host
-// storage account, identity-based (no keys). Function settings point at Cosmos /
-// Foundry / Key Vault by URI — resolved with the app's managed identity.
+// One Elastic Premium plan, one identity-based host storage account (no keys).
+// Settings point at Cosmos / Foundry / Key Vault by URI, resolved with each app's
+// managed identity. Private networking is production hardening — TDD §7.1.
 
 param location string
 param tags object
@@ -17,8 +17,6 @@ param suffix string
 param agentsMode string
 param staticWebAppSku string
 param hostStorageName string
-param computeSubnetId string
-param submissionSubnetId string
 param reasoningIdentityId string
 param submissionIdentityId string
 param cosmosEndpoint string
@@ -80,8 +78,6 @@ resource orchestrator 'Microsoft.Web/sites@2023-12-01' = {
   properties: {
     serverFarmId: plan.id
     httpsOnly: true
-    virtualNetworkSubnetId: computeSubnetId
-    vnetRouteAllEnabled: true
     keyVaultReferenceIdentity: reasoningIdentityId
     siteConfig: {
       netFrameworkVersion: 'v8.0'
@@ -100,8 +96,6 @@ resource apiProxy 'Microsoft.Web/sites@2023-12-01' = {
   properties: {
     serverFarmId: plan.id
     httpsOnly: true
-    virtualNetworkSubnetId: computeSubnetId
-    vnetRouteAllEnabled: true
     keyVaultReferenceIdentity: reasoningIdentityId
     siteConfig: {
       netFrameworkVersion: 'v8.0'
@@ -121,8 +115,6 @@ resource submission 'Microsoft.Web/sites@2023-12-01' = {
   properties: {
     serverFarmId: plan.id
     httpsOnly: true
-    virtualNetworkSubnetId: submissionSubnetId
-    vnetRouteAllEnabled: true
     keyVaultReferenceIdentity: submissionIdentityId
     siteConfig: {
       netFrameworkVersion: 'v8.0'
@@ -132,7 +124,7 @@ resource submission 'Microsoft.Web/sites@2023-12-01' = {
   }
 }
 
-// Storage Blob Data Owner for the host storage — the three apps' identities.
+// Storage Blob Data Owner for the host storage — the app identities.
 var blobDataOwner = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b')
 
 resource reasoningHostStorage 'Microsoft.Authorization/roleAssignments@2022-04-01' = {

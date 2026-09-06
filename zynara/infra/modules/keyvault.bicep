@@ -16,8 +16,7 @@ resource vault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     sku: { family: 'A', name: 'standard' }
     tenantId: tenant().tenantId
     enableRbacAuthorization: true
-    publicNetworkAccess: 'Disabled'
-    networkAcls: { defaultAction: 'Deny', bypass: 'AzureServices' }
+    // Private networking is production hardening (TDD §7.1) — public endpoint here.
   }
 }
 

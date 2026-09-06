@@ -265,12 +265,12 @@ needs the same restyle port.
 
 ## Done — 2026-09-06 — P1-4 infra + CI
 
-- **`infra/`** (D19) — `main.bicep` + 6 modules, `az bicep build` clean, not
-  deployed. Encodes review §13: one managed identity per component; `snet-compute`
-  NSG denies egress to `snet-submission` + the payer CIDR; `id-reasoning` =
-  Foundry + Cosmos + Blob, `id-submission` = the payer secret + Cosmos write only
-  (no Foundry). Cosmos containers incl. `caseAudit` + `denialCohorts`.
-  `azure.yaml` (azd).
+- **`infra/`** (D19) — `main.bicep` + 5 modules, `az bicep build` clean, not
+  deployed. **Managed-identity only — no VNet / private endpoints** (network
+  isolation → TDD §7.1 production hardening). The identity split is the substance:
+  `id-reasoning` = Foundry + Cosmos + Blob; `id-submission` = the payer secret +
+  Cosmos write, **no Foundry**; local auth off everywhere; one secret in Key
+  Vault. Cosmos containers incl. `caseAudit` + `denialCohorts`. `azure.yaml` (azd).
 - **`.github/workflows/zynara-ci.yml`** — build + test (eval gate) + bicep build +
   a stale-snapshot check; `Zynara.DemoDump` made deterministic for it.
 

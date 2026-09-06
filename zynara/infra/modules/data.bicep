@@ -1,21 +1,19 @@
 // Data plane: Cosmos DB serverless for operational state (TD-4) and a Storage
 // account for the unstructured corpus indexed by Foundry File Search (TD-5).
-// Both are reached over PRIVATE ENDPOINTS in snet-data — no public access.
 //
+// Managed-identity only — local auth / shared keys are disabled on both.
 // Data-plane role assignments:
 //   reasoning   → Cosmos Built-in Data Contributor (read + write the case record)
 //               → Blob Data Reader on the corpus
 //   submission  → Cosmos Built-in Data Contributor (write the submission outcome)
 //               → NO Blob, NO Foundry
 //
-// (Container-level scoping of the Cosmos data-plane role is a production
-// refinement — noted, not done here.)
+// Private networking (private endpoints, VNet) is production hardening — TDD §7.1.
 
 param location string
 param tags object
 param cosmosName string
 param corpusStorageName string
-param dataSubnetId string
 param reasoningPrincipalId string
 param submissionPrincipalId string
 
@@ -40,7 +38,6 @@ resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
     consistencyPolicy: { defaultConsistencyLevel: 'Session' }
     locations: [ { locationName: location, failoverPriority: 0 } ]
     disableLocalAuth: true
-    publicNetworkAccess: 'Disabled'
     minimalTlsVersion: 'Tls12'
   }
 }
@@ -96,9 +93,7 @@ resource corpus 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   kind: 'StorageV2'
   properties: {
     allowSharedKeyAccess: false
-    publicNetworkAccess: 'Disabled'
     minimumTlsVersion: 'TLS1_2'
-    networkAcls: { defaultAction: 'Deny', bypass: 'AzureServices' }
   }
 }
 
@@ -122,37 +117,6 @@ resource reasoningBlob 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
     roleDefinitionId: blobDataReader
     principalId: reasoningPrincipalId
     principalType: 'ServicePrincipal'
-  }
-}
-
-// Private endpoints in snet-data.
-resource cosmosPe 'Microsoft.Network/privateEndpoints@2024-01-01' = {
-  name: 'pe-${cosmosName}'
-  location: location
-  tags: tags
-  properties: {
-    subnet: { id: dataSubnetId }
-    privateLinkServiceConnections: [
-      {
-        name: 'cosmos'
-        properties: { privateLinkServiceId: cosmos.id, groupIds: [ 'Sql' ] }
-      }
-    ]
-  }
-}
-
-resource blobPe 'Microsoft.Network/privateEndpoints@2024-01-01' = {
-  name: 'pe-${corpusStorageName}-blob'
-  location: location
-  tags: tags
-  properties: {
-    subnet: { id: dataSubnetId }
-    privateLinkServiceConnections: [
-      {
-        name: 'blob'
-        properties: { privateLinkServiceId: corpus.id, groupIds: [ 'blob' ] }
-      }
-    ]
   }
 }
 
