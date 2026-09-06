@@ -5,6 +5,22 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D25 · Precedent corpus gains first-time-approval cases; support model widened
+
+**2026-09-06.** Follow-on from D24. Every precedent on record was an appeal case,
+so on a clean first submission the hosted Critic still had nothing to treat as
+positive support and questioned any reliance on appeal-overturn cases. Added
+**P-3 / P-4** — comparable MRI-LS cases *approved as submitted* (`InitiallyApproved`,
+`NotAppealed`) — to `DemoWorld` and the File Search corpus (7 docs now).
+`AppealMatch` now scores a precedent as **favourable** if it was approved as
+submitted *or* won on appeal (was: won on appeal only) — this drives the
+similarity bonus and `DeriveSupport`. `StubPrecedentStrategistAgent` cites the
+approved-as-submitted cases on a Submit verdict and the appeal wins on an Appeal
+verdict. `avgPrecedentsConsidered` 2 → 3.7; demo snapshot regenerated.
+Touched: `Zynara.Core/Demo/DemoWorld.cs`, `Pipeline/AppealMatch.cs`,
+`Zynara.Agents/Stubs/StubPrecedentStrategistAgent.cs`, `data/corpus/*`,
+`Zynara.Dashboard/{demo-cases.json,standalone.html}`, `config/profiles/*`.
+
 ## D24 · Appeal-losses excluded from the shortlist on a fresh submission
 
 **2026-09-06.** Surfaced by the hosted de-risk spike: on `demo-ready` (no denial,

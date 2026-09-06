@@ -61,20 +61,27 @@ public sealed class AppealMatch(IZynaraStore store, IPrecedentStrategistAgent ag
             : (double)matched.Count / Math.Max(caseTokens.Count, pTokens.Count);
 
         var codeBonus = p.DenialReasonCodes.Any(denialCodes.Contains) ? 0.35 : 0d;
-        var wonBonus = p.AppealOutcome == AppealOutcome.AppealWon ? 0.15 : 0d;
+        var favourableBonus = IsFavourable(p) ? 0.15 : 0d;
 
-        return new PrecedentMatch(p, Math.Round(overlap + codeBonus + wonBonus, 3), matched);
+        return new PrecedentMatch(p, Math.Round(overlap + codeBonus + favourableBonus, 3), matched);
     }
+
+    /// <summary>
+    /// A precedent that helps the case: approved as submitted, or a denial that
+    /// was overturned on appeal. A lost appeal is <b>not</b> favourable.
+    /// </summary>
+    private static bool IsFavourable(Precedent p) =>
+        p.InitiallyApproved || p.AppealOutcome == AppealOutcome.AppealWon;
 
     private static PrecedentSupport DeriveSupport(IReadOnlyList<PrecedentMatch> shortlist)
     {
         if (shortlist.Count == 0)
             return PrecedentSupport.None;
 
-        var won = shortlist.Count(m => m.Precedent.AppealOutcome == AppealOutcome.AppealWon);
+        var favourable = shortlist.Count(m => IsFavourable(m.Precedent));
         var strongMatch = shortlist.Any(m => m.Similarity >= 0.35);
 
-        return (won, strongMatch) switch
+        return (favourable, strongMatch) switch
         {
             (>= 2, true) => PrecedentSupport.Strong,
             (>= 1, _) => PrecedentSupport.Moderate,

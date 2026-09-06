@@ -6,7 +6,8 @@ namespace Zynara.Core.Demo;
 /// <summary>
 /// Seeds the in-memory store for local runs and the demo (no Cosmos yet — see
 /// <see cref="InMemoryZynaraStore"/>). One payer world: Bupa / Comprehensive,
-/// MRI lumbar spine, UK — the written criteria and three precedents on record.
+/// MRI lumbar spine, UK — the written criteria and five precedents on record
+/// (two approved as submitted, two overturned on appeal, one appeal lost).
 /// </summary>
 public static class DemoWorld
 {
@@ -63,6 +64,25 @@ public static class DemoWorld
             InitiallyApproved: false, AppealOutcome: AppealOutcome.AppealWon,
             DenialReasonCodes: new[] { "MN-01" }, ClausesCited: new[] { "2.1" },
             DecidedOn: new DateOnly(2026, 4, 1)));
+
+        store.AddPrecedent(new Precedent(
+            "P-3", Payer, Procedure, Region.UK,
+            FactPattern:
+                "Eight weeks of physiotherapy completed with the outcome recorded, radiculopathy " +
+                "documented on examination, and the MRI expected to determine whether to proceed to " +
+                "surgical decompression. Approved as submitted — no denial.",
+            InitiallyApproved: true, AppealOutcome: AppealOutcome.NotAppealed,
+            DenialReasonCodes: Array.Empty<string>(), ClausesCited: Array.Empty<string>(),
+            DecidedOn: new DateOnly(2026, 5, 15)));
+
+        store.AddPrecedent(new Precedent(
+            "P-4", Payer, Procedure, Region.UK,
+            FactPattern:
+                "Documented six-week physiotherapy course, dermatomal sensory deficit on examination, " +
+                "imaging requested to plan surgical management. Authorised on first submission.",
+            InitiallyApproved: true, AppealOutcome: AppealOutcome.NotAppealed,
+            DenialReasonCodes: Array.Empty<string>(), ClausesCited: Array.Empty<string>(),
+            DecidedOn: new DateOnly(2026, 6, 20)));
 
         store.AddPrecedent(new Precedent(
             "P-9", Payer, Procedure, Region.UK,

@@ -20,9 +20,12 @@ public sealed class StubPrecedentStrategistAgent : IPrecedentStrategistAgent
         var won = shortlist.Where(m => m.Precedent.AppealOutcome == AppealOutcome.AppealWon).ToList();
         var lost = shortlist.Count(m => m.Precedent.AppealOutcome == AppealOutcome.AppealLost);
         var winRate = won.Count + lost > 0 ? (double)won.Count / (won.Count + lost) : 0d;
+        var approvedAsSubmitted = shortlist.Where(m => m.Precedent.InitiallyApproved).ToList();
 
         var denied = !string.IsNullOrWhiteSpace(request.DenialLetter);
         var missing = gap.WithStatus(CriterionStatus.Missing).Count() + gap.WithStatus(CriterionStatus.Partial).Count();
+        // On a denial we lean on the cases that won on appeal; on a fresh
+        // submission the honest comparables are the ones approved as submitted.
         var cited = won.Take(3).Select(m => m.Precedent.CaseId).ToList();
 
         StrategyVerdict verdict;
@@ -44,7 +47,11 @@ public sealed class StubPrecedentStrategistAgent : IPrecedentStrategistAgent
         else if (missing == 0 && !gap.AnyContradiction)
         {
             verdict = StrategyVerdict.Submit;
-            text = "No evidence gaps and comparable cases were approved first time — submit.";
+            cited = approvedAsSubmitted.Take(3).Select(m => m.Precedent.CaseId).ToList();
+            text = approvedAsSubmitted.Count > 0
+                ? $"No evidence gaps; {approvedAsSubmitted.Count} comparable case(s) were approved as " +
+                  "submitted on this policy — submit."
+                : "No evidence gaps and no denial on record — submit.";
         }
         else
         {

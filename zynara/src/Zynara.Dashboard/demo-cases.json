@@ -86,6 +86,30 @@
       ],
       "precedents": [
         {
+          "caseId": "P-3",
+          "similarity": 0.65,
+          "matchedFacts": [
+            "completed",
+            "decompression",
+            "determine",
+            "documented",
+            "eight",
+            "examination",
+            "physiotherapy",
+            "proceed",
+            "radiculopathy",
+            "weeks",
+            "whether",
+            "with"
+          ],
+          "initiallyDenied": false,
+          "wonOnAppeal": false,
+          "clausesCited": [],
+          "decidedOn": "2026-05-15",
+          "narrative": "Eight weeks of physiotherapy completed with the outcome recorded, radiculopathy documented on examination, and the MRI expected to determine whether to proceed to surgical decompression. Approved as submitted \u2014 no denial.",
+          "droveRecommendation": true
+        },
+        {
           "caseId": "P-1",
           "similarity": 0.567,
           "matchedFacts": [
@@ -107,7 +131,7 @@
           ],
           "decidedOn": "2026-03-01",
           "narrative": "Patient completed eight weeks of physiotherapy with radiculopathy documented on examination and imaging expected to change management. Initially denied under MN-01 (conservative treatment not evidenced); authorised on appeal under clause 2.1.",
-          "droveRecommendation": true
+          "droveRecommendation": false
         },
         {
           "caseId": "P-2",
@@ -127,7 +151,7 @@
           ],
           "decidedOn": "2026-04-01",
           "narrative": "Six weeks of physiotherapy, radiculopathy on examination, MRI requested to plan surgical management. Denied MN-01, overturned on appeal citing clause 2.1 and the documented neurological deficit.",
-          "droveRecommendation": true
+          "droveRecommendation": false
         }
       ],
       "critic": {
@@ -149,7 +173,7 @@
         "contradictionDetected": false,
         "precedentSupport": "Strong"
       },
-      "draftBody": "Prior-authorisation request \u2014 MRI lumbar spine (CCSD-72148)\nPayer / plan: Bupa/Comprehensive  \u00B7  Region: UK  \u00B7  Policy: bupa-mri-ls-v3\n\nMandatory criteria: all met\nSupporting criteria documented (2/2):\n  - physiotherapy completed for six weeks\n  - radiculopathy documented on examination\n  - imaging changes management\n\nClinical summary:\n  Physiotherapy completed over eight weeks with limited benefit. Radiculopathy documented on examination in an L5 distribution with reduced reflexes. MRI imaging changes management \u2014 the findings would determine whether to proceed to decompression surgery.\n\nAppeal analysis: No evidence gaps and comparable cases were approved first time \u2014 submit. (precedent support: Strong).",
+      "draftBody": "Prior-authorisation request \u2014 MRI lumbar spine (CCSD-72148)\nPayer / plan: Bupa/Comprehensive  \u00B7  Region: UK  \u00B7  Policy: bupa-mri-ls-v3\n\nMandatory criteria: all met\nSupporting criteria documented (2/2):\n  - physiotherapy completed for six weeks\n  - radiculopathy documented on examination\n  - imaging changes management\n\nClinical summary:\n  Physiotherapy completed over eight weeks with limited benefit. Radiculopathy documented on examination in an L5 distribution with reduced reflexes. MRI imaging changes management \u2014 the findings would determine whether to proceed to decompression surgery.\n\nAppeal analysis: No evidence gaps; 2 comparable case(s) were approved as submitted on this policy \u2014 submit. (precedent support: Strong).",
       "controls": [
         {
           "action": "approve-send",
@@ -259,6 +283,23 @@
         }
       ],
       "precedents": [
+        {
+          "caseId": "P-4",
+          "similarity": 0.462,
+          "matchedFacts": [
+            "imaging",
+            "management",
+            "physiotherapy",
+            "requested",
+            "surgical"
+          ],
+          "initiallyDenied": false,
+          "wonOnAppeal": false,
+          "clausesCited": [],
+          "decidedOn": "2026-06-20",
+          "narrative": "Documented six-week physiotherapy course, dermatomal sensory deficit on examination, imaging requested to plan surgical management. Authorised on first submission.",
+          "droveRecommendation": false
+        },
         {
           "caseId": "P-2",
           "similarity": 0.462,
@@ -428,6 +469,23 @@
       ],
       "precedents": [
         {
+          "caseId": "P-4",
+          "similarity": 0.462,
+          "matchedFacts": [
+            "documented",
+            "examination",
+            "imaging",
+            "management",
+            "surgical"
+          ],
+          "initiallyDenied": false,
+          "wonOnAppeal": false,
+          "clausesCited": [],
+          "decidedOn": "2026-06-20",
+          "narrative": "Documented six-week physiotherapy course, dermatomal sensory deficit on examination, imaging requested to plan surgical management. Authorised on first submission.",
+          "droveRecommendation": false
+        },
+        {
           "caseId": "P-2",
           "similarity": 0.462,
           "matchedFacts": [
@@ -447,23 +505,21 @@
           "droveRecommendation": true
         },
         {
-          "caseId": "P-1",
-          "similarity": 0.377,
+          "caseId": "P-3",
+          "similarity": 0.413,
           "matchedFacts": [
+            "determine",
             "documented",
             "examination",
-            "imaging",
-            "management",
-            "radiculopathy"
+            "radiculopathy",
+            "surgical"
           ],
-          "initiallyDenied": true,
-          "wonOnAppeal": true,
-          "clausesCited": [
-            "2.1"
-          ],
-          "decidedOn": "2026-03-01",
-          "narrative": "Patient completed eight weeks of physiotherapy with radiculopathy documented on examination and imaging expected to change management. Initially denied under MN-01 (conservative treatment not evidenced); authorised on appeal under clause 2.1.",
-          "droveRecommendation": true
+          "initiallyDenied": false,
+          "wonOnAppeal": false,
+          "clausesCited": [],
+          "decidedOn": "2026-05-15",
+          "narrative": "Eight weeks of physiotherapy completed with the outcome recorded, radiculopathy documented on examination, and the MRI expected to determine whether to proceed to surgical decompression. Approved as submitted \u2014 no denial.",
+          "droveRecommendation": false
         }
       ],
       "critic": {
@@ -627,23 +683,39 @@
           "droveRecommendation": true
         },
         {
-          "caseId": "P-2",
+          "caseId": "P-3",
+          "similarity": 0.423,
+          "matchedFacts": [
+            "completed",
+            "eight",
+            "physiotherapy",
+            "surgical",
+            "weeks",
+            "with"
+          ],
+          "initiallyDenied": false,
+          "wonOnAppeal": false,
+          "clausesCited": [],
+          "decidedOn": "2026-05-15",
+          "narrative": "Eight weeks of physiotherapy completed with the outcome recorded, radiculopathy documented on examination, and the MRI expected to determine whether to proceed to surgical decompression. Approved as submitted \u2014 no denial.",
+          "droveRecommendation": false
+        },
+        {
+          "caseId": "P-4",
           "similarity": 0.377,
           "matchedFacts": [
+            "imaging",
             "management",
             "physiotherapy",
             "plan",
-            "surgical",
-            "weeks"
+            "surgical"
           ],
-          "initiallyDenied": true,
-          "wonOnAppeal": true,
-          "clausesCited": [
-            "2.1"
-          ],
-          "decidedOn": "2026-04-01",
-          "narrative": "Six weeks of physiotherapy, radiculopathy on examination, MRI requested to plan surgical management. Denied MN-01, overturned on appeal citing clause 2.1 and the documented neurological deficit.",
-          "droveRecommendation": true
+          "initiallyDenied": false,
+          "wonOnAppeal": false,
+          "clausesCited": [],
+          "decidedOn": "2026-06-20",
+          "narrative": "Documented six-week physiotherapy course, dermatomal sensory deficit on examination, imaging requested to plan surgical management. Authorised on first submission.",
+          "droveRecommendation": false
         }
       ],
       "critic": {
@@ -812,6 +884,26 @@
           "droveRecommendation": true
         },
         {
+          "caseId": "P-3",
+          "similarity": 0.531,
+          "matchedFacts": [
+            "completed",
+            "documented",
+            "eight",
+            "examination",
+            "physiotherapy",
+            "radiculopathy",
+            "surgical",
+            "weeks"
+          ],
+          "initiallyDenied": false,
+          "wonOnAppeal": false,
+          "clausesCited": [],
+          "decidedOn": "2026-05-15",
+          "narrative": "Eight weeks of physiotherapy completed with the outcome recorded, radiculopathy documented on examination, and the MRI expected to determine whether to proceed to surgical decompression. Approved as submitted \u2014 no denial.",
+          "droveRecommendation": false
+        },
+        {
           "caseId": "P-2",
           "similarity": 0.531,
           "matchedFacts": [
@@ -832,24 +924,6 @@
           "decidedOn": "2026-04-01",
           "narrative": "Six weeks of physiotherapy, radiculopathy on examination, MRI requested to plan surgical management. Denied MN-01, overturned on appeal citing clause 2.1 and the documented neurological deficit.",
           "droveRecommendation": true
-        },
-        {
-          "caseId": "P-9",
-          "similarity": 0.286,
-          "matchedFacts": [
-            "denied",
-            "imaging",
-            "management",
-            "physiotherapy",
-            "radiculopathy",
-            "treatment"
-          ],
-          "initiallyDenied": true,
-          "wonOnAppeal": false,
-          "clausesCited": [],
-          "decidedOn": "2026-02-01",
-          "narrative": "Physiotherapy and radiculopathy noted but imaging not shown to change management. Denied MN-02; appeal unsuccessful \u2014 the record did not establish that the scan would alter the treatment plan.",
-          "droveRecommendation": false
         }
       ],
       "critic": {
@@ -1022,18 +1096,18 @@
           "droveRecommendation": true
         },
         {
-          "caseId": "P-9",
-          "similarity": 0.167,
+          "caseId": "P-3",
+          "similarity": 0.308,
           "matchedFacts": [
-            "denied",
+            "completed",
             "physiotherapy",
-            "treatment"
+            "weeks"
           ],
-          "initiallyDenied": true,
+          "initiallyDenied": false,
           "wonOnAppeal": false,
           "clausesCited": [],
-          "decidedOn": "2026-02-01",
-          "narrative": "Physiotherapy and radiculopathy noted but imaging not shown to change management. Denied MN-02; appeal unsuccessful \u2014 the record did not establish that the scan would alter the treatment plan.",
+          "decidedOn": "2026-05-15",
+          "narrative": "Eight weeks of physiotherapy completed with the outcome recorded, radiculopathy documented on examination, and the MRI expected to determine whether to proceed to surgical decompression. Approved as submitted \u2014 no denial.",
           "droveRecommendation": false
         }
       ],
@@ -1303,7 +1377,7 @@
       "cases": 7,
       "avgCriteriaChecked": 3,
       "avgEvidenceGapsFound": 1,
-      "avgPrecedentsConsidered": 2,
+      "avgPrecedentsConsidered": 3.7142857142857144,
       "avgAssembledInMs": 0,
       "unsafeAutomationRate": 0
     },
@@ -1332,7 +1406,7 @@
       {
         "metric": "Comparable precedents reviewed",
         "manual": "ad hoc, if at all",
-        "careApprovalIQ": "2 ranked automatically per case, with the matched facts shown",
+        "careApprovalIQ": "3.7 ranked automatically per case, with the matched facts shown",
         "manualIsEstimate": true,
         "basis": "precedent review is not a standard step in manual pre-auth."
       },
