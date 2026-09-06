@@ -42,6 +42,7 @@
     },
     "expectedRoute": "HumanReview",
     "expectedCitedPrecedents": [],
-    "expertAbstains": false
+    "expertAbstains": false,
+    "expectedPolicyRef": "bupa-mri-ls-v3"
   }
 }

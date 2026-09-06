@@ -45,6 +45,28 @@ public class EvalGateTests(ITestOutputHelper output)
         Assert.True(r.RouteAgreement >= 0.80, $"route agreement {r.RouteAgreement:P0} < 80%.\n{r.ToText()}");
     }
 
+    /// <summary>Grounding: the assembled draft cites the right policy, invents no clause, cites the right precedents.</summary>
+    [Fact]
+    public void Grounding_holds()
+    {
+        var r = Result.Value;
+        Assert.True(r.PolicyCitationAccuracy >= 0.95,
+            $"policy-citation accuracy {r.PolicyCitationAccuracy:P0} < 95%.\n{r.ToText()}");
+        Assert.True(r.PrecedentCitationAccuracy >= 0.80,
+            $"precedent-citation accuracy {r.PrecedentCitationAccuracy:P0} < 80%.\n{r.ToText()}");
+        Assert.True(r.HallucinatedReferences == 0,
+            $"{r.HallucinatedReferences} hallucinated reference(s).\n{r.ToText()}");
+    }
+
+    /// <summary>The appeal-builder's verdict agrees with the expert labels (review note #3).</summary>
+    [Fact]
+    public void Appeal_verdict_agreement_meets_the_bar()
+    {
+        var r = Result.Value;
+        Assert.True(r.AppealVerdictAgreement >= 0.80,
+            $"appeal-verdict agreement {r.AppealVerdictAgreement:P0} over {r.AppealVerdictCases} cases < 80%.\n{r.ToText()}");
+    }
+
     /// <summary>The multi-agent pipeline beats a single-prompt generalist on safety (TDD §3.1).</summary>
     [Fact]
     public void Agents_beat_the_generalist_baseline_on_unsafe_automation()

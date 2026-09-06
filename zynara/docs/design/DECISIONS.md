@@ -5,6 +5,19 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D18 · Eval — policy-citation accuracy + appeal-verdict agreement
+
+**2026-09-06.** Review re-read note #3. `EvalGroundTruth` gains
+`ExpectedAppealVerdict` (Submit/Strengthen/Appeal) and `ExpectedPolicyRef`.
+`EvalRunner` now also scores: **policy-citation accuracy** (the assembled draft
+names the governing policy ref — CI floor 95%), **appeal-verdict agreement** (the
+`appeal-builder` verdict vs. the label, 7 labelled cases — CI floor 80%), and
+folds **clause hallucination** (a `under/clause/citing x.y` in the appeal draft
+that no shortlisted precedent cited) into the hard-gated hallucination count.
+Current run: both 100%, 0 hallucinations, 8 eval tests.
+Touched: `eval/Zynara.Eval/{EvalCase,EvalRunner,EvalReport,EvalGateTests}.cs`,
+`cases/*.json`, TDD §7.3.
+
 ## D17 · Contradiction-detection flow — claims → pair → never resolved silently
 
 **2026-09-06.** Evaluator finding #4 / P2-3 / review re-read note #2. P0-3 only

@@ -27,6 +27,8 @@ public static class EvalRunner
 
         // grounding
         int citeCases = 0, citeCorrect = 0, hallucinated = 0;
+        int policyCiteCases = 0, policyCiteCorrect = 0;
+        int verdictCases = 0, verdictAgree = 0;
 
         // decisions
         int routeAgree = 0, absExpected = 0, absTaken = 0, unsafeAuto = 0, notAutoExpected = 0;
@@ -80,6 +82,35 @@ public static class EvalRunner
             }
             hallucinated += findings.Keys.Count(id => criteria.Items.All(x => x.Id != id));
 
+            // policy-citation: the assembled draft must name the governing policy ref
+            var expectedPolicy = c.GroundTruth.ExpectedPolicyRef ?? c.Rules.FirstOrDefault()?.PolicyRef;
+            if (!string.IsNullOrWhiteSpace(expectedPolicy) && result.Draft is { } d)
+            {
+                policyCiteCases++;
+                var text = d.Body + " " + (result.Appeal?.Recommendation.AppealDraft ?? "");
+                if (result.NeedsAuth.PolicyRef == expectedPolicy && text.Contains(expectedPolicy))
+                    policyCiteCorrect++;
+            }
+
+            // clause hallucination: a "under/clause/citing x.y" clause in the appeal draft that no
+            // shortlisted precedent cited (similarity scores etc. are not matched)
+            if (result.Appeal?.Recommendation.AppealDraft is { } appealDraft)
+            {
+                var knownClauses = c.Precedents.SelectMany(p => p.ClausesCited).ToHashSet();
+                hallucinated += System.Text.RegularExpressions.Regex
+                    .Matches(appealDraft, @"(?:under|clause|citing)\s+(\d+(?:\.\d+)+)",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+                    .Select(m => m.Groups[1].Value)
+                    .Count(x => !knownClauses.Contains(x));
+            }
+
+            // appeal-recommendation agreement (review note #3)
+            if (c.GroundTruth.AppealVerdict is { } wantVerdict)
+            {
+                verdictCases++;
+                if (result.Appeal?.Recommendation.Verdict == wantVerdict) verdictAgree++;
+            }
+
             // route
             var actualRoute = result.Gate?.Route ?? GateRoute.HumanReview; // early-stop → treat as review
             if (actualRoute == c.GroundTruth.Route) routeAgree++;
@@ -117,6 +148,9 @@ public static class EvalRunner
             MandatoryMetTotal: mandMet,
             MandatoryFalsePositives: mandFp,
             PrecedentCitationAccuracy: Ratio(citeCorrect, citeCases),
+            PolicyCitationAccuracy: Ratio(policyCiteCorrect, policyCiteCases),
+            AppealVerdictAgreement: Ratio(verdictAgree, verdictCases),
+            AppealVerdictCases: verdictCases,
             HallucinatedReferences: hallucinated,
             RouteAgreement: Ratio(routeAgree, cases.Count),
             AbstainExpected: absExpected,

@@ -53,6 +53,8 @@
     },
     "expectedRoute": "HumanReview",
     "expectedCitedPrecedents": [],
-    "expertAbstains": false
+    "expertAbstains": false,
+    "expectedAppealVerdict": "Strengthen",
+    "expectedPolicyRef": "bupa-mri-ls-v3"
   }
 }

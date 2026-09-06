@@ -70,6 +70,8 @@
       "P-1",
       "P-2"
     ],
-    "expertAbstains": false
+    "expertAbstains": false,
+    "expectedAppealVerdict": "Appeal",
+    "expectedPolicyRef": "bupa-mri-ls-v3"
   }
 }

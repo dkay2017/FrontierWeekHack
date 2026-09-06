@@ -21,11 +21,10 @@ four flow diagrams surfaced these still-open points:
    affirmed vs negated on the same subject → Gate HumanReview + Critic Block +
    Conflicts panel. `demo-contradiction` scenario.
 
-3. **Eval metric gaps** (§10): (a) **policy-citation accuracy** — we score
-   *precedent*-citation accuracy but not whether the cited *policy clause* is
-   right; (b) **appeal-recommendation agreement** — only covered indirectly via
-   route agreement (no `ExpectedAppealVerdict` label). Add both when the dataset
-   grows 8 → ~20.
+3. ~~Eval metric gaps~~ **DONE (D18)** — `policy-citation accuracy` (draft names
+   the governing policy ref, CI floor 95%) + `appeal-verdict agreement`
+   (`appeal-builder` verdict vs. label, CI floor 80%); clause hallucination folded
+   into the hard-gated hallucination count. Both 100% on the 8-case set.
 
 4. **Tiered approval thresholds** (§13). The Gate has one `AutoLimit` (£500); the
    review wants thresholds tiered by financial / operational risk. Fold into
@@ -89,12 +88,15 @@ Nothing here overturns a decision. Items 1 and 3 are the substantive ones.
 - **P2-2 done** (D16) — `PipelineMetrics` measured per run; `BenchmarkService`
   before/after table; dashboard **Impact** tab.
 - **P2-3 done** (D17) — `claims-extraction` agent + `ContradictionCheck` spoke;
-  the note-against-itself contradiction flow (review note #2). **92 tests green.**
+  the note-against-itself contradiction flow (review note #2).
+- **Eval note #3 done** (D18) — policy-citation accuracy + appeal-verdict
+  agreement added; clause hallucination hard-gated. **94 tests green.**
 
-**Remaining:** P1-4 (infra identity isolation — needs `infra/` Bicep), review
-note #3 (policy-citation + appeal-verdict eval metrics). Cosmos `caseAudit` +
-real Entra roles land with `Zynara.Data` / `infra/`. **All P1 + all P2 code
-complete bar P1-4 (infra).**
+**Remaining: only P1-4** (infra identity isolation — `infra/` Bicep, no
+deployable Azure yet) and the deferred build items (`Zynara.Data` Cosmos, CI
+workflow, grow the eval set). **Every evaluator P0 / P1 / P2 finding is
+addressed in code** (P1-4's identity + network boundary is designed and
+documented; the Bicep is the only artefact outstanding).
 
 ---
 

@@ -4,8 +4,8 @@
 current at every checkpoint and **commit + push** — uncommitted work is lost on a
 Codespace rebuild.
 
-_Last updated: 2026-09-06 (session 6 — P0 + slice 4 + P1-1/P1-2 dashboard +
-P2-5 demo script). Deadline: **2026-09-23 midnight US**.
+_Last updated: 2026-09-06 (session 6 — all evaluator P0/P1/P2 done in code bar
+P1-4 infra; 94 tests). Deadline: **2026-09-23 midnight US**.
 Submission: 3-min video (required) + repo + architecture doc + TDD + dashboard UI._
 
 ## What this is
@@ -256,39 +256,33 @@ needs the same restyle port.
   evidence-gap (pipeline + orchestrator activity). New `demo-contradiction`
   scenario. `Zynara.Core.Tests` +4. **92 tests green.** (review re-read note #2)
 
-## Next — remaining P1 / P2 (resume point)
+## Done — 2026-09-06 — eval note #3
 
-> Full re-read of the COMPLETE evaluator review (text + 4 flowcharts) logged in
-> `docs/review/EVALUATOR-REVIEW-RESPONSE.md` — 7 open notes; #3 (policy-citation +
-> appeal-verdict eval metrics) is the main one still open (#1 done via
-> `demo-appeal-critic`).
+- **Two eval metrics added** (D18): policy-citation accuracy (draft names the
+  governing policy ref, CI floor 95%) + appeal-verdict agreement (`appeal-builder`
+  verdict vs. label, 7 cases, CI floor 80%). Clause hallucination folded into the
+  hard-gated hallucination count. Both 100%. **94 tests green.**
 
-1. **P2-2** — before/after instrumentation of the pipeline (case-prep time,
-   criteria-check time, reviewer effort, cost per case); label any estimated
-   manual baseline as an estimate.
-2. **`Zynara.Core` audit model + `Zynara.ApiProxy` Entra roles + Cosmos
-   `caseAudit`** — RBAC, approval authority tiered by risk, audit trail incl.
-   agent name + version. (P1-3, + review notes #4/#5)
-3. **`infra/` Bicep** — enforce the reasoning-agent ↔ payer-connectivity identity
-   boundary. (P1-4)
-4. **P2-3** — claims extraction + intra-evidence contradiction check + reviewer
-   surface (review note #2).
-5. **Eval** — add policy-citation accuracy + appeal-verdict agreement; grow the
-   dataset 8 → ~20 (review note #3).
+## Next — remaining (resume point)
 
-## Pending (infra / data — interleave as needed)
+**All evaluator P0 + P1 + P2 items are done in code except P1-4 (infra-only).**
+See `docs/review/EVALUATOR-REVIEW-RESPONSE.md` for the item-by-item state.
 
-- `infra/` skeleton — `main.bicep` + modules, `azure.yaml`; CI (build + test +
-  eval gate); enforce agent↔payer identity isolation (P1-4).
-- `Zynara.Data` — Cosmos-backed `IZynaraStore` (replaces the in-memory seed in
-  `Zynara.Orchestrator/Program.cs`); the real `IAgentCallRecorder`.
-- Data plan — grow the labelled case set 8 → ~20 (`eval/Zynara.Eval/cases/`);
-  2–3 real payer policy files for File Search.
-- P2-3 — dedicated contradiction-detection flow + reviewer UI (the dimension is
-  already in the decision model; this is the flow + surface).
-- **Architecture SVG** — add a shaded "upstream / not built" band for the
-  extraction assumptions now written up in TDD §2.1 (D13): policy-PDF → criteria
-  ingestion, clinical-note / denial-letter OCR, precedent + cohort roll-up.
+1. **`infra/` skeleton** — `main.bicep` + modules, `azure.yaml`; a user-assigned
+   managed identity per component; the reasoning plane with **no egress to the
+   payer subnet**, the Submission Adapter the only identity with
+   outbound-integration permission (P1-4 / review §13). CI workflow: build +
+   `dotnet test` (eval gate runs here).
+2. **`Zynara.Data`** — Cosmos-backed `IZynaraStore` + `ICaseRepository` (Cosmos
+   `caseAudit`); the real `IAgentCallRecorder`. Replaces the in-memory seeds.
+3. **Grow the labelled eval set** 8 → ~20 (`eval/Zynara.Eval/cases/`); 2–3 real
+   payer policy files for File Search.
+4. **Architecture SVG** — add the shaded "upstream / not built" band for the
+   extraction assumptions (TDD §2.1 / D13) and the contradiction step.
+5. **`Zynara.Dashboard/index.html`** — port the light house style from
+   `standalone.html` (the live-API version still has the old look).
+6. Real end-to-end run — needs Azurite + Functions Core Tools (not in the
+   Codespace); the orchestrator + ApiProxy are build- and unit-verified only.
 
 ## Timeline (18 days)
 
