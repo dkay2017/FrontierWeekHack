@@ -1,0 +1,49 @@
+{
+  "id": "case-10-shoulder-partial",
+  "description": "Shoulder \u2014 one supporting criterion only partial",
+  "request": {
+    "procedure": "MR arthrogram shoulder",
+    "payerPlan": "Bupa/Comprehensive",
+    "region": "UK",
+    "clinicalNote": "Physiotherapy tried, limited response. Labral tear suspected clinically. Plain radiographs already obtained.",
+    "denialLetter": null,
+    "estimatedValue": 350
+  },
+  "criteria": [
+    {
+      "id": "c1",
+      "text": "conservative management including physiotherapy attempted",
+      "mandatory": true
+    },
+    {
+      "id": "c2",
+      "text": "instability or labral tear suspected clinically",
+      "mandatory": false
+    },
+    {
+      "id": "c3",
+      "text": "plain radiographs already obtained",
+      "mandatory": false
+    }
+  ],
+  "rules": [
+    {
+      "authRequired": true,
+      "requiredCode": "CCSD-73222",
+      "policyRef": "bupa-mras-v1"
+    }
+  ],
+  "precedents": [],
+  "groundTruth": {
+    "criterionStatus": {
+      "c1": "Partial",
+      "c2": "Documented",
+      "c3": "Documented"
+    },
+    "expectedRoute": "HumanReview",
+    "expectedCitedPrecedents": [],
+    "expertAbstains": false,
+    "expectedPolicyRef": "bupa-mras-v1",
+    "expectedAppealVerdict": "Strengthen"
+  }
+}

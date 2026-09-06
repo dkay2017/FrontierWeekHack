@@ -1,0 +1,49 @@
+{
+  "id": "case-19-shoulder-complete",
+  "description": "Shoulder \u2014 complete record",
+  "request": {
+    "procedure": "MR arthrogram shoulder",
+    "payerPlan": "Bupa/Comprehensive",
+    "region": "UK",
+    "clinicalNote": "Conservative management including physiotherapy attempted for three months. Instability suspected clinically on apprehension testing. Plain radiographs already obtained.",
+    "denialLetter": null,
+    "estimatedValue": 420
+  },
+  "criteria": [
+    {
+      "id": "c1",
+      "text": "conservative management including physiotherapy attempted",
+      "mandatory": true
+    },
+    {
+      "id": "c2",
+      "text": "instability or labral tear suspected clinically",
+      "mandatory": false
+    },
+    {
+      "id": "c3",
+      "text": "plain radiographs already obtained",
+      "mandatory": false
+    }
+  ],
+  "rules": [
+    {
+      "authRequired": true,
+      "requiredCode": "CCSD-73222",
+      "policyRef": "bupa-mras-v1"
+    }
+  ],
+  "precedents": [],
+  "groundTruth": {
+    "criterionStatus": {
+      "c1": "Documented",
+      "c2": "Documented",
+      "c3": "Documented"
+    },
+    "expectedRoute": "AutoSubmit",
+    "expectedCitedPrecedents": [],
+    "expertAbstains": false,
+    "expectedPolicyRef": "bupa-mras-v1",
+    "expectedAppealVerdict": "Submit"
+  }
+}

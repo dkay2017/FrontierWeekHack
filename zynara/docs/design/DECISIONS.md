@@ -5,6 +5,15 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D21 · Eval set grown to 20 labelled cases
+
+**2026-09-06.** `eval/Zynara.Eval/cases/` 8 → 20. New coverage: US region,
+a second procedure (shoulder), Partial evidence, value just over the auto-limit,
+appeal with a shared denial code, appeal with all-lost precedents, and a
+note-self-contradiction. Every metric at 100%; route agreement 100% vs the
+generalist baseline's 55%; unsafe automation 0 vs the baseline's 5.
+Touched: `eval/Zynara.Eval/cases/case-09..20.json`.
+
 ## D20 · Zynara.Data — Cosmos-backed store, case repository, cost meter
 
 **2026-09-06.** `src/Zynara.Data` (`Microsoft.Azure.Cosmos` 3.62, STJ serializer,

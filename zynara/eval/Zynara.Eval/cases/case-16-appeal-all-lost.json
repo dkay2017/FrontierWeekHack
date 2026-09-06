@@ -1,0 +1,70 @@
+{
+  "id": "case-16-appeal-all-lost",
+  "description": "Denied; every comparable case lost on appeal",
+  "request": {
+    "procedure": "MRI lumbar spine",
+    "payerPlan": "Bupa/Comprehensive",
+    "region": "UK",
+    "clinicalNote": "Physiotherapy completed for eight weeks. Radiculopathy documented on examination. Imaging changes management.",
+    "denialLetter": "Prior authorisation denied under code MN-02.",
+    "estimatedValue": 350
+  },
+  "criteria": [
+    {
+      "id": "c1",
+      "text": "physiotherapy completed for six weeks",
+      "mandatory": true
+    },
+    {
+      "id": "c2",
+      "text": "radiculopathy documented on examination",
+      "mandatory": false
+    },
+    {
+      "id": "c3",
+      "text": "imaging changes management",
+      "mandatory": false
+    }
+  ],
+  "rules": [
+    {
+      "authRequired": true,
+      "requiredCode": "CCSD-72148",
+      "policyRef": "bupa-mri-ls-v3"
+    }
+  ],
+  "precedents": [
+    {
+      "caseId": "P-16a",
+      "factPattern": "physiotherapy radiculopathy lumbar spine",
+      "appealOutcome": "AppealLost",
+      "denialReasonCodes": [
+        "MN-02"
+      ],
+      "clausesCited": [],
+      "decidedOn": "2026-02-01"
+    },
+    {
+      "caseId": "P-16b",
+      "factPattern": "physiotherapy radiculopathy lumbar spine",
+      "appealOutcome": "AppealLost",
+      "denialReasonCodes": [
+        "MN-02"
+      ],
+      "clausesCited": [],
+      "decidedOn": "2026-02-01"
+    }
+  ],
+  "groundTruth": {
+    "criterionStatus": {
+      "c1": "Documented",
+      "c2": "Documented",
+      "c3": "Documented"
+    },
+    "expectedRoute": "HumanReview",
+    "expectedCitedPrecedents": [],
+    "expertAbstains": false,
+    "expectedPolicyRef": "bupa-mri-ls-v3",
+    "expectedAppealVerdict": "Strengthen"
+  }
+}

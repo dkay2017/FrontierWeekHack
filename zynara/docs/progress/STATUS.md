@@ -286,7 +286,12 @@ the user chose: **de-risk spike → `Zynara.Data` → grow eval set → video la
    `ICaseRepository` + real cost meter; `CosmosJson` round-trip tested;
    `tools/Zynara.DbDeploy` seeder (azd hook); orchestrator + api-proxy wire it on
    `COSMOS_ENDPOINT`. Not run against live Cosmos (no emulator here). **100 tests.**
-3. **Grow the labelled eval set** 8 → ~20; 2–3 real payer policy files for File Search.
+3. ~~Grow the eval set 8 → ~20~~ **done** — 20 labelled cases now
+   (`eval/Zynara.Eval/cases/`): US-region, shoulder procedure, Partial evidence,
+   value-just-over-limit, appeal with mixed/all-lost precedents,
+   note-self-contradiction. Every metric at 100%, route agreement 100% vs
+   baseline 55%, unsafe automation 0 vs baseline 5. **100 tests green.**
+   Still open: 2–3 real payer policy files for File Search.
 4. **Video + pitch + 5-point doc** — last.
 
 Also open (lower priority): `Zynara.Submission` adapter, port the light style to
