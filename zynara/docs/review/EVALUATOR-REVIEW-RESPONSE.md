@@ -28,9 +28,13 @@ Source: `../design/Care_Approval_IQ_Agent_a_Thon_Evaluator_Review.docx`
   weaknesses 6.5 → ~8.0–8.5; new floor is UX/demo (8.0), addressed by the P1
   dashboard slice.
 
-**Remaining:** P1-1..P1-5, P2-1..P2-3, P2-5 (P2-4 = D6, done). P1 order:
-P1-2 + P1-1 (`Zynara.ApiProxy` read model + `Zynara.Dashboard`) → P2-5 demo
-script → P2-1/P2-2 measured value → P1-5 → P1-3/P1-4.
+- **P1-1 + P1-2 done** (D10) — `Zynara.Core.View.CaseView` evidence-first
+  projection + precedent panel; `Zynara.ApiProxy` read API; `Zynara.Dashboard`
+  static review workspace; `tools/Zynara.DemoDump`. 67 tests green.
+
+**Remaining:** P1-3, P1-4, P1-5, P2-1, P2-2, P2-3, P2-5 (P2-4 = D6). Order:
+P2-5 demo script → P2-1/P2-2 measured value → P1-5 profile → P1-3 RBAC/audit →
+P1-4 infra isolation. P2-3 (contradiction flow/UI) folds into the dashboard.
 
 ---
 

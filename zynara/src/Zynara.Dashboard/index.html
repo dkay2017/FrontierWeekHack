@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Zynara — Care Approval IQ</title>
+<style>
+  :root {
+    --bg: #0f1720; --panel: #16212e; --panel-2: #1c2a3a; --line: #2a3b4f;
+    --ink: #e8eef4; --ink-dim: #9fb3c6; --ink-faint: #6f8698;
+    --teal: #2ec4b6; --blue: #4d7cfe; --violet: #9a7cf0;
+    --green: #35c47b; --amber: #e8b23a; --red: #e2584d;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  a { color: var(--blue); }
+  header {
+    display: flex; align-items: center; gap: 16px; padding: 14px 22px;
+    border-bottom: 1px solid var(--line); background: var(--panel);
+    position: sticky; top: 0; z-index: 5;
+  }
+  .brand { font-weight: 700; letter-spacing: .2px; }
+  .brand small { color: var(--ink-faint); font-weight: 500; margin-left: 8px; }
+  .tag { color: var(--teal); font-style: italic; margin-left: 6px; }
+  header .spacer { flex: 1; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px;
+    border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .pill.region { background: #123; color: var(--teal); border: 1px solid var(--line); }
+  select, button {
+    font: inherit; color: var(--ink); background: var(--panel-2);
+    border: 1px solid var(--line); border-radius: 8px; padding: 7px 11px;
+  }
+  button { cursor: pointer; }
+  button.primary { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
+  button.ghost { background: transparent; }
+  button:hover { filter: brightness(1.08); }
+  .tabs { display: flex; gap: 4px; padding: 10px 22px 0; border-bottom: 1px solid var(--line); background: var(--panel); }
+  .tab { padding: 9px 14px; border: 1px solid transparent; border-bottom: none;
+    border-radius: 8px 8px 0 0; color: var(--ink-dim); cursor: pointer; }
+  .tab.active { background: var(--bg); color: var(--ink); border-color: var(--line); }
+
+  .layout { display: grid; grid-template-columns: 340px 1fr; gap: 0; min-height: calc(100vh - 108px); }
+  .queue { border-right: 1px solid var(--line); background: var(--panel); overflow-y: auto; }
+  .queue h2, .main h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .8px;
+    color: var(--ink-faint); margin: 18px 18px 8px; }
+  .qitem { padding: 12px 18px; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .qitem:hover { background: var(--panel-2); }
+  .qitem.active { background: var(--panel-2); border-left: 3px solid var(--blue); padding-left: 15px; }
+  .qitem .proc { font-weight: 600; }
+  .qitem .meta { color: var(--ink-faint); font-size: 12px; margin-top: 2px; }
+  .qitem .head { color: var(--ink-dim); font-size: 12.5px; margin-top: 6px; }
+
+  .main { overflow-y: auto; padding-bottom: 80px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    margin: 16px 22px; padding: 18px 20px; }
+  .card h3 { margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: var(--ink-faint); }
+  .why { font-size: 17px; font-weight: 600; margin: 2px 0 10px; }
+  .kv { color: var(--ink-dim); }
+  .kv b { color: var(--ink); font-weight: 600; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; }
+
+  .s-ready { background: rgba(53,196,123,.15); color: var(--green); }
+  .s-strengthen { background: rgba(232,178,58,.16); color: var(--amber); }
+  .s-review { background: rgba(77,124,254,.16); color: #8fb0ff; }
+  .s-abstain { background: rgba(226,88,77,.16); color: #ff8f85; }
+  .s-none { background: rgba(159,179,198,.16); color: var(--ink-dim); }
+
+  table.crit { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  table.crit th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .6px;
+    color: var(--ink-faint); padding: 6px 10px; border-bottom: 1px solid var(--line); }
+  table.crit td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .badge { font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 5px;
+    background: rgba(46,196,182,.16); color: var(--teal); }
+  .badge.mand { background: rgba(154,124,240,.18); color: #c3b0ff; }
+  .st { font-size: 12px; font-weight: 600; padding: 2px 7px; border-radius: 5px; }
+  .st.Documented { background: rgba(53,196,123,.16); color: var(--green); }
+  .st.Partial { background: rgba(232,178,58,.16); color: var(--amber); }
+  .st.Missing { background: rgba(159,179,198,.14); color: var(--ink-dim); }
+  .st.Contradicted { background: rgba(226,88,77,.18); color: #ff8f85; }
+  .quote { color: var(--ink); border-left: 2px solid var(--line); padding-left: 9px; margin: 4px 0 0; }
+  .src { color: var(--ink-faint); font-size: 12px; margin-top: 3px; }
+
+  .precedent { border: 1px solid var(--line); border-radius: 8px; padding: 13px 14px; margin-top: 10px; background: var(--panel-2); }
+  .precedent.drove { border-color: var(--blue); box-shadow: inset 3px 0 0 var(--blue); }
+  .precedent .top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .precedent .id { font-weight: 700; }
+  .sim { flex: 1; min-width: 120px; max-width: 240px; height: 7px; background: #0d1620; border-radius: 999px; overflow: hidden; }
+  .sim > i { display: block; height: 100%; background: linear-gradient(90deg, var(--teal), var(--blue)); }
+  .simn { font-variant-numeric: tabular-nums; color: var(--ink-dim); font-size: 12px; }
+  .chip { display: inline-block; font-size: 11.5px; padding: 2px 7px; border-radius: 999px;
+    background: #0d1620; border: 1px solid var(--line); color: var(--ink-dim); margin: 4px 4px 0 0; }
+  .chip.win { background: rgba(53,196,123,.14); color: var(--green); border-color: transparent; }
+  .chip.deny { background: rgba(226,88,77,.14); color: #ff8f85; border-color: transparent; }
+  .narr { color: var(--ink-dim); margin-top: 8px; font-size: 13px; }
+  .drove-tag { font-size: 11px; font-weight: 700; color: #8fb0ff; }
+
+  .flag { margin-top: 8px; padding-left: 12px; border-left: 2px solid var(--line); }
+  .flag b { color: var(--ink); }
+  ul.conf { margin: 6px 0 0; padding-left: 18px; color: #ff9f96; }
+  .model { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 16px; margin-top: 10px; }
+  .model div { color: var(--ink-dim); font-size: 12.5px; }
+  .model b { color: var(--ink); }
+  pre.draft { white-space: pre-wrap; background: #0d1620; border: 1px solid var(--line); border-radius: 8px;
+    padding: 13px; color: var(--ink-dim); max-height: 320px; overflow: auto; font-size: 12.5px; }
+
+  .controls { position: fixed; bottom: 0; left: 340px; right: 0; display: flex; gap: 10px; align-items: center;
+    padding: 12px 22px; background: var(--panel); border-top: 1px solid var(--line); }
+  .controls .note { color: var(--ink-faint); font-size: 12px; }
+  .done { color: var(--green); font-weight: 600; }
+  .empty { color: var(--ink-faint); padding: 40px 22px; }
+  .src-toggle { color: var(--ink-faint); font-size: 12px; padding: 8px 22px; }
+  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } .controls { left: 0; } }
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">Zynara <small>Care Approval IQ</small><span class="tag">proof beats paperwork</span></span>
+  <span class="spacer"></span>
+  <span class="pill region" id="region">UK · Bupa/Comprehensive</span>
+  <select id="scenario" title="Run a demo scenario"></select>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-tab="queue">Review Queue</div>
+  <div class="tab" data-tab="warnings">Early Warnings</div>
+  <div class="tab" data-tab="cost">Cost</div>
+</div>
+
+<div id="tab-queue" class="layout">
+  <div class="queue">
+    <h2>Cases</h2>
+    <div id="qlist"></div>
+    <div class="src-toggle" id="srcnote"></div>
+  </div>
+  <div class="main" id="detail"><div class="empty">Select a case.</div></div>
+</div>
+
+<div id="tab-warnings" hidden>
+  <div class="card">
+    <h3>Early warnings — deterministic monitors</h3>
+    <p class="kv"><b>expiry-watch</b> (date math) and <b>policy-drift</b> (text diff) raise advisory
+    warnings only — they never gate a decision or trigger an outbound action.</p>
+    <p class="empty" style="padding:12px 0">No warnings in the demo dataset.</p>
+  </div>
+</div>
+
+<div id="tab-cost" hidden>
+  <div class="card">
+    <h3>Cost metering</h3>
+    <p class="kv">Per-case token and tool-call cost is recorded by <b>IAgentCallRecorder</b> when the
+    hosted Foundry agents run (<code>ZYNARA_AGENTS=foundry</code>). The demo runs deterministic stubs,
+    so there is no inference cost to show.</p>
+  </div>
+</div>
+
+<div class="controls" id="controls" hidden></div>
+
+<script>
+const API = new URLSearchParams(location.search).get("api");
+let DATA = { scenarios: [], cases: [] };
+let current = null;
+
+const statusClass = s => ({
+  ReadyToSubmit: "s-ready", NeedsStrengthening: "s-strengthen",
+  NeedsHumanReview: "s-review", SystemAbstained: "s-abstain", NotRequired: "s-none",
+}[s] || "s-none");
+const statusLabel = s => ({
+  ReadyToSubmit: "Ready to submit", NeedsStrengthening: "Needs strengthening",
+  NeedsHumanReview: "Human review", SystemAbstained: "System abstained", NotRequired: "Not required",
+}[s] || s);
+const esc = s => (s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+async function load() {
+  if (API) {
+    try {
+      const [sc, cs] = await Promise.all([
+        fetch(`${API}/api/demo/scenarios`).then(r => r.json()),
+        fetch(`${API}/api/cases`).then(r => r.json()),
+      ]);
+      DATA.scenarios = sc;
+      DATA.cases = await Promise.all(cs.map(c => fetch(`${API}/api/cases/${c.requestId}`).then(r => r.json()).then(x => x.view)));
+      document.getElementById("srcnote").textContent = `live · ${API}`;
+    } catch (e) {
+      document.getElementById("srcnote").textContent = "live API unreachable — falling back to demo data";
+      await loadStatic();
+    }
+  } else {
+    await loadStatic();
+  }
+  renderScenarios();
+  renderQueue();
+  if (DATA.cases.length) select(DATA.cases[0].requestId);
+}
+
+async function loadStatic() {
+  const d = await fetch("demo-cases.json").then(r => r.json());
+  DATA = d;
+  document.getElementById("srcnote").textContent = "demo dataset (offline) · demo-cases.json";
+}
+
+function renderScenarios() {
+  const sel = document.getElementById("scenario");
+  sel.innerHTML = `<option value="">Run a scenario…</option>` +
+    DATA.scenarios.map(s => `<option value="${s.id}">${esc(s.label)}</option>`).join("");
+  sel.onchange = async () => {
+    const id = sel.value; if (!id) return;
+    if (API) {
+      const v = await fetch(`${API}/api/demo/scenarios/${id}/run`, { method: "POST" }).then(r => r.json());
+      upsert(v);
+    }
+    select(id); sel.value = "";
+  };
+}
+
+function upsert(view) {
+  const i = DATA.cases.findIndex(c => c.requestId === view.requestId);
+  if (i >= 0) DATA.cases[i] = view; else DATA.cases.unshift(view);
+  renderQueue();
+}
+
+function renderQueue() {
+  document.getElementById("qlist").innerHTML = DATA.cases.map(c => `
+    <div class="qitem ${current === c.requestId ? "active" : ""}" data-id="${c.requestId}">
+      <div class="proc">${esc(c.procedure)}</div>
+      <div class="meta">${esc(c.payerPlan)} · ${esc(c.region)}
+        · <span class="st ${statusClass(c.status)}" style="padding:1px 6px">${statusLabel(c.status)}</span>
+        · conf ${esc(c.confidence)}</div>
+      <div class="head">${esc(c.headline)}</div>
+    </div>`).join("");
+  document.querySelectorAll(".qitem").forEach(el => el.onclick = () => select(el.dataset.id));
+}
+
+function select(id) {
+  current = id;
+  const c = DATA.cases.find(x => x.requestId === id);
+  renderQueue();
+  if (!c) return;
+  renderDetail(c);
+}
+
+function precedentCard(p) {
+  const pct = Math.round(p.similarity * 100);
+  return `<div class="precedent ${p.droveRecommendation ? "drove" : ""}">
+    <div class="top">
+      <span class="id">${esc(p.caseId)}</span>
+      <span class="sim"><i style="width:${pct}%"></i></span>
+      <span class="simn">${pct}% match</span>
+      ${p.droveRecommendation ? `<span class="drove-tag">▲ drove the recommendation</span>` : ""}
+    </div>
+    <div>
+      ${p.wonOnAppeal ? `<span class="chip win">won on appeal</span>` : ""}
+      ${p.initiallyDenied ? `<span class="chip deny">initially denied</span>` : ""}
+      ${(p.clausesCited || []).map(x => `<span class="chip">clause ${esc(x)}</span>`).join("")}
+      <span class="chip">decided ${esc(p.decidedOn)}</span>
+    </div>
+    <div>${(p.matchedFacts || []).map(f => `<span class="chip">${esc(f)}</span>`).join("") || `<span class="src">no shared fact tokens</span>`}</div>
+    <div class="narr">${esc(p.narrative)}</div>
+  </div>`;
+}
+
+function renderDetail(c) {
+  const critic = c.critic;
+  const g = c.gate;
+  const parts = [];
+
+  parts.push(`<div class="card">
+    <h3>Why</h3>
+    <div class="why">${esc(c.headline)}</div>
+    <div class="row">
+      <span class="st ${statusClass(c.status)}">${statusLabel(c.status)}</span>
+      <span class="kv">Confidence <b>${esc(c.confidence)}</b> <span class="src">(derived from the decision model)</span></span>
+    </div>
+    <p class="kv" style="margin:10px 0 0"><b>AI action:</b> ${esc(c.aiAction)}</p>
+    <p class="kv" style="margin:4px 0 0"><b>Authorisation:</b> ${c.auth.authRequired
+      ? `required — code ${esc(c.auth.requiredCode || "TBC")}, ${esc(c.auth.policyRef || "")}` : "not required"}
+      ${c.auth.ambiguous ? ` <span class="src">(plan text ambiguous — agent-explained)</span>` : ""}</p>
+  </div>`);
+
+  parts.push(`<div class="card">
+    <h3>Evidence — each criterion against the clinical note</h3>
+    <table class="crit">
+      <tr><th>Criterion</th><th>Status</th><th>Evidence &amp; source</th><th>Policy</th></tr>
+      ${c.criteria.map(cr => `<tr>
+        <td>${esc(cr.text)} ${cr.mandatory ? `<span class="badge mand">mandatory</span>` : ""}</td>
+        <td><span class="st ${cr.status}">${cr.status}</span></td>
+        <td>${cr.evidenceStatement ? `<div class="quote">“${esc(cr.evidenceStatement)}”</div>` : `<span class="src">—</span>`}
+            <div class="src">${esc(cr.source)}</div></td>
+        <td class="src">${esc(cr.policyRef)}<br>${esc(cr.policyVersion)}</td>
+      </tr>`).join("")}
+    </table>
+  </div>`);
+
+  parts.push(`<div class="card">
+    <h3>Precedents — comparable cases on the payer's record</h3>
+    ${c.precedents.length
+      ? c.precedents.map(precedentCard).join("")
+      : `<p class="empty" style="padding:10px 0">No precedent on record for this payer + procedure — a reason the system is cautious here.</p>`}
+  </div>`);
+
+  if (critic) {
+    parts.push(`<div class="card">
+      <h3>Critic — tried to disprove the recommendation</h3>
+      <div class="row"><span class="st ${statusClass(critic.verdict === "Clear" ? "ReadyToSubmit"
+        : critic.verdict === "Concerns" ? "NeedsStrengthening"
+        : critic.verdict === "Abstain" ? "SystemAbstained" : "NeedsHumanReview")}">${esc(critic.verdict)}</span>
+        <span class="kv">${esc(critic.summary)}</span></div>
+      ${(critic.flags || []).map(f => `<div class="flag"><b>${esc(f.check)}</b> — ${esc(f.concern)}</div>`).join("")}
+    </div>`);
+  }
+
+  if ((c.conflicts || []).length) {
+    parts.push(`<div class="card">
+      <h3>Conflicts — not resolved silently</h3>
+      <ul class="conf">${c.conflicts.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
+    </div>`);
+  }
+
+  if (g) {
+    parts.push(`<div class="card">
+      <h3>Gate — deterministic routing</h3>
+      <div class="why" style="font-size:15px">${esc(g.route)}</div>
+      <p class="kv">${esc(g.reason)}</p>
+      <div class="model">
+        <div>Mandatory <b>${g.mandatoryPass ? "all met" : "UNMET: " + esc((g.unmetMandatory || []).join(", "))}</b></div>
+        <div>Supporting <b>${g.supportingDocumented} documented · ${g.supportingPartial} partial · ${g.supportingMissing} missing</b></div>
+        <div>Evidence quality <b>${esc(g.evidenceQuality)}</b></div>
+        <div>Contradiction <b>${g.contradictionDetected ? "detected" : "none"}</b></div>
+        <div>Precedent support <b>${esc(g.precedentSupport)}</b></div>
+      </div>
+    </div>`);
+  }
+
+  if (c.draftBody || c.appealDraft) {
+    parts.push(`<div class="card">
+      <h3>${c.appealDraft ? "Appeal draft" : "Submission draft"} <span class="src">— reviewer edits before it is sent</span></h3>
+      <pre class="draft">${esc(c.appealDraft || c.draftBody)}</pre>
+    </div>`);
+  }
+
+  document.getElementById("detail").innerHTML = parts.join("");
+  renderControls(c);
+}
+
+function renderControls(c) {
+  const bar = document.getElementById("controls");
+  bar.hidden = false;
+  bar.innerHTML = `<span class="note">Human control —</span>` +
+    c.controls.map(ct => `<button class="${ct.primary ? "primary" : "ghost"}" data-a="${ct.action}">${esc(ct.label)}</button>`).join("") +
+    `<span class="note" id="decided">${c.decision ? `<span class="done">recorded: ${esc(c.decision.action)}</span>` : ""}</span>`;
+  bar.querySelectorAll("button").forEach(b => b.onclick = () => decide(c, b.dataset.a));
+}
+
+async function decide(c, action) {
+  if (API) {
+    try { await fetch(`${API}/api/cases/${c.requestId}/decision`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, by: "reviewer@demo" }) }); } catch (e) {}
+  }
+  c.decision = { action, by: "reviewer@demo" };
+  document.getElementById("decided").innerHTML = `<span class="done">recorded: ${esc(action)}</span>`;
+}
+
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
+  document.querySelectorAll(".tab").forEach(x => x.classList.toggle("active", x === t));
+  for (const name of ["queue", "warnings", "cost"]) {
+    const el = document.getElementById("tab-" + name);
+    el.hidden = name !== t.dataset.tab;
+  }
+  document.getElementById("controls").hidden = t.dataset.tab !== "queue" || !current;
+});
+
+load();
+</script>
+</body>
+</html>

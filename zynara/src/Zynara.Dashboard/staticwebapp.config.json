@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json.schemas.azureedge.net/staticwebapp.config.json",
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/demo-cases.json", "*.{css,js,png,svg}"]
+  },
+  "mimeTypes": {
+    ".json": "application/json"
+  },
+  "globalHeaders": {
+    "cache-control": "no-cache"
+  }
+}

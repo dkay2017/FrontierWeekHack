@@ -34,3 +34,24 @@ slice (dashboard + precedent panel + a live Critic moment).
 
 **Next lever, in order:** P1-2 + P1-1 (dashboard) → P2-5 (demo script) →
 P2-1 / P2-2 (measured business value) → P1-5 → P1-3 / P1-4.
+
+---
+
+## Note — 2026-09-06 (after P1-1 + P1-2)
+
+`Zynara.ApiProxy` + `Zynara.Dashboard` landed (D10): the evidence-first review
+card, the precedent panel, the Critic surface, the Gate decision model, the
+human-control bar, and an offline demo dataset. Provisional deltas:
+
+- **UX / demo potential 8.0 → 8.5** — the reviewer workspace exists and is the
+  shape the review asked for (evidence and precedent lead, not the approve
+  button). Cap: not yet run through a Functions host / deployed; no scripted
+  demo (P2-5).
+- **Multi-agent justification 8.0 → 8.3** — the Critic is now *visible* to the
+  reviewer as a distinct challenger with its own flags, not just an internal
+  signal.
+- **Innovation 8.2 → 8.4** — the precedent panel (match %, won-on-appeal badges,
+  matched facts, "drove the recommendation") is now demonstrable.
+
+New floor: **Microsoft Foundry usage (8.0)** — still no hosted-agent run shown
+end-to-end. Then Production credibility (8.2, RBAC/audit/isolation).

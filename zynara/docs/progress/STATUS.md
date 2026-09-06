@@ -4,8 +4,8 @@
 current at every checkpoint and **commit + push** — uncommitted work is lost on a
 Codespace rebuild.
 
-_Last updated: 2026-09-06 (session 5 — P0 complete, slice 4 orchestrator built).
-Deadline: **2026-09-23 midnight US**.
+_Last updated: 2026-09-06 (session 6 — P0 + slice 4 + P1-1/P1-2 reviewer
+dashboard). Deadline: **2026-09-23 midnight US**.
 Submission: 3-min video (required) + repo + architecture doc + TDD + dashboard UI._
 
 ## What this is
@@ -149,28 +149,50 @@ P0-2 (Critic agent) → P0-1 (reframe docs) → P0-4 (eval suite). **All P0 done
   evaluation) moved 6.5 → ~8.0–8.5. New floor: **UX / demo (8.0)**.
 - **Scope target locked: P0 + all P1 + P2** (D9 / review §D-5).
 
-## Next — P1, demo-first (this is the resume point)
+## Done — session 6 (2026-09-06) — P1-1 + P1-2
 
-Scope decision D9: **P1-2 + P1-1 first** — the dashboard slice is the biggest
-lever now (lowest score is UX/demo, and it proves evaluator questions 2 & 3).
+- **Reviewer read model** (`Zynara.Core/View`):
+  - `CaseView` — the evidence-first projection of a `PipelineResult` (WHY, AI
+    action, per-criterion evidence + source + policy clause + version, top-3
+    precedent panel with similarity / won / denied / matched-facts /
+    "drove the recommendation", Critic verdict + flags, conflicts, the Gate +
+    its decision model, the draft, the human-control set).
+  - `CaseViewBuilder` — pure, unit-tested. `CaseService` — run → project → store.
+  - `ICaseRepository` + `InMemoryCaseRepository` (Cosmos later); `CaseRecord` /
+    `CaseSummary` / `ReviewerDecision`.
+  - `Zynara.Core/Demo` — `DemoWorld` (now + a 2nd procedure with no precedents)
+    and `DemoCatalog` (5 scenarios, one per route). Moved here from the
+    orchestrator; both apps share it.
+- **`src/Zynara.ApiProxy`** (.NET 8 isolated Functions) — `GET /api/cases`,
+  `GET /api/cases/{id}`, `POST /api/cases`, `POST /api/cases/{id}/decision`,
+  `GET /api/demo/scenarios`, `POST /api/demo/scenarios/{id}/run`, `GET /api/health`.
+  Self-contained for the demo (seeds + pre-runs the scenarios). CORS `*` locally.
+- **`src/Zynara.Dashboard`** — one static `index.html` (no build step). Offline
+  from `demo-cases.json`, or live with `?api=<url>`. Review card (evidence &
+  precedent-first) + Review Queue / Early Warnings / Cost tabs +
+  `staticwebapp.config.json`.
+- **`tools/Zynara.DemoDump`** — regenerates `demo-cases.json` from `Zynara.Core.Demo`.
+- `Zynara.Core.Tests` +7 (`CaseViewTests` — the 5 demo scenarios pinned to their
+  routes, plus card-shape assertions). **67 tests green.**
+- Fixed the pre-existing `StubEvidenceGapAgent` CS8604 warnings.
+- **Not run through a Functions host** — no `func`/Azurite in the Codespace;
+  projection logic is covered by `CaseService`/`CaseViewBuilder` tests, HTTP layer
+  is thin. Same posture as the orchestrator.
 
-1. **`Zynara.ApiProxy`** — Azure Functions read model over `PipelineResult`:
-   `GET /api/cases/{id}` returning the reviewer view (WHY / per-criterion
-   EVIDENCE + SOURCE / POLICY clause + VERSION / top-3 PRECEDENTS with similarity
-   + matched facts + won-on-appeal badge / CONFIDENCE / CONFLICTS / AI ACTION /
-   Critic verdict). No new decision logic — pure projection. (P1-1, P1-2)
-2. **`Zynara.Dashboard`** — Static Web App, evidence-first review card (not
-   approve-button-first) + the precedent panel. 3 tabs: Review Queue · Early
-   Warnings · Cost. (P1-1, P1-2)
-3. **`docs/runbooks/demo-script.md`** — denial → evidence case → Critic blocks an
+## Next — remaining P1 / P2 (resume point)
+
+1. **`docs/runbooks/demo-script.md`** — denial → evidence case → Critic blocks an
    unsupported claim → correction → Gate → human approve → send → audit trail.
    (P2-5)
-4. **`Zynara.ApiProxy`** — measured "Estimated Recoverable Value" with the
-   formula + confidence; pipeline instrumentation for before/after. (P2-1, P2-2)
-5. **`config/profiles/`** — "Policy + Regulatory Profile" model + control rename.
+2. **`Zynara.ApiProxy` + dashboard** — measured "Estimated Recoverable Value"
+   with the formula + confidence; pipeline instrumentation for before/after.
+   (P2-1, P2-2)
+3. **`config/profiles/`** — "Policy + Regulatory Profile" model + control rename.
    (P1-5)
-6. **`Zynara.Core` audit model + `Zynara.ApiProxy` Entra roles + Cosmos
+4. **`Zynara.Core` audit model + `Zynara.ApiProxy` Entra roles + Cosmos
    `caseAudit`** — RBAC, approval authority, audit trail. (P1-3)
+5. **`infra/` Bicep** — enforce the reasoning-agent ↔ payer-connectivity identity
+   boundary. (P1-4)
 
 ## Pending (infra / data — interleave as needed)
 

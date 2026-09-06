@@ -1,0 +1,18 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+
+    "ZYNARA_AGENTS": "stub",
+    "ZYNARA_SKIP_DEMO_SEED": "false",
+
+    "//": "Set ZYNARA_AGENTS=foundry + the below to project real hosted-agent runs.",
+    "PROJECT_ENDPOINT": "",
+    "MODEL_DEPLOYMENT_NAME": "gpt-5.4",
+    "VECTOR_STORE_ID": ""
+  },
+  "Host": {
+    "CORS": "*"
+  }
+}

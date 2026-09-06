@@ -1,6 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Zynara.Core.Abstractions;
 using Zynara.Core.Gating;
 using Zynara.Core.Pipeline;
+using Zynara.Core.View;
 
 namespace Zynara.Core;
 
@@ -25,6 +28,11 @@ public static class DependencyInjection
         services.AddScoped<ExpiryMath>();
         services.AddScoped<PolicyDiff>();
         services.AddScoped<AuthPipeline>();
+
+        // Reviewer read model (P1-1 / P1-2). In-memory case store by default;
+        // Zynara.Data overrides ICaseRepository with the Cosmos-backed one.
+        services.TryAddSingleton<ICaseRepository, InMemoryCaseRepository>();
+        services.AddScoped<CaseService>();
 
         return services;
     }

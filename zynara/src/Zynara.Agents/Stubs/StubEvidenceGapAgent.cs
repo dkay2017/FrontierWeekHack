@@ -47,12 +47,12 @@ public sealed class StubEvidenceGapAgent : IEvidenceGapAgent
             else if (hits.Any(k => Contradicted(note, k)))
             {
                 status = CriterionStatus.Contradicted;
-                evidence = Sentence(clinicalNote, hits[0]);
+                evidence = Sentence(clinicalNote ?? "", hits[0]);
             }
             else
             {
                 status = keywords.Count > 3 && hits.Count == 1 ? CriterionStatus.Partial : CriterionStatus.Documented;
-                evidence = Sentence(clinicalNote, hits[0]);
+                evidence = Sentence(clinicalNote ?? "", hits[0]);
             }
 
             findings.Add(new CriterionFinding(c.Id, status, evidence));

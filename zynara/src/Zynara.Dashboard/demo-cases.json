@@ -1,0 +1,735 @@
+{
+  "scenarios": [
+    {
+      "id": "demo-ready",
+      "label": "Complete record \u2014 ready to submit",
+      "expectation": "All criteria documented, high-quality evidence \u2192 auto-submit on approval."
+    },
+    {
+      "id": "demo-strengthen",
+      "label": "One gap \u2014 needs strengthening",
+      "expectation": "Mandatory met, a supporting criterion undocumented \u2192 back to the clinician."
+    },
+    {
+      "id": "demo-review-mandatory",
+      "label": "Mandatory criterion missing \u2014 human review",
+      "expectation": "No physiotherapy evidenced \u2192 the Critic blocks and a reviewer must decide."
+    },
+    {
+      "id": "demo-appeal",
+      "label": "Denied \u2014 appeal with winning precedents",
+      "expectation": "Denial on record; two comparable cases won on appeal \u2192 precedent-backed appeal, human-approved."
+    },
+    {
+      "id": "demo-abstain",
+      "label": "Thin record, no precedent \u2014 the system abstains",
+      "expectation": "Rarer procedure with no comparable history and low-quality evidence \u2192 the system declines to advise."
+    }
+  ],
+  "cases": [
+    {
+      "requestId": "demo-ready",
+      "procedure": "MRI lumbar spine",
+      "payerPlan": "Bupa/Comprehensive",
+      "region": "UK",
+      "status": "ReadyToSubmit",
+      "headline": "The clinical record meets the plan\u0027s criteria and the case is ready to submit.",
+      "aiAction": "Assembled the submission draft and recommends sending it on approval.",
+      "auth": {
+        "authRequired": true,
+        "requiredCode": "CCSD-72148",
+        "policyRef": "bupa-mri-ls-v3",
+        "ambiguous": false,
+        "note": "Bupa/Comprehensive requires prior authorisation for MRI lumbar spine (code CCSD-72148, bupa-mri-ls-v3)."
+      },
+      "criteria": [
+        {
+          "id": "c1",
+          "text": "physiotherapy completed for six weeks",
+          "mandatory": true,
+          "status": "Documented",
+          "evidenceStatement": "Physiotherapy completed over eight weeks with limited benefit",
+          "source": "clinical note",
+          "policyRef": "bupa-mri-ls-v3",
+          "policyVersion": "v3"
+        },
+        {
+          "id": "c2",
+          "text": "radiculopathy documented on examination",
+          "mandatory": false,
+          "status": "Documented",
+          "evidenceStatement": "Radiculopathy documented on examination in an L5 distribution with reduced reflexes",
+          "source": "clinical note",
+          "policyRef": "bupa-mri-ls-v3",
+          "policyVersion": "v3"
+        },
+        {
+          "id": "c3",
+          "text": "imaging changes management",
+          "mandatory": false,
+          "status": "Documented",
+          "evidenceStatement": "MRI imaging changes management \u2014 the findings would determine whether to proceed to decompression surgery",
+          "source": "clinical note",
+          "policyRef": "bupa-mri-ls-v3",
+          "policyVersion": "v3"
+        }
+      ],
+      "precedents": [
+        {
+          "caseId": "P-1",
+          "similarity": 0.567,
+          "matchedFacts": [
+            "completed",
+            "documented",
+            "eight",
+            "examination",
+            "imaging",
+            "management",
+            "physiotherapy",
+            "radiculopathy",
+            "weeks",
+            "with"
+          ],
+          "initiallyDenied": true,
+          "wonOnAppeal": true,
+          "clausesCited": [
+            "2.1"
+          ],
+          "decidedOn": "2026-03-01",
+          "narrative": "Patient completed eight weeks of physiotherapy with radiculopathy documented on examination and imaging expected to change management. Initially denied under MN-01 (conservative treatment not evidenced); authorised on appeal under clause 2.1.",
+          "droveRecommendation": true
+        },
+        {
+          "caseId": "P-2",
+          "similarity": 0.4,
+          "matchedFacts": [
+            "documented",
+            "examination",
+            "management",
+            "physiotherapy",
+            "radiculopathy",
+            "weeks"
+          ],
+          "initiallyDenied": true,
+          "wonOnAppeal": true,
+          "clausesCited": [
+            "2.1"
+          ],
+          "decidedOn": "2026-04-01",
+          "narrative": "Six weeks of physiotherapy, radiculopathy on examination, MRI requested to plan surgical management. Denied MN-01, overturned on appeal citing clause 2.1 and the documented neurological deficit.",
+          "droveRecommendation": true
+        },
+        {
+          "caseId": "P-9",
+          "similarity": 0.208,
+          "matchedFacts": [
+            "imaging",
+            "management",
+            "physiotherapy",
+            "radiculopathy",
+            "would"
+          ],
+          "initiallyDenied": true,
+          "wonOnAppeal": false,
+          "clausesCited": [],
+          "decidedOn": "2026-02-01",
+          "narrative": "Physiotherapy and radiculopathy noted but imaging not shown to change management. Denied MN-02; appeal unsuccessful \u2014 the record did not establish that the scan would alter the treatment plan.",
+          "droveRecommendation": false
+        }
+      ],
+      "critic": {
+        "verdict": "Clear",
+        "flags": [],
+        "summary": "No material concern \u2014 the recommendation holds up."
+      },
+      "conflicts": [],
+      "confidence": "High",
+      "gate": {
+        "route": "AutoSubmit",
+        "reason": "gap-checked, Critic-cleared and ready \u2014 auto-submit the draft. [mandatory all met; supporting 2 documented / 0 partial / 0 missing; evidence High; contradiction none; precedent support Strong]",
+        "mandatoryPass": true,
+        "unmetMandatory": [],
+        "supportingDocumented": 2,
+        "supportingPartial": 0,
+        "supportingMissing": 0,
+        "evidenceQuality": "High",
+        "contradictionDetected": false,
+        "precedentSupport": "Strong"
+      },
+      "draftBody": "Prior-authorisation request \u2014 MRI lumbar spine (CCSD-72148)\nPayer / plan: Bupa/Comprehensive  \u00B7  Region: UK  \u00B7  Policy: bupa-mri-ls-v3\n\nMandatory criteria: all met\nSupporting criteria documented (2/2):\n  - physiotherapy completed for six weeks\n  - radiculopathy documented on examination\n  - imaging changes management\n\nClinical summary:\n  Physiotherapy completed over eight weeks with limited benefit. Radiculopathy documented on examination in an L5 distribution with reduced reflexes. MRI imaging changes management \u2014 the findings would determine whether to proceed to decompression surgery.\n\nAppeal analysis: No evidence gaps and comparable cases were approved first time \u2014 submit. (precedent support: Strong).",
+      "controls": [
+        {
+          "action": "approve-send",
+          "label": "Approve \u0026 send",
+          "primary": true
+        },
+        {
+          "action": "edit",
+          "label": "Edit the draft",
+          "primary": false
+        },
+        {
+          "action": "request-evidence",
+          "label": "Request more evidence",
+          "primary": false
+        },
+        {
+          "action": "reject",
+          "label": "Reject",
+          "primary": false
+        }
+      ]
+    },
+    {
+      "requestId": "demo-strengthen",
+      "procedure": "MRI lumbar spine",
+      "payerPlan": "Bupa/Comprehensive",
+      "region": "UK",
+      "status": "NeedsStrengthening",
+      "headline": "The mandatory criteria are met, but 1 supporting criterion(a) need more evidence before this is ready.",
+      "aiAction": "Assembled a draft and listed the evidence gaps for the clinician.",
+      "auth": {
+        "authRequired": true,
+        "requiredCode": "CCSD-72148",
+        "policyRef": "bupa-mri-ls-v3",
+        "ambiguous": false,
+        "note": "Bupa/Comprehensive requires prior authorisation for MRI lumbar spine (code CCSD-72148, bupa-mri-ls-v3)."
+      },
+      "criteria": [
+        {
+          "id": "c1",
+          "text": "physiotherapy completed for six weeks",
+          "mandatory": true,
+          "status": "Documented",
+          "evidenceStatement": "Physiotherapy completed for six weeks",
+          "source": "clinical note",
+          "policyRef": "bupa-mri-ls-v3",
+          "policyVersion": "v3"
+        },
+        {
+          "id": "c2",
+          "text": "radiculopathy documented on examination",
+          "mandatory": false,
+          "status": "Missing",
+          "source": "not found in the clinical note",
+          "policyRef": "bupa-mri-ls-v3",
+          "policyVersion": "v3"
+        },
+        {
+          "id": "c3",
+          "text": "imaging changes management",
+          "mandatory": false,
+          "status": "Documented",
+          "evidenceStatement": "MRI requested; imaging changes management and would alter the planned surgical approach",
+          "source": "clinical note",
+          "policyRef": "bupa-mri-ls-v3",
+          "policyVersion": "v3"
+        }
+      ],
+      "precedents": [
+        {
+          "caseId": "P-2",
+          "similarity": 0.462,
+          "matchedFacts": [
+            "management",
+            "physiotherapy",
+            "requested",
+            "surgical",
+            "weeks"
+          ],
+          "initiallyDenied": true,
+          "wonOnAppeal": true,
+          "clausesCited": [
+            "2.1"
+          ],
+          "decidedOn": "2026-04-01",
+          "narrative": "Six weeks of physiotherapy, radiculopathy on examination, MRI requested to plan surgical management. Denied MN-01, overturned on appeal citing clause 2.1 and the documented neurological deficit.",
+          "droveRecommendation": true
+        },
+        {
+          "caseId": "P-1",
+          "similarity": 0.377,
+          "matchedFacts": [
+            "completed",
+            "imaging",
+            "management",
+            "physiotherapy",
+            "weeks"
+          ],
+          "initiallyDenied": true,
+          "wonOnAppeal": true,
+          "clausesCited": [
+            "2.1"
+          ],
+          "decidedOn": "2026-03-01",
+          "narrative": "Patient completed eight weeks of physiotherapy with radiculopathy documented on examination and imaging expected to change management. Initially denied under MN-01 (conservative treatment not evidenced); authorised on appeal under clause 2.1.",
+          "droveRecommendation": true
+        },
+        {
+          "caseId": "P-9",
+          "similarity": 0.278,
+          "matchedFacts": [
+            "alter",
+            "imaging",
+            "management",
+            "physiotherapy",
+            "would"
+          ],
+          "initiallyDenied": true,
+          "wonOnAppeal": false,
+          "clausesCited": [],
+          "decidedOn": "2026-02-01",
+          "narrative": "Physiotherapy and radiculopathy noted but imaging not shown to change management. Denied MN-02; appeal unsuccessful \u2014 the record did not establish that the scan would alter the treatment plan.",
+          "droveRecommendation": false
+        }
+      ],
+      "critic": {
+        "verdict": "Clear",
+        "flags": [],
+        "summary": "No material concern \u2014 the recommendation holds up."
+      },
+      "conflicts": [],
+      "confidence": "Medium",
+      "gate": {
+        "route": "Strengthen",
+        "reason": "1 supporting criterion(a) undocumented / evidence Medium \u2014 strengthen with the clinician. [mandatory all met; supporting 1 documented / 0 partial / 1 missing; evidence Medium; contradiction none; precedent support Strong]",
+        "mandatoryPass": true,
+        "unmetMandatory": [],
+        "supportingDocumented": 1,
+        "supportingPartial": 0,
+        "supportingMissing": 1,
+        "evidenceQuality": "Medium",
+        "contradictionDetected": false,
+        "precedentSupport": "Strong"
+      },
+      "draftBody": "Prior-authorisation request \u2014 MRI lumbar spine (CCSD-72148)\nPayer / plan: Bupa/Comprehensive  \u00B7  Region: UK  \u00B7  Policy: bupa-mri-ls-v3\n\nMandatory criteria: all met\nSupporting criteria documented (1/2):\n  - physiotherapy completed for six weeks\n  - imaging changes management\n\nClinical summary:\n  Physiotherapy completed for six weeks. MRI requested; imaging changes management and would alter the planned surgical approach.\n\nOutstanding for the reviewer: 1 undocumented.\n\nAppeal analysis: 1 criterion(a) undocumented \u2014 close the gaps with the clinician before submitting. (precedent support: Strong).",
+      "controls": [
+        {
+          "action": "request-evidence",
+          "label": "Request more evidence",
+          "primary": true
+        },
+        {
+          "action": "edit",
+          "label": "Edit the draft",
+          "primary": false
+        },
+        {
+          "action": "approve-send",
+          "label": "Approve \u0026 send anyway",
+          "primary": false
+        },
+        {
+          "action": "reject",
+          "label": "Reject",
+          "primary": false
+        }
+      ]
+    },
+    {
+      "requestId": "demo-review-mandatory",
+      "procedure": "MRI lumbar spine",
+      "payerPlan": "Bupa/Comprehensive",
+      "region": "UK",
+      "status": "NeedsHumanReview",
+      "headline": "A reviewer must decide: Critic \u2014 mandatory criterion not documented: c1",
+      "aiAction": "Assembled the case and routed it to a human \u2014 it did not act.",
+      "auth": {
+        "authRequired": true,
+        "requiredCode": "CCSD-72148",
+        "policyRef": "bupa-mri-ls-v3",
+        "ambiguous": false,
+        "note": "Bupa/Comprehensive requires prior authorisation for MRI lumbar spine (code CCSD-72148, bupa-mri-ls-v3)."
+      },
+      "criteria": [
+        {
+          "id": "c1",
+          "text": "physiotherapy completed for six weeks",
+          "mandatory": true,
+          "status": "Missing",
+          "source": "not found in the clinical note",
+          "policyRef": "bupa-mri-ls-v3",
+          "policyVersion": "v3"
+        },
+        {
+          "id": "c2",
+          "text": "radiculopathy documented on examination",
+          "mandatory": false,
+          "status": "Documented",
+          "evidenceStatement": "Radiculopathy documented on examination",
+          "source": "clinical note",
+          "policyRef": "bupa-mri-ls-v3",
+          "policyVersion": "v3"
+        },
+        {
+          "id": "c3",
+          "text": "imaging changes management",
+          "mandatory": false,
+          "status": "Documented",
+          "evidenceStatement": "Imaging changes management and would determine the surgical approach",
+          "source": "clinical note",
+          "policyRef": "bupa-mri-ls-v3",
+          "policyVersion": "v3"
+        }
+      ],
+      "precedents": [
+        {
+          "caseId": "P-2",
+          "similarity": 0.462,
+          "matchedFacts": [
+            "documented",
+            "examination",
+            "management",
+            "radiculopathy",
+            "surgical"
+          ],
+          "initiallyDenied": true,
+          "wonOnAppeal": true,
+          "clausesCited": [
+            "2.1"
+          ],
+          "decidedOn": "2026-04-01",
+          "narrative": "Six weeks of physiotherapy, radiculopathy on examination, MRI requested to plan surgical management. Denied MN-01, overturned on appeal citing clause 2.1 and the documented neurological deficit.",
+          "droveRecommendation": true
+        },
+        {
+          "caseId": "P-1",
+          "similarity": 0.377,
+          "matchedFacts": [
+            "documented",
+            "examination",
+            "imaging",
+            "management",
+            "radiculopathy"
+          ],
+          "initiallyDenied": true,
+          "wonOnAppeal": true,
+          "clausesCited": [
+            "2.1"
+          ],
+          "decidedOn": "2026-03-01",
+          "narrative": "Patient completed eight weeks of physiotherapy with radiculopathy documented on examination and imaging expected to change management. Initially denied under MN-01 (conservative treatment not evidenced); authorised on appeal under clause 2.1.",
+          "droveRecommendation": true
+        },
+        {
+          "caseId": "P-9",
+          "similarity": 0.222,
+          "matchedFacts": [
+            "imaging",
+            "management",
+            "radiculopathy",
+            "would"
+          ],
+          "initiallyDenied": true,
+          "wonOnAppeal": false,
+          "clausesCited": [],
+          "decidedOn": "2026-02-01",
+          "narrative": "Physiotherapy and radiculopathy noted but imaging not shown to change management. Denied MN-02; appeal unsuccessful \u2014 the record did not establish that the scan would alter the treatment plan.",
+          "droveRecommendation": false
+        }
+      ],
+      "critic": {
+        "verdict": "Block",
+        "flags": [
+          {
+            "check": "mandatory-criteria",
+            "concern": "mandatory criterion not documented: c1"
+          }
+        ],
+        "summary": "1 material problem(s) \u2014 the case must go to a reviewer."
+      },
+      "conflicts": [
+        "Critic \u2014 mandatory criterion not documented: c1"
+      ],
+      "confidence": "Medium",
+      "gate": {
+        "route": "HumanReview",
+        "reason": "the Critic raised a material concern (mandatory criterion not documented: c1) \u2014 a reviewer must decide. [mandatory 1/1 unmet; supporting 2 documented / 0 partial / 0 missing; evidence Medium; contradiction none; precedent support Strong]",
+        "mandatoryPass": false,
+        "unmetMandatory": [
+          "c1"
+        ],
+        "supportingDocumented": 2,
+        "supportingPartial": 0,
+        "supportingMissing": 0,
+        "evidenceQuality": "Medium",
+        "contradictionDetected": false,
+        "precedentSupport": "Strong"
+      },
+      "draftBody": "Prior-authorisation request \u2014 MRI lumbar spine (CCSD-72148)\nPayer / plan: Bupa/Comprehensive  \u00B7  Region: UK  \u00B7  Policy: bupa-mri-ls-v3\n\nMandatory criteria: UNMET \u2014 c1\nSupporting criteria documented (2/2):\n  - radiculopathy documented on examination\n  - imaging changes management\n\nClinical summary:\n  Radiculopathy documented on examination. Imaging changes management and would determine the surgical approach.\n\nOutstanding for the reviewer: 1 undocumented.\n\nAppeal analysis: 1 criterion(a) undocumented \u2014 close the gaps with the clinician before submitting. (precedent support: Strong).",
+      "controls": [
+        {
+          "action": "approve-send",
+          "label": "Approve \u0026 send",
+          "primary": true
+        },
+        {
+          "action": "reject",
+          "label": "Reject",
+          "primary": true
+        },
+        {
+          "action": "edit",
+          "label": "Edit the draft",
+          "primary": false
+        },
+        {
+          "action": "request-evidence",
+          "label": "Request more evidence",
+          "primary": false
+        }
+      ]
+    },
+    {
+      "requestId": "demo-appeal",
+      "procedure": "MRI lumbar spine",
+      "payerPlan": "Bupa/Comprehensive",
+      "region": "UK",
+      "status": "NeedsHumanReview",
+      "headline": "This is an appeal \u2014 a reviewer signs off before it is filed. 2 comparable case(s) won on appeal.",
+      "aiAction": "Assembled the case and routed it to a human \u2014 it did not act.",
+      "auth": {
+        "authRequired": true,
+        "requiredCode": "CCSD-72148",
+        "policyRef": "bupa-mri-ls-v3",
+        "ambiguous": false,
+        "note": "Bupa/Comprehensive requires prior authorisation for MRI lumbar spine (code CCSD-72148, bupa-mri-ls-v3)."
+      },
+      "criteria": [
+        {
+          "id": "c1",
+          "text": "physiotherapy completed for six weeks",
+          "mandatory": true,
+          "status": "Documented",
+          "evidenceStatement": "Physiotherapy completed for eight weeks",
+          "source": "clinical note",
+          "policyRef": "bupa-mri-ls-v3",
+          "policyVersion": "v3"
+        },
+        {
+          "id": "c2",
+          "text": "radiculopathy documented on examination",
+          "mandatory": false,
+          "status": "Documented",
+          "evidenceStatement": "Radiculopathy documented on examination",
+          "source": "clinical note",
+          "policyRef": "bupa-mri-ls-v3",
+          "policyVersion": "v3"
+        },
+        {
+          "id": "c3",
+          "text": "imaging changes management",
+          "mandatory": false,
+          "status": "Documented",
+          "evidenceStatement": "Imaging changes management and determines the surgical approach",
+          "source": "clinical note",
+          "policyRef": "bupa-mri-ls-v3",
+          "policyVersion": "v3"
+        }
+      ],
+      "precedents": [
+        {
+          "caseId": "P-1",
+          "similarity": 0.786,
+          "matchedFacts": [
+            "completed",
+            "conservative",
+            "denied",
+            "documented",
+            "eight",
+            "evidenced",
+            "examination",
+            "imaging",
+            "management",
+            "physiotherapy",
+            "radiculopathy",
+            "treatment",
+            "under",
+            "weeks"
+          ],
+          "initiallyDenied": true,
+          "wonOnAppeal": true,
+          "clausesCited": [
+            "2.1"
+          ],
+          "decidedOn": "2026-03-01",
+          "narrative": "Patient completed eight weeks of physiotherapy with radiculopathy documented on examination and imaging expected to change management. Initially denied under MN-01 (conservative treatment not evidenced); authorised on appeal under clause 2.1.",
+          "droveRecommendation": true
+        },
+        {
+          "caseId": "P-2",
+          "similarity": 0.531,
+          "matchedFacts": [
+            "denied",
+            "documented",
+            "examination",
+            "management",
+            "physiotherapy",
+            "radiculopathy",
+            "surgical",
+            "weeks"
+          ],
+          "initiallyDenied": true,
+          "wonOnAppeal": true,
+          "clausesCited": [
+            "2.1"
+          ],
+          "decidedOn": "2026-04-01",
+          "narrative": "Six weeks of physiotherapy, radiculopathy on examination, MRI requested to plan surgical management. Denied MN-01, overturned on appeal citing clause 2.1 and the documented neurological deficit.",
+          "droveRecommendation": true
+        },
+        {
+          "caseId": "P-9",
+          "similarity": 0.286,
+          "matchedFacts": [
+            "denied",
+            "imaging",
+            "management",
+            "physiotherapy",
+            "radiculopathy",
+            "treatment"
+          ],
+          "initiallyDenied": true,
+          "wonOnAppeal": false,
+          "clausesCited": [],
+          "decidedOn": "2026-02-01",
+          "narrative": "Physiotherapy and radiculopathy noted but imaging not shown to change management. Denied MN-02; appeal unsuccessful \u2014 the record did not establish that the scan would alter the treatment plan.",
+          "droveRecommendation": false
+        }
+      ],
+      "critic": {
+        "verdict": "Clear",
+        "flags": [],
+        "summary": "No material concern \u2014 the recommendation holds up."
+      },
+      "conflicts": [],
+      "confidence": "Medium",
+      "gate": {
+        "route": "HumanReview",
+        "reason": "an appeal always goes to a reviewer before it is filed. [mandatory all met; supporting 2 documented / 0 partial / 0 missing; evidence High; contradiction none; precedent support Strong]",
+        "mandatoryPass": true,
+        "unmetMandatory": [],
+        "supportingDocumented": 2,
+        "supportingPartial": 0,
+        "supportingMissing": 0,
+        "evidenceQuality": "High",
+        "contradictionDetected": false,
+        "precedentSupport": "Strong"
+      },
+      "draftBody": "Prior-authorisation request \u2014 MRI lumbar spine (CCSD-72148)\nPayer / plan: Bupa/Comprehensive  \u00B7  Region: UK  \u00B7  Policy: bupa-mri-ls-v3\n\nMandatory criteria: all met\nSupporting criteria documented (2/2):\n  - physiotherapy completed for six weeks\n  - radiculopathy documented on examination\n  - imaging changes management\n\nClinical summary:\n  Physiotherapy completed for eight weeks. Radiculopathy documented on examination. Imaging changes management and determines the surgical approach.\n\nAppeal analysis: 2 comparable case(s) won on appeal (win rate 67 %). Recommend appeal, citing the precedents below. (precedent support: Strong).",
+      "appealDraft": "Re: appeal of the denied prior-authorisation request for MRI lumbar spine.\n\nWe respectfully appeal this denial. The clinical record meets the plan\u0027s published criteria for this procedure, and the payer\u0027s own recorded outcomes support authorisation:\n  - Case P-1 (2026-03-01, 0.79 similarity): a comparable fact pattern, initially denied then authorised on appeal under 2.1.\n  - Case P-2 (2026-04-01, 0.53 similarity): a comparable fact pattern, initially denied then authorised on appeal under 2.1.\n\nWe ask that the authorisation be granted. [Reviewer to add case-specific detail.]",
+      "controls": [
+        {
+          "action": "approve-send",
+          "label": "Approve \u0026 send",
+          "primary": true
+        },
+        {
+          "action": "reject",
+          "label": "Reject",
+          "primary": true
+        },
+        {
+          "action": "edit",
+          "label": "Edit the draft",
+          "primary": false
+        },
+        {
+          "action": "request-evidence",
+          "label": "Request more evidence",
+          "primary": false
+        }
+      ]
+    },
+    {
+      "requestId": "demo-abstain",
+      "procedure": "MR arthrogram shoulder",
+      "payerPlan": "Bupa/Comprehensive",
+      "region": "UK",
+      "status": "SystemAbstained",
+      "headline": "The system does not have enough reliable evidence to make a recommendation.",
+      "aiAction": "Declined to advise and routed the case to a human.",
+      "auth": {
+        "authRequired": true,
+        "requiredCode": "CCSD-73222",
+        "policyRef": "bupa-mras-v1",
+        "ambiguous": false,
+        "note": "Bupa/Comprehensive requires prior authorisation for MR arthrogram shoulder (code CCSD-73222, bupa-mras-v1)."
+      },
+      "criteria": [
+        {
+          "id": "c1",
+          "text": "conservative management including physiotherapy attempted",
+          "mandatory": true,
+          "status": "Documented",
+          "evidenceStatement": "Physiotherapy attempted",
+          "source": "clinical note",
+          "policyRef": "bupa-mras-v1",
+          "policyVersion": "v1"
+        },
+        {
+          "id": "c2",
+          "text": "instability or labral tear suspected clinically",
+          "mandatory": false,
+          "status": "Partial",
+          "evidenceStatement": "Ongoing shoulder pain, query labral pathology",
+          "source": "clinical note",
+          "policyRef": "bupa-mras-v1",
+          "policyVersion": "v1"
+        },
+        {
+          "id": "c3",
+          "text": "plain radiographs already obtained",
+          "mandatory": false,
+          "status": "Missing",
+          "source": "not found in the clinical note",
+          "policyRef": "bupa-mras-v1",
+          "policyVersion": "v1"
+        }
+      ],
+      "precedents": [],
+      "critic": {
+        "verdict": "Abstain",
+        "flags": [
+          {
+            "check": "abstention",
+            "concern": "Low-quality evidence and no comparable precedent \u2014 not enough to make a reliable recommendation"
+          }
+        ],
+        "summary": "The recommendation is not supportable \u2014 the system should abstain."
+      },
+      "conflicts": [],
+      "confidence": "Low",
+      "gate": {
+        "route": "Abstain",
+        "reason": "the Critic cannot support the recommendation (Low-quality evidence and no comparable precedent \u2014 not enough to make a reliable recommendation) \u2014 the system abstains. [mandatory all met; supporting 0 documented / 1 partial / 1 missing; evidence Low; contradiction none; precedent support None]",
+        "mandatoryPass": true,
+        "unmetMandatory": [],
+        "supportingDocumented": 0,
+        "supportingPartial": 1,
+        "supportingMissing": 1,
+        "evidenceQuality": "Low",
+        "contradictionDetected": false,
+        "precedentSupport": "None"
+      },
+      "draftBody": "Prior-authorisation request \u2014 MR arthrogram shoulder (CCSD-73222)\nPayer / plan: Bupa/Comprehensive  \u00B7  Region: UK  \u00B7  Policy: bupa-mras-v1\n\nMandatory criteria: all met\nSupporting criteria documented (0/2):\n  - conservative management including physiotherapy attempted\n\nClinical summary:\n  Physiotherapy attempted. Ongoing shoulder pain, query labral pathology. Requesting MR arthrogram to clarify.\n\nOutstanding for the reviewer: 2 undocumented.\n\nAppeal analysis: 2 criterion(a) undocumented \u2014 close the gaps with the clinician before submitting. (precedent support: None).",
+      "controls": [
+        {
+          "action": "request-evidence",
+          "label": "Request more evidence",
+          "primary": true
+        },
+        {
+          "action": "reject",
+          "label": "Reject",
+          "primary": true
+        },
+        {
+          "action": "edit",
+          "label": "Edit and decide manually",
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

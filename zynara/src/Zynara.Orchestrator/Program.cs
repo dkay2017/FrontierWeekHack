@@ -3,7 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Zynara.Agents;
 using Zynara.Core;
 using Zynara.Core.Abstractions;
-using Zynara.Orchestrator;
+using Zynara.Core.Demo;
 
 // Compute layer (Architecture §4 · TDD §12 TD-1..TD-3).
 //
