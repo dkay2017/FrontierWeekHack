@@ -138,8 +138,8 @@ public sealed record EvalGroundTruth
     /// <summary>Precedent ids the appeal should cite (empty for a non-appeal case).</summary>
     public IReadOnlyList<string> ExpectedCitedPrecedents { get; init; } = Array.Empty<string>();
 
-    /// <summary>Expected appeal-builder verdict: Submit / Strengthen / Appeal. Null = not scored.</summary>
-    public string? ExpectedAppealVerdict { get; init; }
+    /// <summary>Expected precedent-strategist verdict: Submit / Strengthen / Appeal. Null = not scored.</summary>
+    public string? ExpectedStrategyVerdict { get; init; }
 
     /// <summary>The governing policy the assembled draft must cite. Null → the case's first rule's PolicyRef.</summary>
     public string? ExpectedPolicyRef { get; init; }
@@ -149,8 +149,8 @@ public sealed record EvalGroundTruth
 
     public GateRoute Route => Enum.Parse<GateRoute>(ExpectedRoute, ignoreCase: true);
 
-    public AppealVerdict? AppealVerdict =>
-        ExpectedAppealVerdict is { } v ? Enum.Parse<AppealVerdict>(v, ignoreCase: true) : null;
+    public StrategyVerdict? StrategyVerdict =>
+        ExpectedStrategyVerdict is { } v ? Enum.Parse<StrategyVerdict>(v, ignoreCase: true) : null;
 
     public CriterionStatus StatusOf(string id) =>
         Enum.Parse<CriterionStatus>(CriterionStatus.GetValueOrDefault(id, "Missing"), ignoreCase: true);

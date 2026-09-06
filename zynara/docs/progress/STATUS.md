@@ -25,7 +25,7 @@ patterns reused, not code.
 ## The 4 reasoning agents + 2 monitors
 
 **Agents** (each behind a `Zynara.Core` port + deterministic stub twin):
-needs-auth · evidence-gap · appeal-builder (drafts the appeal — the
+needs-auth · evidence-gap · precedent-strategist (drafts the appeal — the
 differentiator) · **critic** (tries to disprove the assembled case — D5).
 **Deterministic monitors** (not agents — D6): expiry-watch (date math),
 policy-drift (text diff). Payer-agnostic; **Policy + Regulatory Profile** (UK ⇄ US) behind the header chip.
@@ -87,7 +87,7 @@ source of truth):
   `AuthPipeline`, `AddZynaraCore()`. 20 tests.
 - **Slice 3 — Foundry agents** (`Zynara.Agents/Foundry`): `FoundryAgentClient`,
   `FoundryAgentOptions`, `AgentPrompts`, `FoundryAgentProvisioner`,
-  `Foundry{NeedsAuth,EvidenceGap,AppealBuilder,ExpiryWatch,PolicyDrift}Agent`,
+  `Foundry{NeedsAuth,EvidenceGap,PrecedentStrategist}Agent`,
   `FoundryResponse` (testable JSON sanitisers), `ZYNARA_AGENTS=foundry` DI.
   17 agent tests. **37 tests green total.**
 
@@ -259,7 +259,7 @@ needs the same restyle port.
 ## Done — 2026-09-06 — eval note #3
 
 - **Two eval metrics added** (D18): policy-citation accuracy (draft names the
-  governing policy ref, CI floor 95%) + appeal-verdict agreement (`appeal-builder`
+  governing policy ref, CI floor 95%) + strategy-verdict agreement (`precedent-strategist`
   verdict vs. label, 7 cases, CI floor 80%). Clause hallucination folded into the
   hard-gated hallucination count. Both 100%. **94 tests green.**
 

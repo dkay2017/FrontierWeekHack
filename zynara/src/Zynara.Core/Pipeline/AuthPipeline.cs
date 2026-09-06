@@ -51,7 +51,7 @@ public sealed class AuthPipeline(
             CriteriaChecked: gap.Assessment.Findings.Count,
             EvidenceGapsFound: gap.Assessment.Findings.Count(f => f.Status != CriterionStatus.Documented),
             PrecedentsConsidered: appeal.Shortlist.Count,
-            ReasoningStepsRun: 5,   // needs-auth · evidence-gap · claims-extraction · appeal-builder · critic
+            ReasoningStepsRun: 5,   // needs-auth · evidence-gap · claims-extraction · precedent-strategist · critic
             AssembledInMs: sw.ElapsedMilliseconds);
 
         return new PipelineResult(request.Id, na, gap, appeal, review, decision, draft)

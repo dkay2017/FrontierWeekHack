@@ -50,35 +50,35 @@ internal static class FoundryResponse
             criteria.Items.Select(c => findings[c.Id]).ToList(), quality, summary);
     }
 
-    /// <summary>appeal-builder reply → a sanitised <see cref="AppealRecommendation"/>.</summary>
-    public static AppealRecommendation ParseAppeal(
+    /// <summary>precedent-strategist reply → a sanitised <see cref="StrategyRecommendation"/>.</summary>
+    public static StrategyRecommendation ParseStrategy(
         string reply, IReadOnlyList<PrecedentMatch> shortlist, bool denied)
     {
         var ids = shortlist.Select(m => m.Precedent.CaseId).ToHashSet();
         var obj = AgentJson.FirstObject(reply);
 
         if (obj is not { } o)
-            return new AppealRecommendation(
-                AppealVerdict.Strengthen, Array.Empty<string>(), null,
+            return new StrategyRecommendation(
+                StrategyVerdict.Strengthen, Array.Empty<string>(), null,
                 "Agent response could not be parsed — routed to human review.");
 
         var verdict = AgentJson.String(o, "verdict").Trim().ToLowerInvariant() switch
         {
-            "submit" => AppealVerdict.Submit,
-            "appeal" when denied => AppealVerdict.Appeal,
-            _ => AppealVerdict.Strengthen,
+            "submit" => StrategyVerdict.Submit,
+            "appeal" when denied => StrategyVerdict.Appeal,
+            _ => StrategyVerdict.Strengthen,
         };
 
         var cited = AgentJson.StringArray(o, "cited").Where(ids.Contains).Distinct().ToList();
 
         var draftRaw = AgentJson.String(o, "draft").Trim();
-        var draft = verdict == AppealVerdict.Appeal && draftRaw.Length > 0 ? draftRaw : null;
+        var draft = verdict == StrategyVerdict.Appeal && draftRaw.Length > 0 ? draftRaw : null;
 
         var rationale = AgentJson.String(o, "rationale");
         if (rationale.Length == 0)
             rationale = $"Recommendation: {verdict}.";
 
-        return new AppealRecommendation(verdict, cited, draft, rationale);
+        return new StrategyRecommendation(verdict, cited, draft, rationale);
     }
 
     private static void Classify(

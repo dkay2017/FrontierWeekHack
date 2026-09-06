@@ -70,6 +70,6 @@ internal static class Build
 
     public static AppealMatchResult Appeal(PrecedentSupport support = PrecedentSupport.Moderate) =>
         new(Array.Empty<PrecedentMatch>(),
-            new AppealRecommendation(AppealVerdict.Submit, Array.Empty<string>(), null, "ok"),
+            new StrategyRecommendation(StrategyVerdict.Submit, Array.Empty<string>(), null, "ok"),
             support);
 }

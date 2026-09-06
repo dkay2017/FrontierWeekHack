@@ -78,12 +78,12 @@ public class SpokeTests
             denial: "Denied under MN-01: conservative treatment not documented.");
         var gap = Build.Assessment();
 
-        var result = await new AppealMatch(store, new StubAppealBuilderAgent()).RunAsync(req, gap);
+        var result = await new AppealMatch(store, new StubPrecedentStrategistAgent()).RunAsync(req, gap);
 
         Assert.Equal("P-near", result.Shortlist[0].Precedent.CaseId);
         Assert.True(result.Shortlist[0].Similarity > 0);
         Assert.Equal(PrecedentSupport.Strong, result.Support);
-        Assert.Equal(AppealVerdict.Appeal, result.Recommendation.Verdict);
+        Assert.Equal(StrategyVerdict.Appeal, result.Recommendation.Verdict);
     }
 
     [Fact]

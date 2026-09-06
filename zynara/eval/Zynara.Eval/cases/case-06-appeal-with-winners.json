@@ -71,7 +71,7 @@
       "P-2"
     ],
     "expertAbstains": false,
-    "expectedAppealVerdict": "Appeal",
+    "expectedStrategyVerdict": "Appeal",
     "expectedPolicyRef": "bupa-mri-ls-v3"
   }
 }

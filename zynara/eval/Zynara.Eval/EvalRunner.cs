@@ -105,7 +105,7 @@ public static class EvalRunner
             }
 
             // appeal-recommendation agreement (review note #3)
-            if (c.GroundTruth.AppealVerdict is { } wantVerdict)
+            if (c.GroundTruth.StrategyVerdict is { } wantVerdict)
             {
                 verdictCases++;
                 if (result.Appeal?.Recommendation.Verdict == wantVerdict) verdictAgree++;
@@ -149,8 +149,8 @@ public static class EvalRunner
             MandatoryFalsePositives: mandFp,
             PrecedentCitationAccuracy: Ratio(citeCorrect, citeCases),
             PolicyCitationAccuracy: Ratio(policyCiteCorrect, policyCiteCases),
-            AppealVerdictAgreement: Ratio(verdictAgree, verdictCases),
-            AppealVerdictCases: verdictCases,
+            StrategyVerdictAgreement: Ratio(verdictAgree, verdictCases),
+            StrategyVerdictCases: verdictCases,
             HallucinatedReferences: hallucinated,
             RouteAgreement: Ratio(routeAgree, cases.Count),
             AbstainExpected: absExpected,

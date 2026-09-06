@@ -8,13 +8,13 @@ namespace Zynara.Core.Pipeline;
 /// Spoke 3 (the differentiator's deterministic half). Filters precedent metadata to
 /// the same payer + procedure + region, ranks it by fact-pattern similarity to the
 /// case in hand, and hands the top shortlist — with the similarity score and the
-/// facts that matched — to the <c>appeal-builder</c> agent. It also derives the
+/// facts that matched — to the <c>precedent-strategist</c> agent. It also derives the
 /// precedent-support level the Gate consumes.
 /// Ranking is deterministic: token overlap between the clinical note (or denial
 /// letter) and each precedent's narrative, a bonus for a shared denial reason code,
 /// and a bonus for a case that won on appeal.
 /// </summary>
-public sealed class AppealMatch(IZynaraStore store, IAppealBuilderAgent agent)
+public sealed class AppealMatch(IZynaraStore store, IPrecedentStrategistAgent agent)
 {
     private const int ShortlistSize = 5;
 

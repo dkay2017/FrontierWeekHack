@@ -43,7 +43,7 @@
     "expectedRoute": "AutoSubmit",
     "expectedCitedPrecedents": [],
     "expertAbstains": false,
-    "expectedAppealVerdict": "Submit",
+    "expectedStrategyVerdict": "Submit",
     "expectedPolicyRef": "bupa-mri-ls-v3"
   }
 }

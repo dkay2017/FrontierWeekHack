@@ -77,33 +77,33 @@ public class FoundryResponseTests
         Assert.Equal(CriterionStatus.Documented, StatusOf(a, "c1"));   // first classification wins
     }
 
-    // ----- appeal-builder parsing -------------------------------------------------
+    // ----- precedent-strategist parsing -------------------------------------------------
 
     [Fact]
-    public void ParseAppeal_keeps_a_draft_only_for_an_appeal_verdict_after_a_denial()
+    public void ParseStrategy_keeps_a_draft_only_for_an_appeal_verdict_after_a_denial()
     {
         var reply = """{"verdict":"appeal","cited":["P-1"],"draft":"We appeal...","rationale":"won before"}""";
 
-        var r = FoundryResponse.ParseAppeal(reply, Shortlist(), denied: true);
+        var r = FoundryResponse.ParseStrategy(reply, Shortlist(), denied: true);
 
-        Assert.Equal(AppealVerdict.Appeal, r.Verdict);
+        Assert.Equal(StrategyVerdict.Appeal, r.Verdict);
         Assert.Equal("We appeal...", r.AppealDraft);
         Assert.Equal(new[] { "P-1" }, r.CitedPrecedentIds);
     }
 
     [Fact]
-    public void ParseAppeal_downgrades_appeal_to_strengthen_when_there_is_no_denial()
+    public void ParseStrategy_downgrades_appeal_to_strengthen_when_there_is_no_denial()
     {
-        var r = FoundryResponse.ParseAppeal("""{"verdict":"appeal","cited":[],"draft":"x"}""", Shortlist(), denied: false);
+        var r = FoundryResponse.ParseStrategy("""{"verdict":"appeal","cited":[],"draft":"x"}""", Shortlist(), denied: false);
 
-        Assert.Equal(AppealVerdict.Strengthen, r.Verdict);
+        Assert.Equal(StrategyVerdict.Strengthen, r.Verdict);
         Assert.Null(r.AppealDraft);
     }
 
     [Fact]
-    public void ParseAppeal_drops_a_cited_id_that_is_not_in_the_shortlist()
+    public void ParseStrategy_drops_a_cited_id_that_is_not_in_the_shortlist()
     {
-        var r = FoundryResponse.ParseAppeal("""{"verdict":"submit","cited":["P-1","P-999"]}""", Shortlist(), denied: false);
+        var r = FoundryResponse.ParseStrategy("""{"verdict":"submit","cited":["P-1","P-999"]}""", Shortlist(), denied: false);
         Assert.Equal(new[] { "P-1" }, r.CitedPrecedentIds);
     }
 
@@ -126,7 +126,7 @@ public class FoundryResponseTests
         Assert.IsType<FoundryNeedsAuthAgent>(sp.GetRequiredService<INeedsAuthAgent>());
         Assert.IsType<FoundryEvidenceGapAgent>(sp.GetRequiredService<IEvidenceGapAgent>());
         Assert.IsType<FoundryClaimExtractionAgent>(sp.GetRequiredService<IClaimExtractionAgent>());
-        Assert.IsType<FoundryAppealBuilderAgent>(sp.GetRequiredService<IAppealBuilderAgent>());
+        Assert.IsType<FoundryPrecedentStrategistAgent>(sp.GetRequiredService<IPrecedentStrategistAgent>());
         Assert.IsType<FoundryCriticAgent>(sp.GetRequiredService<ICriticAgent>());
 
         // expiry-watch / policy-drift are deterministic monitors — stub in both modes,

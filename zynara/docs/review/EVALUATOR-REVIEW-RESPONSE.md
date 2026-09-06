@@ -22,8 +22,8 @@ four flow diagrams surfaced these still-open points:
    Conflicts panel. `demo-contradiction` scenario.
 
 3. ~~Eval metric gaps~~ **DONE (D18)** — `policy-citation accuracy` (draft names
-   the governing policy ref, CI floor 95%) + `appeal-verdict agreement`
-   (`appeal-builder` verdict vs. label, CI floor 80%); clause hallucination folded
+   the governing policy ref, CI floor 95%) + `strategy-verdict agreement`
+   (`precedent-strategist` verdict vs. label, CI floor 80%); clause hallucination folded
    into the hard-gated hallucination count. Both 100% on the 8-case set.
 
 4. **Tiered approval thresholds** (§13). The Gate has one `AutoLimit` (£500); the
@@ -41,7 +41,7 @@ four flow diagrams surfaced these still-open points:
 7. **Framing** (§4 + recommended-model flowchart). The recommended model names a
    distinct **Precedent Analyst Agent** between Evidence and Appeal Strategist.
    We fold precedent-comparability reasoning into deterministic `AppealMatch`
-   ranking + `appeal-builder` + Critic check #3 + the precedent panel. D9 keeps
+   ranking + `precedent-strategist` + Critic check #3 + the precedent panel. D9 keeps
    our names — fine, but the pitch must be ready to answer "where is the
    precedent analysis?".
 
@@ -89,7 +89,7 @@ Nothing here overturns a decision. Items 1 and 3 are the substantive ones.
   before/after table; dashboard **Impact** tab.
 - **P2-3 done** (D17) — `claims-extraction` agent + `ContradictionCheck` spoke;
   the note-against-itself contradiction flow (review note #2).
-- **Eval note #3 done** (D18) — policy-citation accuracy + appeal-verdict
+- **Eval note #3 done** (D18) — policy-citation accuracy + strategy-verdict
   agreement added; clause hallucination hard-gated.
 - **P1-4 done** (D19) — `infra/main.bicep` + 6 modules encode the identity +
   network boundary (§13): one managed identity per component, `snet-compute` NSG

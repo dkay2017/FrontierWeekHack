@@ -8,7 +8,7 @@ namespace Zynara.Core.Tests;
 public class CriticTests
 {
     private static CriticContext Context(
-        AppealVerdict verdict,
+        StrategyVerdict verdict,
         EvidenceQuality quality = EvidenceQuality.High,
         bool contradiction = false,
         string[]? unmetMandatory = null,
@@ -21,12 +21,12 @@ public class CriticTests
             new("c1", contradiction ? CriterionStatus.Contradicted : CriterionStatus.Documented, null),
         };
         return new CriticContext(
-            Sample.Request("note", denial: verdict == AppealVerdict.Appeal ? "Denied under MN-01." : null),
+            Sample.Request("note", denial: verdict == StrategyVerdict.Appeal ? "Denied under MN-01." : null),
             "needs auth",
             new EvidenceGapAssessment(findings, quality, "summary"),
             unmetMandatory ?? Array.Empty<string>(),
             precedents ?? Array.Empty<PrecedentMatch>(),
-            new AppealRecommendation(verdict, citedPrecedents ?? Array.Empty<string>(), draft, "rec"));
+            new StrategyRecommendation(verdict, citedPrecedents ?? Array.Empty<string>(), draft, "rec"));
     }
 
     private static PrecedentMatch Won(double similarity) =>
@@ -35,7 +35,7 @@ public class CriticTests
     [Fact]
     public async Task Clear_when_nothing_is_wrong()
     {
-        var r = await new StubCriticAgent().ReviewAsync(Context(AppealVerdict.Submit));
+        var r = await new StubCriticAgent().ReviewAsync(Context(StrategyVerdict.Submit));
         Assert.Equal(CriticVerdict.Clear, r.Verdict);
         Assert.Empty(r.Flags);
     }
@@ -43,7 +43,7 @@ public class CriticTests
     [Fact]
     public async Task Blocks_when_a_mandatory_criterion_is_unmet()
     {
-        var r = await new StubCriticAgent().ReviewAsync(Context(AppealVerdict.Submit, unmetMandatory: new[] { "c1" }));
+        var r = await new StubCriticAgent().ReviewAsync(Context(StrategyVerdict.Submit, unmetMandatory: new[] { "c1" }));
         Assert.Equal(CriticVerdict.Block, r.Verdict);
         Assert.Contains(r.Flags, f => f.Check == "mandatory-criteria");
     }
@@ -52,7 +52,7 @@ public class CriticTests
     public async Task Blocks_an_appeal_recommended_without_a_winning_precedent()
     {
         var r = await new StubCriticAgent().ReviewAsync(
-            Context(AppealVerdict.Appeal, precedents: new[]
+            Context(StrategyVerdict.Appeal, precedents: new[]
             {
                 new PrecedentMatch(Sample.Precedent("P-l", "x", AppealOutcome.AppealLost), 0.5, Array.Empty<string>()),
             }));
@@ -64,7 +64,7 @@ public class CriticTests
     public async Task Abstains_on_low_evidence_and_no_comparable_precedent()
     {
         var r = await new StubCriticAgent().ReviewAsync(
-            Context(AppealVerdict.Strengthen, quality: EvidenceQuality.Low));
+            Context(StrategyVerdict.Strengthen, quality: EvidenceQuality.Low));
         Assert.Equal(CriticVerdict.Abstain, r.Verdict);
     }
 
@@ -72,7 +72,7 @@ public class CriticTests
     public async Task Concerns_when_an_appeal_draft_cites_no_precedent()
     {
         var r = await new StubCriticAgent().ReviewAsync(
-            Context(AppealVerdict.Appeal, precedents: new[] { Won(0.5) }, citedPrecedents: Array.Empty<string>(),
+            Context(StrategyVerdict.Appeal, precedents: new[] { Won(0.5) }, citedPrecedents: Array.Empty<string>(),
                 draft: "We appeal this denial."));
         Assert.Equal(CriticVerdict.Concerns, r.Verdict);
         Assert.Contains(r.Flags, f => f.Check == "claim-support");

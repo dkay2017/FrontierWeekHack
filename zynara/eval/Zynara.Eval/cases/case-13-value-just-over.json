@@ -44,6 +44,6 @@
     "expectedCitedPrecedents": [],
     "expertAbstains": false,
     "expectedPolicyRef": "bupa-mri-ls-v3",
-    "expectedAppealVerdict": "Submit"
+    "expectedStrategyVerdict": "Submit"
   }
 }

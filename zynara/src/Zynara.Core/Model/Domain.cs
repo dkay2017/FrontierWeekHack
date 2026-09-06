@@ -66,7 +66,7 @@ public sealed record Criteria(
 
 /// <summary>
 /// A past submission and its recorded outcome. <see cref="FactPattern"/> is the narrative
-/// the appeal-builder agent reasons over (File Search); the rest is structured metadata
+/// the precedent-strategist agent reasons over (File Search); the rest is structured metadata
 /// that <c>AppealMatch</c> filters and ranks deterministically.
 /// </summary>
 public sealed record Precedent(

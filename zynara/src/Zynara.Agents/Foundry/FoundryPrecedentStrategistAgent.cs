@@ -5,16 +5,16 @@ using Zynara.Core.Model;
 namespace Zynara.Agents.Foundry;
 
 /// <summary>
-/// <c>appeal-builder</c> backed by the hosted agent — the differentiator. Reasons
+/// <c>precedent-strategist</c> backed by the hosted agent — the differentiator. Reasons
 /// over the ranked precedent shortlist, recommends submit / strengthen / appeal,
 /// and drafts the appeal when a denial has occurred. The recommendation is
 /// advisory: the deterministic Gate still decides auto-submit vs. review.
 /// Citations and the verdict are sanitised against the shortlist.
 /// </summary>
-public sealed class FoundryAppealBuilderAgent(
-    FoundryAgentClient client, FoundryAgentOptions options, IAgentCallRecorder recorder) : IAppealBuilderAgent
+public sealed class FoundryPrecedentStrategistAgent(
+    FoundryAgentClient client, FoundryAgentOptions options, IAgentCallRecorder recorder) : IPrecedentStrategistAgent
 {
-    public async Task<AppealRecommendation> RecommendAsync(
+    public async Task<StrategyRecommendation> RecommendAsync(
         Request request,
         EvidenceGapAssessment gap,
         IReadOnlyList<PrecedentMatch> shortlist,
@@ -41,9 +41,9 @@ public sealed class FoundryAppealBuilderAgent(
                 (p.DenialReasonCodes.Count > 0 ? $", codes {string.Join("/", p.DenialReasonCodes)}" : ""));
         }
 
-        var inv = await client.InvokeAsync(options.AppealBuilderAgentName, prompt.ToString(), toolHandler: null, ct);
-        await Usage.RecordAsync(recorder, options.AppealBuilderAgentName, options.Model, inv, request.Id, ct);
+        var inv = await client.InvokeAsync(options.PrecedentStrategistAgentName, prompt.ToString(), toolHandler: null, ct);
+        await Usage.RecordAsync(recorder, options.PrecedentStrategistAgentName, options.Model, inv, request.Id, ct);
 
-        return FoundryResponse.ParseAppeal(inv.Text, shortlist, denied);
+        return FoundryResponse.ParseStrategy(inv.Text, shortlist, denied);
     }
 }

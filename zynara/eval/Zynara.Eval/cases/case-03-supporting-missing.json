@@ -43,7 +43,7 @@
     "expectedRoute": "Strengthen",
     "expectedCitedPrecedents": [],
     "expertAbstains": false,
-    "expectedAppealVerdict": "Strengthen",
+    "expectedStrategyVerdict": "Strengthen",
     "expectedPolicyRef": "bupa-mri-ls-v3"
   }
 }

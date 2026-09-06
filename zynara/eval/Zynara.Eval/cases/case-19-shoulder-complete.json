@@ -44,6 +44,6 @@
     "expectedCitedPrecedents": [],
     "expertAbstains": false,
     "expectedPolicyRef": "bupa-mras-v1",
-    "expectedAppealVerdict": "Submit"
+    "expectedStrategyVerdict": "Submit"
   }
 }

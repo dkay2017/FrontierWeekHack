@@ -5,6 +5,24 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D23 · `appeal-builder` renamed to `precedent-strategist`
+
+**2026-09-06.** The agent never "builds an appeal" on most cases — it reads the
+payer's recorded outcomes for comparable cases and recommends submit / strengthen
+/ appeal (it only drafts a letter in the denial branch). Full rename, not just
+the display label: `IAppealBuilderAgent` → `IPrecedentStrategistAgent`,
+`{Foundry,Stub}AppealBuilderAgent` → `…PrecedentStrategistAgent`,
+`AppealRecommendation` → `StrategyRecommendation`, `AppealVerdict` →
+`StrategyVerdict` (values Submit/Strengthen/Appeal unchanged), hosted agent name
+`appeal-builder-agent` → `precedent-strategist-agent`, roster step, prompt,
+eval `expectedAppealVerdict` → `expectedStrategyVerdict`, metric label. The
+`AppealMatch` deterministic spoke (precedent scoring) keeps its name.
+Touched: `Zynara.Core/Agents/Contracts.cs`, `Model/{Results,Domain}.cs`,
+`Pipeline/{AppealMatch,AuthPipeline}.cs`, `Zynara.Agents/*` (2 files renamed),
+`eval/Zynara.Eval/*` + `cases/*.json`, `Zynara.Dashboard/{demo-cases.json,standalone.html}`,
+tests, TDD/ARCHITECTURE/STATUS/review docs. **100 tests green.** Architecture SVG
+still says "appeal-builder" — flagged for the diagram owner.
+
 ## D22 · Foundry provisions only the five pipeline agents
 
 **2026-09-06.** `expiry-watch` and `policy-drift` are deterministic monitors
@@ -12,7 +30,7 @@ Each entry: what changed, why, and what it touched.
 were still being registered as hosted agents and created in the Foundry project,
 so the portal showed seven agents where the architecture has five. Now
 `FoundryAgentProvisioner.Specs` and `FoundryAgentOptions.AllAgentNames` list
-only needs-auth, evidence-gap, claims-extraction, appeal-builder, critic; in
+only needs-auth, evidence-gap, claims-extraction, precedent-strategist, critic; in
 `foundry` mode `IExpiryWatchAgent` / `IPolicyDriftAgent` resolve to their stubs.
 The interfaces, `ExpiryMath` / `PolicyDiff` spokes and stubs stay for the
 (unwired) Early Warnings feature.
@@ -82,13 +100,13 @@ Touched: `infra/*`, `azure.yaml`, `.github/workflows/zynara-ci.yml`,
 `tools/Zynara.DemoDump`, `Zynara.Core/Impact/BenchmarkService.cs`,
 `src/Zynara.Dashboard/standalone.html`, TDD §7.1.
 
-## D18 · Eval — policy-citation accuracy + appeal-verdict agreement
+## D18 · Eval — policy-citation accuracy + strategy-verdict agreement
 
 **2026-09-06.** Review re-read note #3. `EvalGroundTruth` gains
-`ExpectedAppealVerdict` (Submit/Strengthen/Appeal) and `ExpectedPolicyRef`.
+`ExpectedStrategyVerdict` (Submit/Strengthen/Appeal) and `ExpectedPolicyRef`.
 `EvalRunner` now also scores: **policy-citation accuracy** (the assembled draft
-names the governing policy ref — CI floor 95%), **appeal-verdict agreement** (the
-`appeal-builder` verdict vs. the label, 7 labelled cases — CI floor 80%), and
+names the governing policy ref — CI floor 95%), **strategy-verdict agreement** (the
+`precedent-strategist` verdict vs. the label, 7 labelled cases — CI floor 80%), and
 folds **clause hallucination** (a `under/clause/citing x.y` in the appeal draft
 that no shortlisted precedent cited) into the hard-gated hallucination count.
 Current run: both 100%, 0 hallucinations, 8 eval tests.
@@ -218,7 +236,7 @@ beat sheet built around the review's golden path, ending on the memorable line
 lacked: the Critic overturning a *plausible-looking* recommendation.
 
 - New **`demo-appeal-critic`** scenario: a denial with two comparable cases that
-  won on appeal (appeal-builder drafts and recommends filing), but only one of
+  won on appeal (precedent-strategist drafts and recommends filing), but only one of
   three criteria is evidenced → Critic `Concerns` (*recommendation firmer than
   Low-quality evidence supports*) → Gate `HumanReview`.
 - `CaseViewBuilder.Controls` now weighs the **Critic verdict + evidence quality**:
@@ -269,7 +287,7 @@ Touched: `Zynara.Core/View/*`, `Zynara.Core/Abstractions/ICaseRepository.cs`,
 **2026-09-06.** Answers to the open questions in
 `../review/EVALUATOR-REVIEW-RESPONSE.md` §D:
 - **Framing (§D-1):** keep the existing agent names (`needs-auth`, `evidence-gap`,
-  `appeal-builder`, `critic`) — no rename to "Analyst" roles. The multi-agent
+  `precedent-strategist`, `critic`) — no rename to "Analyst" roles. The multi-agent
   story is carried by the Critic + the "why multi-agent" section + the measured
   agents-vs-generalist comparison, not by role titles.
 - **Sequencing (§D-3):** all P0 first, then the orchestrator — done.
@@ -309,7 +327,7 @@ Touched: `eval/Zynara.Eval/*`, `Zynara.sln`, TDD §7.3, STATUS.
 text diff (drift) do not need an LLM. `ExpiryMath` and `PolicyDiff` stay as
 deterministic spokes with a **thin optional AI narrator** for the alert wording;
 they are no longer counted among the reasoning agents. The reasoning agents are
-now: needs-auth, evidence-gap, appeal-builder, **critic**.
+now: needs-auth, evidence-gap, precedent-strategist, **critic**.
 Touched: TDD §3/§6, ARCHITECTURE §5, the architecture SVG, STATUS.
 
 ## D5 · Add the Critic agent

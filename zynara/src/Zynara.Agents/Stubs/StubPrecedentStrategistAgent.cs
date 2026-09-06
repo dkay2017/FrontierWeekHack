@@ -5,13 +5,13 @@ using Zynara.Core.Model;
 namespace Zynara.Agents.Stubs;
 
 /// <summary>
-/// Deterministic <c>appeal-builder</c> twin — the differentiator. Recommends
+/// Deterministic <c>precedent-strategist</c> twin — the differentiator. Recommends
 /// submit / strengthen / appeal from the recorded outcomes of the matched
 /// precedents, and produces a templated appeal draft when a denial has occurred.
 /// </summary>
-public sealed class StubAppealBuilderAgent : IAppealBuilderAgent
+public sealed class StubPrecedentStrategistAgent : IPrecedentStrategistAgent
 {
-    public Task<AppealRecommendation> RecommendAsync(
+    public Task<StrategyRecommendation> RecommendAsync(
         Request request,
         EvidenceGapAssessment gap,
         IReadOnlyList<PrecedentMatch> shortlist,
@@ -25,36 +25,36 @@ public sealed class StubAppealBuilderAgent : IAppealBuilderAgent
         var missing = gap.WithStatus(CriterionStatus.Missing).Count() + gap.WithStatus(CriterionStatus.Partial).Count();
         var cited = won.Take(3).Select(m => m.Precedent.CaseId).ToList();
 
-        AppealVerdict verdict;
+        StrategyVerdict verdict;
         string text;
         string? draft = null;
 
         if (denied)
         {
-            verdict = winRate >= 0.5 && won.Count > 0 ? AppealVerdict.Appeal : AppealVerdict.Strengthen;
+            verdict = winRate >= 0.5 && won.Count > 0 ? StrategyVerdict.Appeal : StrategyVerdict.Strengthen;
             text = won.Count > 0
                 ? $"{won.Count} comparable case(s) won on appeal (win rate {winRate:P0}). " +
-                  (verdict == AppealVerdict.Appeal
+                  (verdict == StrategyVerdict.Appeal
                       ? "Recommend appeal, citing the precedents below."
                       : "Recommend strengthening the record before re-appealing.")
                 : "No comparable case has won on appeal on record — strengthen the record first.";
-            if (verdict == AppealVerdict.Appeal)
+            if (verdict == StrategyVerdict.Appeal)
                 draft = BuildDraft(request, won.Take(3).ToList());
         }
         else if (missing == 0 && !gap.AnyContradiction)
         {
-            verdict = AppealVerdict.Submit;
+            verdict = StrategyVerdict.Submit;
             text = "No evidence gaps and comparable cases were approved first time — submit.";
         }
         else
         {
-            verdict = AppealVerdict.Strengthen;
+            verdict = StrategyVerdict.Strengthen;
             text = $"{missing} criterion(a) undocumented" +
                    (gap.AnyContradiction ? " and contradictory evidence present" : "") +
                    " — close the gaps with the clinician before submitting.";
         }
 
-        return Task.FromResult(new AppealRecommendation(verdict, cited, draft, text));
+        return Task.FromResult(new StrategyRecommendation(verdict, cited, draft, text));
     }
 
     private static string BuildDraft(Request request, IReadOnlyList<PrecedentMatch> matches)

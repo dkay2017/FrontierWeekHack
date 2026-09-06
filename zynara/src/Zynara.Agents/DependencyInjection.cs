@@ -16,7 +16,7 @@ public static class DependencyInjection
     /// Registers the agent ports. Five run as hosted Foundry agents in
     /// <c>foundry</c> mode — <see cref="INeedsAuthAgent"/> /
     /// <see cref="IEvidenceGapAgent"/> / <see cref="IClaimExtractionAgent"/> /
-    /// <see cref="IAppealBuilderAgent"/> / <see cref="ICriticAgent"/>.
+    /// <see cref="IPrecedentStrategistAgent"/> / <see cref="ICriticAgent"/>.
     /// <see cref="IExpiryWatchAgent"/> / <see cref="IPolicyDriftAgent"/> are
     /// deterministic monitors (D6): the stub twin is the implementation in both
     /// modes and no Foundry agent is provisioned for them.
@@ -55,7 +55,7 @@ public static class DependencyInjection
         services.AddScoped<INeedsAuthAgent, FoundryNeedsAuthAgent>();
         services.AddScoped<IEvidenceGapAgent, FoundryEvidenceGapAgent>();
         services.AddScoped<IClaimExtractionAgent, FoundryClaimExtractionAgent>();
-        services.AddScoped<IAppealBuilderAgent, FoundryAppealBuilderAgent>();
+        services.AddScoped<IPrecedentStrategistAgent, FoundryPrecedentStrategistAgent>();
         services.AddScoped<ICriticAgent, FoundryCriticAgent>();
 
         // expiry-watch / policy-drift are deterministic monitors (D6), not hosted
@@ -80,7 +80,7 @@ public static class DependencyInjection
         services.AddSingleton<INeedsAuthAgent, StubNeedsAuthAgent>();
         services.AddSingleton<IEvidenceGapAgent, StubEvidenceGapAgent>();
         services.AddSingleton<IClaimExtractionAgent, StubClaimExtractionAgent>();
-        services.AddSingleton<IAppealBuilderAgent, StubAppealBuilderAgent>();
+        services.AddSingleton<IPrecedentStrategistAgent, StubPrecedentStrategistAgent>();
         services.AddSingleton<ICriticAgent, StubCriticAgent>();
         services.AddSingleton<IExpiryWatchAgent, StubExpiryWatchAgent>();
         services.AddSingleton<IPolicyDriftAgent, StubPolicyDriftAgent>();

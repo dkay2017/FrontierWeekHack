@@ -40,16 +40,16 @@ public sealed class StubCriticAgent : ICriticAgent
 
         // 3 · precedents genuinely comparable
         var comparable = c.Precedents.Any(p => p.Similarity >= ComparableSimilarity);
-        if (c.Recommendation.Verdict == AppealVerdict.Appeal && !comparable)
+        if (c.Recommendation.Verdict == StrategyVerdict.Appeal && !comparable)
             Raise(CriticVerdict.Concerns, "precedent-comparability",
                 "no shortlisted precedent is clearly comparable to this case");
 
         // 6 · recommendation stronger than the evidence allows
         var won = c.Precedents.Count(p => p.Precedent.AppealOutcome == AppealOutcome.AppealWon);
-        if (c.Recommendation.Verdict == AppealVerdict.Appeal && won == 0)
+        if (c.Recommendation.Verdict == StrategyVerdict.Appeal && won == 0)
             Raise(CriticVerdict.Block, "recommendation-strength",
                 "an appeal is recommended but no comparable case has won on appeal");
-        if (c.Recommendation.Verdict is AppealVerdict.Submit or AppealVerdict.Appeal
+        if (c.Recommendation.Verdict is StrategyVerdict.Submit or StrategyVerdict.Appeal
             && c.Evidence.Quality == EvidenceQuality.Low)
             Raise(CriticVerdict.Concerns, "recommendation-strength",
                 "the recommendation is firmer than Low-quality evidence supports");

@@ -20,8 +20,8 @@ public sealed record EvalReport(
     // grounding
     double PrecedentCitationAccuracy,
     double PolicyCitationAccuracy,
-    double AppealVerdictAgreement,
-    int AppealVerdictCases,
+    double StrategyVerdictAgreement,
+    int StrategyVerdictCases,
     int HallucinatedReferences,
 
     // decisions
@@ -49,7 +49,7 @@ public sealed record EvalReport(
         sb.AppendLine($"  mandatory false-positive   {MandatoryFalsePositives}/{MandatoryMetTotal}");
         sb.AppendLine($"  precedent citation accuracy {PrecedentCitationAccuracy:P1}");
         sb.AppendLine($"  policy citation accuracy    {PolicyCitationAccuracy:P1}");
-        sb.AppendLine($"  appeal-verdict agreement    {AppealVerdictAgreement:P1}  ({AppealVerdictCases} labelled)");
+        sb.AppendLine($"  strategy-verdict agreement    {StrategyVerdictAgreement:P1}  ({StrategyVerdictCases} labelled)");
         sb.AppendLine($"  hallucinated references     {HallucinatedReferences}");
         sb.AppendLine($"  route agreement            {RouteAgreement:P1}");
         sb.AppendLine($"  safe abstention            {AbstainTaken}/{AbstainExpected}  ({SafeAbstentionRate:P1})");

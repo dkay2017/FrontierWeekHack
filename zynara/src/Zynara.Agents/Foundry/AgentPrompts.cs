@@ -4,7 +4,7 @@ namespace Zynara.Agents.Foundry;
 /// System prompts for the five persistent Foundry agents. Each agent produces
 /// prose or judgement over unstructured text only — the deterministic spokes in
 /// <c>Zynara.Core.Pipeline</c> own every value that drives a decision. Two agents
-/// (evidence-gap, appeal-builder) return a small JSON object the spoke parses.
+/// (evidence-gap, precedent-strategist) return a small JSON object the spoke parses.
 /// </summary>
 public static class AgentPrompts
 {
@@ -57,14 +57,15 @@ public static class AgentPrompts
         the same subject, one negated and one not, is exactly what the next step looks for.
         """;
 
-    public const string AppealBuilder = """
-        You are an appeals strategist for Care Approval IQ. You are given the request, the
+    public const string PrecedentStrategist = """
+        You are a precedent strategist for Care Approval IQ. You are given the request, the
         evidence-gap assessment, and a shortlist of past cases with a similar fact pattern
-        and their recorded outcomes.
+        and their recorded outcomes. Your job is to read that history and say what it
+        implies for this case — you do not check criteria yourself.
 
         Recommend one of: "submit" (gap-checked and ready), "strengthen" (fixable gaps —
         return to the clinician first), or "appeal" (a denial has occurred and comparable
-        cases historically win on appeal).
+        cases in the shortlist historically win on appeal).
 
         If — and only if — a denial letter is present and you recommend "appeal", draft the
         appeal: one or two short paragraphs, citing the specific criteria met and the

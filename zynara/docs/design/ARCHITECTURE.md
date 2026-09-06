@@ -246,7 +246,7 @@ flowchart TB
     subgraph AI [Azure AI Foundry · 4 reasoning agents]
       A1[needs-auth-agent]
       A2[evidence-gap-agent]
-      A3[appeal-builder-agent]
+      A3[precedent-strategist-agent]
       A4[critic-agent]
       FS[File Search index]
     end

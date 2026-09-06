@@ -58,13 +58,13 @@ public class EvalGateTests(ITestOutputHelper output)
             $"{r.HallucinatedReferences} hallucinated reference(s).\n{r.ToText()}");
     }
 
-    /// <summary>The appeal-builder's verdict agrees with the expert labels (review note #3).</summary>
+    /// <summary>The precedent-strategist's verdict agrees with the expert labels (review note #3).</summary>
     [Fact]
     public void Appeal_verdict_agreement_meets_the_bar()
     {
         var r = Result.Value;
-        Assert.True(r.AppealVerdictAgreement >= 0.80,
-            $"appeal-verdict agreement {r.AppealVerdictAgreement:P0} over {r.AppealVerdictCases} cases < 80%.\n{r.ToText()}");
+        Assert.True(r.StrategyVerdictAgreement >= 0.80,
+            $"strategy-verdict agreement {r.StrategyVerdictAgreement:P0} over {r.StrategyVerdictCases} cases < 80%.\n{r.ToText()}");
     }
 
     /// <summary>The multi-agent pipeline beats a single-prompt generalist on safety (TDD §3.1).</summary>

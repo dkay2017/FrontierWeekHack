@@ -7,7 +7,7 @@ using Zynara.Core.Demo;
 using Zynara.Core.View;
 
 // De-risk spike (STATUS "next" #1). Runs the WHOLE pipeline against the HOSTED
-// Foundry agents — needs-auth, evidence-gap, claims-extraction, appeal-builder,
+// Foundry agents — needs-auth, evidence-gap, claims-extraction, precedent-strategist,
 // critic — for two demo scenarios, and prints what each produced.
 //
 //   az login

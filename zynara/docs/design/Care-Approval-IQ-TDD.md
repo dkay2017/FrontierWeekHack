@@ -81,7 +81,7 @@ are stated here and will be marked on the architecture diagram (a shaded
 
 What the pipeline **does** own: reading that already-extracted text against the
 already-structured criteria (`evidence-gap`), matching precedents (`AppealMatch` +
-`appeal-builder`), and grounding the agents in the policy/precedent corpus via
+`precedent-strategist`), and grounding the agents in the policy/precedent corpus via
 **Foundry File Search**.
 
 ## 3. Solution Overview
@@ -104,7 +104,7 @@ code that decides, and a human reviewer who authorises.
 
 - **Four reasoning agents that collaborate, not a pipeline of prompts.**
   `needs-auth` reads ambiguous plan language · `evidence-gap` maps the clinical
-  note to the written criteria · `appeal-builder` reasons over recorded precedent
+  note to the written criteria · `precedent-strategist` reasons over recorded precedent
   outcomes and drafts the appeal · **`critic`** then tries to *disprove* the
   assembled recommendation (unsupported claims, non-comparable precedents,
   over-strong conclusions, hidden contradictions, whether the system should
@@ -171,7 +171,7 @@ cross-cutting concerns.
 |---|-------|-----------|
 | 1 | **Intake** | The request contract (procedure · plan · region · clinical note · prior denial letter — the note and letter as attached files) → **Intake API**: `POST /api/requests`, the orchestrator app's Durable HTTP starter — validates the DTO, starts the orchestration keyed on request id, returns `202` + status URL. Not a separate Function App and not a queue (§12 · TD-3). *Open: portal form vs. API client vs. FHIR bundle for v1 — see §8.* |
 | 2 | **Compute · Orchestration** (Azure Durable Functions) | `Zynara.Orchestrator` (the orchestrator function — sequences `NeedsAuthCheck → EvidenceGapMatch → AppealMatch → CriticCheck`, keyed on request id) as **Durable Activity Functions** — deterministic wrappers, no LLM in the wrapper — for the reasons in §12 · TD-2. `ExpiryMath` / `PolicyDiff` run as advisory timers. Owns the Gate. |
-| 3 | **AI Foundry · Agent Service** | four reasoning agents — `needs-auth-agent` · `evidence-gap-agent` · `appeal-builder-agent` · **`critic-agent`** — each behind a `Zynara.Core` interface with a deterministic stub twin. `ExpiryMath` / `PolicyDiff` narrator calls are optional and thin (D6). |
+| 3 | **AI Foundry · Agent Service** | four reasoning agents — `needs-auth-agent` · `evidence-gap-agent` · `precedent-strategist-agent` · **`critic-agent`** — each behind a `Zynara.Core` interface with a deterministic stub twin. `ExpiryMath` / `PolicyDiff` narrator calls are optional and thin (D6). |
 | 4 | **Data** | Submission Adapter (Azure Function · the only path to payer portal / X12 / FHIR / fax) → **Azure Cosmos DB** serverless (operational state): `requests · submissions · outcomes · auths · earlyWarnings · agentCalls`, plus `precedents` / `policies` **metadata** → **Azure Blob Storage** (the unstructured corpus: policy docs, denial PDFs, precedent narratives) → **Foundry File Search** (vector index the agents query). Split rationale: §12 · TD-4, TD-5. |
 | 5 | **Experience** | Reviewer (human) → Dashboard (`Zynara.Dashboard`, Static Web App Standard + linked backend; tabs = **Review Queue** (drafts · appeals · HITL · Estimated Recoverable Value) · **Early Warnings** (expiry-watch · policy-drift) · **Cost** (£/$ per request · agent · day), with a **UK ⇄ US** header control) → **API Proxy** (Azure Function; read models + reviewer approve/reject actions) |
 
@@ -217,7 +217,7 @@ cross-cutting concerns.
    `{met[], missing[], conflicts[], readiness}`.
 4. **Appeal Builder** — `AppealMatch` (deterministic activity) filters the
    `precedents` metadata in Cosmos (payer, procedure, outcome, appeal result)
-   and ranks the shortlist by fact-pattern similarity; `appeal-builder-agent`
+   and ranks the shortlist by fact-pattern similarity; `precedent-strategist-agent`
    reasons over the File-Search-retrieved precedent narratives, reports the
    recorded outcomes and recommends **submit / strengthen / appeal**.
 5. **Critic** — `critic-agent` reviews the assembled case and runs its seven
@@ -234,7 +234,7 @@ cross-cutting concerns.
    (portal / X12 278 / FHIR / fax) — the only outbound path.
 9. **Decision** — approved → step 12; denied → step 10. The denial letter (PDF)
     is parsed for the reason code and the clause cited.
-10. **Appeal** — `appeal-builder-agent` drafts the appeal citing the specific policy
+10. **Appeal** — `precedent-strategist-agent` drafts the appeal citing the specific policy
     clause misapplied and the precedent case ids; `critic-agent` reviews the
     draft; deterministic code fills the dates and the escalation route
     (region-specific: state/external review vs. Financial Ombudsman Service).
@@ -279,7 +279,7 @@ behind a `Zynara.Core` interface with a deterministic stub twin:
 |---|---|---|
 | `needs-auth-agent` | Plain-language reading of ambiguous plan text | payer rule-set KB, procedure-code lookup |
 | `evidence-gap-agent` | Free-text clinical note vs. the numbered criteria — per-criterion status + the supporting quote + an evidence-quality grade | Foundry File Search over `policies/` (Blob), the clinical note |
-| `appeal-builder-agent` | Corpus-level fact-pattern match over recorded outcomes; drafts the appeal argument | `precedents` metadata (Cosmos) + precedent narratives (File Search), policy clause text |
+| `precedent-strategist-agent` | Corpus-level fact-pattern match over recorded outcomes; drafts the appeal argument | `precedents` metadata (Cosmos) + precedent narratives (File Search), policy clause text |
 | **`critic-agent`** | Tries to disprove the assembled recommendation — the seven checks (§3) — and can force a human or an abstention | the whole assembled case + File Search to verify citations |
 
 The two continuous monitors, `ExpiryMath` (date arithmetic) and `PolicyDiff`
@@ -433,13 +433,13 @@ citations) and measures:
 | **Policy-citation accuracy** | the assembled draft names the governing policy ref (CI floor 95%) |
 | **Precedent-citation accuracy** | the cited precedent ids match the labelled set (CI floor 80%) |
 | **Hallucination rate** | criterion ids not in the set, precedent ids not on record, or a policy clause in the appeal draft that no shortlisted precedent cited — CI hard-gate: **must be 0** |
-| **Appeal-recommendation agreement** vs. labels | the `appeal-builder` verdict (Submit / Strengthen / Appeal) matches the expert label (CI floor 80%) |
+| **Appeal-recommendation agreement** vs. labels | the `precedent-strategist` verdict (Submit / Strengthen / Appeal) matches the expert label (CI floor 80%) |
 | **Safe-abstention rate** | of the cases an expert marks "not enough to advise", how many did the system route to `Abstain` (CI floor 80%) |
 | **Unsafe-automation rate** | cases the system auto-submitted that an expert would not have — CI hard-gate: **must be 0** |
 
 CI hard-gates the safety metrics (unsafe automation = 0, mandatory false-negative
 = 0, hallucinated references = 0) and holds a floor on route agreement,
-safe-abstention, appeal-verdict agreement and policy/precedent citation. The
+safe-abstention, strategy-verdict agreement and policy/precedent citation. The
 agents-vs-generalist comparison (§3.1) runs the same set through a single-prompt
 baseline and reports the delta on agreement and safe automation.
 
@@ -471,7 +471,7 @@ midnight US).
 - **Build priority if time runs short (agreed order):**
   1. HTTP starter → Orchestrator → NeedsAuth + Gap + AppealMatch → Gate →
      Submission Adapter → Cosmos/Blob (the core mission), with `needs-auth` +
-     `evidence-gap` + `appeal-builder` agents
+     `evidence-gap` + `precedent-strategist` agents
   2. Dashboard Review Queue + Reviewer loop + the Estimated Recoverable Value, on real
      (synthetic) data
   3. Region switch (UK ⇄ US)
@@ -645,7 +645,7 @@ Cosmos holds only the **structured metadata** about these artifacts —
 blobRef, decidedOn}`, `policies = {policyRef, version, blobRef, effectiveFrom}`.
 
 **Why the split.** Retrieval over the corpus is semantic — `evidence-gap` reads
-a note against written criteria, `appeal-builder` matches fact patterns — which
+a note against written criteria, `precedent-strategist` matches fact patterns — which
 is a vector-search job, not a query job. Forcing it into Cosmos means building
 and running our own chunk / embed / index pipeline; File Search does that for
 the agents natively. `AppealMatch` (deterministic) filters the `precedents`

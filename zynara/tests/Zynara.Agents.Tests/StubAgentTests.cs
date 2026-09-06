@@ -33,7 +33,7 @@ public class StubAgentTests
 
         Assert.IsType<StubNeedsAuthAgent>(sp.GetRequiredService<INeedsAuthAgent>());
         Assert.IsType<StubEvidenceGapAgent>(sp.GetRequiredService<IEvidenceGapAgent>());
-        Assert.IsType<StubAppealBuilderAgent>(sp.GetRequiredService<IAppealBuilderAgent>());
+        Assert.IsType<StubPrecedentStrategistAgent>(sp.GetRequiredService<IPrecedentStrategistAgent>());
         Assert.IsType<StubExpiryWatchAgent>(sp.GetRequiredService<IExpiryWatchAgent>());
         Assert.IsType<StubPolicyDriftAgent>(sp.GetRequiredService<IPolicyDriftAgent>());
     }
@@ -93,7 +93,7 @@ public class StubAgentTests
     }
 
     [Fact]
-    public async Task AppealBuilder_recommends_submit_when_there_are_no_gaps()
+    public async Task PrecedentStrategist_recommends_submit_when_there_are_no_gaps()
     {
         var req = new Request
         {
@@ -108,14 +108,14 @@ public class StubAgentTests
                 new CriterionFinding("c3", CriterionStatus.Documented, null),
             }, EvidenceQuality.High, "ok");
 
-        var rec = await new StubAppealBuilderAgent().RecommendAsync(req, gap, Array.Empty<PrecedentMatch>());
+        var rec = await new StubPrecedentStrategistAgent().RecommendAsync(req, gap, Array.Empty<PrecedentMatch>());
 
-        Assert.Equal(AppealVerdict.Submit, rec.Verdict);
+        Assert.Equal(StrategyVerdict.Submit, rec.Verdict);
         Assert.Null(rec.AppealDraft);
     }
 
     [Fact]
-    public async Task AppealBuilder_drafts_an_appeal_citing_precedents_that_won()
+    public async Task PrecedentStrategist_drafts_an_appeal_citing_precedents_that_won()
     {
         var req = new Request
         {
@@ -135,9 +135,9 @@ public class StubAgentTests
             Match("P-102", "similar", AppealOutcome.AppealWon),
         };
 
-        var rec = await new StubAppealBuilderAgent().RecommendAsync(req, gap, shortlist);
+        var rec = await new StubPrecedentStrategistAgent().RecommendAsync(req, gap, shortlist);
 
-        Assert.Equal(AppealVerdict.Appeal, rec.Verdict);
+        Assert.Equal(StrategyVerdict.Appeal, rec.Verdict);
         Assert.NotNull(rec.AppealDraft);
         Assert.Contains("P-101", rec.CitedPrecedentIds);
         Assert.Contains("P-101", rec.AppealDraft!);

@@ -94,11 +94,11 @@ public sealed record EvidenceGapAssessment(
 }
 
 // ---------------------------------------------------------------------------
-// appeal-builder (the differentiator) — matches the case to precedents that won,
+// precedent-strategist (the differentiator) — matches the case to precedents that won,
 // recommends submit / strengthen / appeal from their recorded outcomes, and drafts
 // the appeal argument when a denial has occurred.
 // ---------------------------------------------------------------------------
-public enum AppealVerdict
+public enum StrategyVerdict
 {
     /// <summary>Gap-checked and ready — send it.</summary>
     Submit,
@@ -110,9 +110,9 @@ public enum AppealVerdict
     Appeal,
 }
 
-public interface IAppealBuilderAgent
+public interface IPrecedentStrategistAgent
 {
-    Task<AppealRecommendation> RecommendAsync(
+    Task<StrategyRecommendation> RecommendAsync(
         Request request,
         EvidenceGapAssessment gap,
         IReadOnlyList<PrecedentMatch> shortlist,
@@ -129,8 +129,8 @@ public sealed record PrecedentMatch(
     IReadOnlyList<string> MatchedFacts);
 
 /// <summary><c>AppealDraft</c> is populated only when <c>request.DenialLetter</c> is set.</summary>
-public sealed record AppealRecommendation(
-    AppealVerdict Verdict,
+public sealed record StrategyRecommendation(
+    StrategyVerdict Verdict,
     IReadOnlyList<string> CitedPrecedentIds,
     string? AppealDraft,
     string Text);
@@ -154,7 +154,7 @@ public sealed record CriticContext(
     EvidenceGapAssessment Evidence,
     IReadOnlyList<string> UnmetMandatory,
     IReadOnlyList<PrecedentMatch> Precedents,
-    AppealRecommendation Recommendation)
+    StrategyRecommendation Recommendation)
 {
     /// <summary>Claims that conflict within the clinical note (P2-3) — check 4 also weighs these.</summary>
     public IReadOnlyList<ClaimConflict> NoteConflicts { get; init; } = Array.Empty<ClaimConflict>();

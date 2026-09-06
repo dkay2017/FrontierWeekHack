@@ -6,7 +6,7 @@ namespace Zynara.Agents;
 internal sealed class AgentRoster(string implementation, string version) : IAgentRoster
 {
     private static readonly string[] Steps =
-        { "needs-auth", "evidence-gap", "claims-extraction", "appeal-builder", "critic" };
+        { "needs-auth", "evidence-gap", "claims-extraction", "precedent-strategist", "critic" };
 
     public IReadOnlyList<AgentAttribution> Describe() =>
         Steps.Select(s => new AgentAttribution(s, s + "-agent", implementation, version)).ToList();

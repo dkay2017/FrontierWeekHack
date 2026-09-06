@@ -25,7 +25,7 @@ public sealed class FoundryAgentProvisioner(FoundryAgentClient client, FoundryAg
                 new(options.NeedsAuthAgentName, AgentPrompts.NeedsAuth, fileSearch),
                 new(options.EvidenceGapAgentName, AgentPrompts.EvidenceGap, fileSearch),
                 new(options.ClaimsAgentName, AgentPrompts.Claims, null),
-                new(options.AppealBuilderAgentName, AgentPrompts.AppealBuilder, fileSearch),
+                new(options.PrecedentStrategistAgentName, AgentPrompts.PrecedentStrategist, fileSearch),
                 new(options.CriticAgentName, AgentPrompts.Critic, fileSearch),
             ];
         }

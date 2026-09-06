@@ -46,7 +46,7 @@ public enum PrecedentSupport
 /// <summary>AppealMatch result — the ranked shortlist, the agent recommendation, and the derived support level.</summary>
 public sealed record AppealMatchResult(
     IReadOnlyList<PrecedentMatch> Shortlist,
-    AppealRecommendation Recommendation,
+    StrategyRecommendation Recommendation,
     PrecedentSupport Support);
 
 /// <summary>An advisory flag raised by ExpiryMath or PolicyDiff — no Gate, no outbound action.</summary>

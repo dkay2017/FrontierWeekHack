@@ -15,7 +15,7 @@ public sealed class FoundryAgentOptions
     public string NeedsAuthAgentName { get; init; } = "needs-auth-agent";
     public string EvidenceGapAgentName { get; init; } = "evidence-gap-agent";
     public string ClaimsAgentName { get; init; } = "claims-extraction-agent";
-    public string AppealBuilderAgentName { get; init; } = "appeal-builder-agent";
+    public string PrecedentStrategistAgentName { get; init; } = "precedent-strategist-agent";
     public string CriticAgentName { get; init; } = "critic-agent";
 
     /// <summary>
@@ -26,7 +26,7 @@ public sealed class FoundryAgentOptions
 
     public IReadOnlyList<string> AllAgentNames =>
     [
-        NeedsAuthAgentName, EvidenceGapAgentName, ClaimsAgentName, AppealBuilderAgentName,
+        NeedsAuthAgentName, EvidenceGapAgentName, ClaimsAgentName, PrecedentStrategistAgentName,
         CriticAgentName,
     ];
 }

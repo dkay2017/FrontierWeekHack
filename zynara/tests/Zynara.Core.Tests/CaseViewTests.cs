@@ -73,7 +73,7 @@ public class CaseViewTests
             DemoCatalog.All.Single(s => s.Id == "demo-appeal-critic").Request);
         var view = record.View;
 
-        // the appeal-builder still found winning precedents and drafted the appeal…
+        // the precedent-strategist still found winning precedents and drafted the appeal…
         Assert.NotNull(view.AppealDraft);
         Assert.Contains(view.Precedents, p => p is { WonOnAppeal: true, DroveRecommendation: true });
 
