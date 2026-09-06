@@ -19,8 +19,18 @@ Source: `../design/Care_Approval_IQ_Agent_a_Thon_Evaluator_Review.docx`
   FN = 0). Current run: route agreement 100%, unsafe automation 0 (baseline 2),
   safe abstention 1/1, no hallucinated references.
 - **All P0 items complete.**
-- **D-2 taken** — expiry-watch / policy-drift demoted to deterministic monitors
-  (D6).
+- **Slice 4 done** — `Zynara.Orchestrator` Durable Functions (hub + per-spoke
+  activities + inline Gate); `tests/Zynara.Orchestrator.Tests`. 57 tests green.
+- **All §D decisions taken** — see `DECISIONS.md` D9: keep agent names (no
+  "Analyst" rename), scope target = **P0 + all P1 + P2**, dataset 8 → ~20,
+  P1 next in demo-first order.
+- **Re-scored** — `../progress/JUDGING-SELF-ASSESSMENT.md`: the two flagged
+  weaknesses 6.5 → ~8.0–8.5; new floor is UX/demo (8.0), addressed by the P1
+  dashboard slice.
+
+**Remaining:** P1-1..P1-5, P2-1..P2-3, P2-5 (P2-4 = D6, done). P1 order:
+P1-2 + P1-1 (`Zynara.ApiProxy` read model + `Zynara.Dashboard`) → P2-5 demo
+script → P2-1/P2-2 measured value → P1-5 → P1-3/P1-4.
 
 ---
 

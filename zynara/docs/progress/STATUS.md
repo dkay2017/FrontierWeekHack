@@ -140,20 +140,48 @@ P0-2 (Critic agent) → P0-1 (reframe docs) → P0-4 (eval suite). **All P0 done
 - Running locally needs Azurite (`AzureWebJobsStorage=UseDevelopmentStorage=true`)
   and `func start`; `ZYNARA_AGENTS=stub` by default.
 
-Next: `infra/` skeleton + CI, then `Zynara.Data` (Cosmos `IZynaraStore`).
+## Housekeeping — session 5 tail (2026-09-06)
 
-## Pending
+- **`DECISIONS.md` D7–D9 added** — eval-as-CI-gate, slice-4 orchestrator, and all
+  `EVALUATOR-REVIEW-RESPONSE.md` §D decisions locked.
+- **`JUDGING-SELF-ASSESSMENT.md` created** — re-score vs. the evaluator's
+  10-dimension card. The two flagged weaknesses (multi-agent justification,
+  evaluation) moved 6.5 → ~8.0–8.5. New floor: **UX / demo (8.0)**.
+- **Scope target locked: P0 + all P1 + P2** (D9 / review §D-5).
 
-1. `infra/` skeleton — `main.bicep` + module stubs, `azure.yaml`; CI (build +
-   test + eval gate); enforce agent↔payer identity isolation (P1-4).
-2. `Zynara.Data` — Cosmos-backed `IZynaraStore` (replaces the in-memory seed in
-   `Zynara.Orchestrator/Program.cs`); the real `IAgentCallRecorder`.
-3. Data plan — grow the labelled clinical-case set beyond the initial 8
-   (`eval/Zynara.Eval/cases/`); 2–3 real payer policy files for File Search.
-4. `Zynara.Dashboard` — evidence-first HITL workspace (P1-1) + precedent panel
-   (P1-2).
-5. `Zynara.ApiProxy` — read models + reviewer actions + RBAC (P1-3).
-6. `config/profiles/` — "Policy + Regulatory Profile" (P1-5).
+## Next — P1, demo-first (this is the resume point)
+
+Scope decision D9: **P1-2 + P1-1 first** — the dashboard slice is the biggest
+lever now (lowest score is UX/demo, and it proves evaluator questions 2 & 3).
+
+1. **`Zynara.ApiProxy`** — Azure Functions read model over `PipelineResult`:
+   `GET /api/cases/{id}` returning the reviewer view (WHY / per-criterion
+   EVIDENCE + SOURCE / POLICY clause + VERSION / top-3 PRECEDENTS with similarity
+   + matched facts + won-on-appeal badge / CONFIDENCE / CONFLICTS / AI ACTION /
+   Critic verdict). No new decision logic — pure projection. (P1-1, P1-2)
+2. **`Zynara.Dashboard`** — Static Web App, evidence-first review card (not
+   approve-button-first) + the precedent panel. 3 tabs: Review Queue · Early
+   Warnings · Cost. (P1-1, P1-2)
+3. **`docs/runbooks/demo-script.md`** — denial → evidence case → Critic blocks an
+   unsupported claim → correction → Gate → human approve → send → audit trail.
+   (P2-5)
+4. **`Zynara.ApiProxy`** — measured "Estimated Recoverable Value" with the
+   formula + confidence; pipeline instrumentation for before/after. (P2-1, P2-2)
+5. **`config/profiles/`** — "Policy + Regulatory Profile" model + control rename.
+   (P1-5)
+6. **`Zynara.Core` audit model + `Zynara.ApiProxy` Entra roles + Cosmos
+   `caseAudit`** — RBAC, approval authority, audit trail. (P1-3)
+
+## Pending (infra / data — interleave as needed)
+
+- `infra/` skeleton — `main.bicep` + modules, `azure.yaml`; CI (build + test +
+  eval gate); enforce agent↔payer identity isolation (P1-4).
+- `Zynara.Data` — Cosmos-backed `IZynaraStore` (replaces the in-memory seed in
+  `Zynara.Orchestrator/Program.cs`); the real `IAgentCallRecorder`.
+- Data plan — grow the labelled case set 8 → ~20 (`eval/Zynara.Eval/cases/`);
+  2–3 real payer policy files for File Search.
+- P2-3 — dedicated contradiction-detection flow + reviewer UI (the dimension is
+  already in the decision model; this is the flow + surface).
 
 ## Timeline (18 days)
 
