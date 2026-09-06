@@ -5,6 +5,19 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D28 · Challenge 3 — the Foundry portal evaluation half (S-10)
+
+**2026-09-06.** Challenge 3 was only half covered: `eval/Zynara.Eval` (CI,
+20 cases, hard-gated) is the *correctness* half; the Foundry *portal* evaluation
+— the analog to what TireForge did — was missing. Added
+`eval/portal/eval_portal.jsonl` (15 turns for `evidence-gap-agent`, each `query`
+is the exact prompt `FoundryEvidenceGapAgent` builds; `context` + `ground_truth`
+for optional Groundedness / Similarity), `eval/portal/build_dataset.py`
+(deterministic regen), `eval/portal/README.md`, and
+`docs/runbooks/challenge-3-portal-evaluation.md` (Evaluate → Evaluations →
+Create → Agent → Coherence/Fluency). Manual run, like the vector store.
+Touched: `eval/portal/*`, `docs/runbooks/challenge-3-portal-evaluation.md`, TDD §10.
+
 ## D27 · `Zynara.Submission` — the outbound adapter (S-1)
 
 **2026-09-06.** The infra + `azure.yaml` referenced `src/Zynara.Submission` but

@@ -303,9 +303,10 @@ live pipeline is shown separately on one fresh case.
   the dashboard's Cost tab. A few lines, carried from the prior project.
 - **Service Health workbook:** an Azure Monitor workbook showing live component
   status (Functions, Cosmos, Foundry, Blob) — a workbook definition, no code.
-- **Evaluation:** `eval/Zynara.Eval` replays the labelled case set through the
-  Evidence Gap agent, gates CI on classification accuracy; the Foundry portal
-  runs Coherence/Fluency over the same set (Challenge 3).
+- **Evaluation:** `eval/Zynara.Eval` replays 20 labelled cases through the
+  pipeline and hard-gates CI on the safety metrics; the Foundry portal runs
+  Coherence/Fluency over `eval/portal/eval_portal.jsonl` against the Evidence Gap
+  agent (Challenge 3 — see `docs/runbooks/challenge-3-portal-evaluation.md`).
 
 Broader AI governance (model/prompt version pinning, continuous production drift
 monitoring, retention policy) is a consideration, not in the demo scope — see

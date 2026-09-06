@@ -320,7 +320,7 @@ the user chose: **de-risk spike → `Zynara.Data` → grow eval set → video la
 | S-7 | **Pitch + 5-point doc** | M | Submission artifact. |
 | S-8 | **Video** | M | **Last**, per the user. |
 | S-9 | 2–3 real payer policy files for File Search | S | Corpus is synthetic Bupa today. |
-| S-10 | **Challenge 3 — Foundry *portal* evaluation** | S | `eval/Zynara.Eval` (CI, 20 cases, hard-gated) covers the code half. The portal half is missing: an `eval_portal.jsonl` dataset for `evidence-gap-agent` + a runbook + the manual `ai.azure.com → Evaluations → Create` run (Coherence/Fluency), as done for TireForge (`tireforge/docs/runbooks/challenge-3-portal-evaluation.md`). |
+| ~~S-10~~ | **Challenge 3 — Foundry *portal* evaluation** — ✅ **done (D28)** | — | `eval/portal/eval_portal.jsonl` (15 turns for `evidence-gap-agent`) + `build_dataset.py` + `docs/runbooks/challenge-3-portal-evaluation.md`. User runs it in the portal (Evaluate → Evaluations → Create → Agent → Coherence/Fluency), like the vector store. |
 
 ## Timeline (18 days)
 
