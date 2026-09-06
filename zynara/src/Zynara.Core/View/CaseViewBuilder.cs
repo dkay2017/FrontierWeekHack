@@ -25,7 +25,7 @@ public static class CaseViewBuilder
         var critic = result.Critic is { } c
             ? new CriticView(c.Verdict, c.Flags.Select(f => new CriticFlagView(f.Check, f.Concern)).ToList(), c.Summary)
             : null;
-        var conflicts = BuildConflicts(criteriaView, result.Critic);
+        var conflicts = BuildConflicts(criteriaView, result.Critic, result.Contradiction);
         var gate = result.Gate is { } g ? BuildGate(g) : null;
 
         return new CaseView(
@@ -121,7 +121,7 @@ public static class CaseViewBuilder
     }
 
     private static IReadOnlyList<string> BuildConflicts(
-        IReadOnlyList<CriterionEvidenceView> criteria, CriticReview? critic)
+        IReadOnlyList<CriterionEvidenceView> criteria, CriticReview? critic, ContradictionResult contradiction)
     {
         var conflicts = criteria
             .Where(c => c.Status == CriterionStatus.Contradicted)
@@ -129,10 +129,16 @@ public static class CaseViewBuilder
                          (c.EvidenceStatement is { Length: > 0 } s ? $": {s}" : "."))
             .ToList();
 
-        if (critic?.Verdict == CriticVerdict.Block)
-            conflicts.AddRange(critic.Flags.Select(f => $"Critic — {f.Concern}"));
+        // Intra-evidence contradictions (P2-3) — surfaced, never silently resolved.
+        conflicts.AddRange(contradiction.Conflicts.Select(x =>
+            $"The clinical note contradicts itself on {x.Subject}: “{x.Affirmed.Text}” vs “{x.Denied.Text}”"));
 
-        return conflicts;
+        if (critic?.Verdict == CriticVerdict.Block)
+            conflicts.AddRange(critic.Flags
+                .Where(f => f.Check != "contradiction" || contradiction.Conflicts.Count == 0)
+                .Select(f => $"Critic — {f.Concern}"));
+
+        return conflicts.Distinct().ToList();
     }
 
     private static GateView BuildGate(GateDecision g) => new(

@@ -16,6 +16,7 @@ public sealed class CriticCheck(ICriticAgent agent)
         NeedsAuthResult needsAuth,
         EvidenceGapResult gap,
         AppealMatchResult appeal,
+        ContradictionResult? contradiction = null,
         CancellationToken ct = default)
     {
         var context = new CriticContext(
@@ -24,7 +25,10 @@ public sealed class CriticCheck(ICriticAgent agent)
             Evidence: gap.Assessment,
             UnmetMandatory: gap.UnmetMandatory,
             Precedents: appeal.Shortlist,
-            Recommendation: appeal.Recommendation);
+            Recommendation: appeal.Recommendation)
+        {
+            NoteConflicts = contradiction?.Conflicts ?? Array.Empty<ClaimConflict>(),
+        };
 
         return agent.ReviewAsync(context, ct);
     }

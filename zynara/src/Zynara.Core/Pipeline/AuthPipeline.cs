@@ -17,6 +17,7 @@ namespace Zynara.Core.Pipeline;
 public sealed class AuthPipeline(
     NeedsAuthCheck needsAuth,
     EvidenceGapMatch evidenceGap,
+    ContradictionCheck contradiction,
     AppealMatch appealMatch,
     CriticCheck critic,
     Gate gate,
@@ -34,10 +35,11 @@ public sealed class AuthPipeline(
             };
 
         var gap = await evidenceGap.RunAsync(request, ct);
+        var conflict = await contradiction.RunAsync(request, ct);
         var appeal = await appealMatch.RunAsync(request, gap.Assessment, ct);
-        var review = await critic.RunAsync(request, na, gap, appeal, ct);
+        var review = await critic.RunAsync(request, na, gap, appeal, conflict, ct);
         var isAppeal = !string.IsNullOrWhiteSpace(request.DenialLetter);
-        var decision = gate.Evaluate(gap, appeal, request.EstimatedValue, review, isAppeal);
+        var decision = gate.Evaluate(gap, appeal, request.EstimatedValue, review, isAppeal, conflict);
 
         var criteria = await store.GetCriteriaAsync(
             request.PayerPlan, request.Procedure, request.Region, ct);
@@ -49,10 +51,14 @@ public sealed class AuthPipeline(
             CriteriaChecked: gap.Assessment.Findings.Count,
             EvidenceGapsFound: gap.Assessment.Findings.Count(f => f.Status != CriterionStatus.Documented),
             PrecedentsConsidered: appeal.Shortlist.Count,
-            ReasoningStepsRun: 4,   // needs-auth · evidence-gap · appeal-builder · critic
+            ReasoningStepsRun: 5,   // needs-auth · evidence-gap · claims-extraction · appeal-builder · critic
             AssembledInMs: sw.ElapsedMilliseconds);
 
-        return new PipelineResult(request.Id, na, gap, appeal, review, decision, draft) { Metrics = metrics };
+        return new PipelineResult(request.Id, na, gap, appeal, review, decision, draft)
+        {
+            Metrics = metrics,
+            Contradiction = conflict,
+        };
     }
 }
 

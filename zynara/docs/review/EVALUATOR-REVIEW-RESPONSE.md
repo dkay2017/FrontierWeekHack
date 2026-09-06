@@ -16,11 +16,10 @@ four flow diagrams surfaced these still-open points:
    `Concerns` → HumanReview, with *"Request more evidence"* as the primary control.
    `docs/runbooks/demo-script.md` builds the 3-minute demo around it.
 
-2. **Intra-evidence contradiction is not covered.** P0-3 gave us "evidence
-   contradicts a *criterion*". The review's flowchart is claims-extraction →
-   contradiction check *within the supplied evidence* (statement vs statement),
-   never silently resolved. We have no claims-extraction step. Keep **P2-3**
-   deferred, but do not assume P0-3 already did it.
+2. ~~Intra-evidence contradiction is not covered.~~ **DONE (D17)** —
+   `claims-extraction` agent + `ContradictionCheck` spoke: assertions → pair
+   affirmed vs negated on the same subject → Gate HumanReview + Critic Block +
+   Conflicts panel. `demo-contradiction` scenario.
 
 3. **Eval metric gaps** (§10): (a) **policy-citation accuracy** — we score
    *precedent*-citation accuracy but not whether the cited *policy clause* is
@@ -88,13 +87,14 @@ Nothing here overturns a decision. Items 1 and 3 are the substantive ones.
 - **P1-3 done** (D15) — reviewer roles + tiered approval authority + append-only
   case audit trail. Covers review notes #4 + #5.
 - **P2-2 done** (D16) — `PipelineMetrics` measured per run; `BenchmarkService`
-  before/after table with each manual figure labelled an estimate + its basis;
-  dashboard **Impact** tab. **88 tests green.**
+  before/after table; dashboard **Impact** tab.
+- **P2-3 done** (D17) — `claims-extraction` agent + `ContradictionCheck` spoke;
+  the note-against-itself contradiction flow (review note #2). **92 tests green.**
 
-**Remaining:** P1-4 (infra identity isolation — needs `infra/` Bicep), P2-3
-(claims extraction + intra-evidence contradiction), review note #3
-(policy-citation + appeal-verdict eval metrics). Cosmos `caseAudit` + real Entra
-roles land with `Zynara.Data` / `infra/`.
+**Remaining:** P1-4 (infra identity isolation — needs `infra/` Bicep), review
+note #3 (policy-citation + appeal-verdict eval metrics). Cosmos `caseAudit` +
+real Entra roles land with `Zynara.Data` / `infra/`. **All P1 + all P2 code
+complete bar P1-4 (infra).**
 
 ---
 

@@ -57,6 +57,15 @@ public sealed record EarlyWarning(
     string Text,
     DateOnly RaisedOn);
 
+/// <summary>ContradictionCheck result — claims that conflict <b>within</b> the clinical note (evaluator #4).</summary>
+public sealed record ContradictionResult(
+    int ClaimsExtracted,
+    IReadOnlyList<ClaimConflict> Conflicts)
+{
+    public bool HasConflicts => Conflicts.Count > 0;
+    public static readonly ContradictionResult None = new(0, Array.Empty<ClaimConflict>());
+}
+
 /// <summary>ExpiryMath result.</summary>
 public sealed record ExpiryResult(int DaysOfMargin, EarlyWarning? Warning);
 
@@ -128,6 +137,9 @@ public sealed record PipelineResult(
 
     /// <summary>What this run actually did — the measured half of the before/after benchmark (P2-2).</summary>
     public PipelineMetrics Metrics { get; init; } = PipelineMetrics.Empty;
+
+    /// <summary>Claims that conflict within the clinical note (P2-3). Empty when there is nothing to flag.</summary>
+    public ContradictionResult Contradiction { get; init; } = ContradictionResult.None;
 }
 
 /// <summary>Measured facts about one pipeline run. Every field is counted, not estimated (evaluator §16).</summary>

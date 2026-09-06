@@ -30,10 +30,13 @@ public sealed class StubCriticAgent : ICriticAgent
             Raise(CriticVerdict.Block, "mandatory-criteria",
                 $"mandatory criterion not documented: {string.Join(", ", c.UnmetMandatory)}");
 
-        // 4 · contradictory evidence
+        // 4 · contradictory evidence — against a criterion, or the note against itself
         if (c.Evidence.AnyContradiction)
             Raise(CriticVerdict.Block, "contradiction",
                 "the clinical note contains evidence that contradicts a criterion");
+        if (c.NoteConflicts.Count > 0)
+            Raise(CriticVerdict.Block, "contradiction",
+                c.NoteConflicts[0].Describe());
 
         // 3 · precedents genuinely comparable
         var comparable = c.Precedents.Any(p => p.Similarity >= ComparableSimilarity);

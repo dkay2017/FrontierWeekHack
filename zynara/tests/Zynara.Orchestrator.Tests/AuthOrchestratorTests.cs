@@ -38,6 +38,7 @@ public class AuthOrchestratorTests
     {
         nameof(SpokeActivities.NeedsAuthActivity) => await s.NeedsAuthActivity((Request)input!),
         nameof(SpokeActivities.EvidenceGapActivity) => await s.EvidenceGapActivity((Request)input!),
+        nameof(SpokeActivities.ContradictionActivity) => await s.ContradictionActivity((Request)input!),
         nameof(SpokeActivities.AppealMatchActivity) => await s.AppealMatchActivity((AppealMatchInput)input!),
         nameof(SpokeActivities.CriticActivity) => await s.CriticActivity((CriticInput)input!),
         nameof(SpokeActivities.DraftActivity) => await s.DraftActivity((DraftInput)input!),
@@ -81,6 +82,7 @@ public class AuthOrchestratorTests
         {
             nameof(SpokeActivities.NeedsAuthActivity),
             nameof(SpokeActivities.EvidenceGapActivity),
+            nameof(SpokeActivities.ContradictionActivity),
             nameof(SpokeActivities.AppealMatchActivity),
             nameof(SpokeActivities.CriticActivity),
             nameof(SpokeActivities.DraftActivity),

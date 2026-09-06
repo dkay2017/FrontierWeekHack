@@ -154,7 +154,11 @@ public sealed record CriticContext(
     EvidenceGapAssessment Evidence,
     IReadOnlyList<string> UnmetMandatory,
     IReadOnlyList<PrecedentMatch> Precedents,
-    AppealRecommendation Recommendation);
+    AppealRecommendation Recommendation)
+{
+    /// <summary>Claims that conflict within the clinical note (P2-3) — check 4 also weighs these.</summary>
+    public IReadOnlyList<ClaimConflict> NoteConflicts { get; init; } = Array.Empty<ClaimConflict>();
+}
 
 public enum CriticVerdict
 {

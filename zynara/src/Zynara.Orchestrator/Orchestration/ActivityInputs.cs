@@ -10,7 +10,8 @@ namespace Zynara.Orchestrator.Orchestration;
 public sealed record AppealMatchInput(Request Request, EvidenceGapAssessment Assessment);
 
 public sealed record CriticInput(
-    Request Request, NeedsAuthResult NeedsAuth, EvidenceGapResult Gap, AppealMatchResult Appeal);
+    Request Request, NeedsAuthResult NeedsAuth, EvidenceGapResult Gap, AppealMatchResult Appeal,
+    ContradictionResult Contradiction);
 
 public sealed record DraftInput(
     Request Request, NeedsAuthResult NeedsAuth, EvidenceGapResult Gap, AppealMatchResult Appeal);

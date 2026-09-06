@@ -30,6 +30,7 @@ public class CaseViewTests
     [InlineData("demo-ready", CaseStatus.ReadyToSubmit)]
     [InlineData("demo-strengthen", CaseStatus.NeedsStrengthening)]
     [InlineData("demo-review-mandatory", CaseStatus.NeedsHumanReview)]
+    [InlineData("demo-contradiction", CaseStatus.NeedsHumanReview)]
     [InlineData("demo-appeal", CaseStatus.NeedsHumanReview)]
     [InlineData("demo-appeal-critic", CaseStatus.NeedsHumanReview)]
     [InlineData("demo-abstain", CaseStatus.SystemAbstained)]

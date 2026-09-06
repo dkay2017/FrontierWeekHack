@@ -35,19 +35,25 @@ public sealed class AuthOrchestrator(Gate gate)
         var gap = await context.CallActivityAsync<EvidenceGapResult>(
             nameof(SpokeActivities.EvidenceGapActivity), request, Retry);
 
+        var conflict = await context.CallActivityAsync<ContradictionResult>(
+            nameof(SpokeActivities.ContradictionActivity), request, Retry);
+
         var appeal = await context.CallActivityAsync<AppealMatchResult>(
             nameof(SpokeActivities.AppealMatchActivity), new AppealMatchInput(request, gap.Assessment), Retry);
 
         var critic = await context.CallActivityAsync<CriticReview>(
-            nameof(SpokeActivities.CriticActivity), new CriticInput(request, needsAuth, gap, appeal), Retry);
+            nameof(SpokeActivities.CriticActivity), new CriticInput(request, needsAuth, gap, appeal, conflict), Retry);
 
         // The Gate — deterministic, no I/O, computed in the hub.
         var isAppeal = !string.IsNullOrWhiteSpace(request.DenialLetter);
-        var decision = gate.Evaluate(gap, appeal, request.EstimatedValue, critic, isAppeal);
+        var decision = gate.Evaluate(gap, appeal, request.EstimatedValue, critic, isAppeal, conflict);
 
         var draft = await context.CallActivityAsync<SubmissionDraft>(
             nameof(SpokeActivities.DraftActivity), new DraftInput(request, needsAuth, gap, appeal), Retry);
 
-        return new PipelineResult(request.Id, needsAuth, gap, appeal, critic, decision, draft);
+        return new PipelineResult(request.Id, needsAuth, gap, appeal, critic, decision, draft)
+        {
+            Contradiction = conflict,
+        };
     }
 }

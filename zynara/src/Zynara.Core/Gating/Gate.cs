@@ -32,9 +32,10 @@ public sealed class Gate(GateOptions options)
 
     public GateDecision Evaluate(
         EvidenceGapResult gap, AppealMatchResult? appeal, decimal? estimatedValue,
-        CriticReview? critic = null, bool isAppeal = false)
+        CriticReview? critic = null, bool isAppeal = false, ContradictionResult? contradiction = null)
     {
         var support = appeal?.Support ?? PrecedentSupport.None;
+        var noteConflicts = contradiction?.Conflicts ?? Array.Empty<ClaimConflict>();
 
         var model = new DecisionModel(
             MandatoryPass: gap.MandatoryPass,
@@ -51,7 +52,7 @@ public sealed class Gate(GateOptions options)
             $"mandatory {(gap.MandatoryPass ? "all met" : $"{gap.UnmetMandatory.Count}/{gap.MandatoryTotal} unmet")}; " +
             $"supporting {gap.SupportingDocumented} documented / {gap.SupportingPartial} partial / {gap.SupportingMissing} missing; " +
             $"evidence {gap.Quality}; contradiction {(gap.ContradictionDetected ? "detected" : "none")}; " +
-            $"precedent support {support}";
+            $"note conflicts {noteConflicts.Count}; precedent support {support}";
 
         // The Critic can force a human or an abstention regardless of the numbers.
         if (critic?.Verdict == CriticVerdict.Abstain)
@@ -60,6 +61,11 @@ public sealed class Gate(GateOptions options)
         if (critic?.Verdict == CriticVerdict.Block)
             return Route(GateRoute.HumanReview, model,
                 $"the Critic raised a material concern ({CriticNote(critic)}) — a reviewer must decide", facts);
+
+        // A note that contradicts itself is never silently resolved (evaluator #4).
+        if (noteConflicts.Count > 0)
+            return Route(GateRoute.HumanReview, model,
+                $"the clinical note contradicts itself ({noteConflicts[0].Describe()}) — a reviewer must resolve it", facts);
 
         // Every appeal is human-approved — an appeal draft never auto-submits.
         if (isAppeal)

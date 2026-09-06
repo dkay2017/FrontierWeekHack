@@ -15,6 +15,7 @@ namespace Zynara.Orchestrator.Orchestration;
 public sealed class SpokeActivities(
     NeedsAuthCheck needsAuth,
     EvidenceGapMatch evidenceGap,
+    ContradictionCheck contradiction,
     AppealMatch appealMatch,
     CriticCheck critic,
     IZynaraStore store)
@@ -27,13 +28,17 @@ public sealed class SpokeActivities(
     public Task<EvidenceGapResult> EvidenceGapActivity([ActivityTrigger] Request request) =>
         evidenceGap.RunAsync(request);
 
+    [Function(nameof(ContradictionActivity))]
+    public Task<ContradictionResult> ContradictionActivity([ActivityTrigger] Request request) =>
+        contradiction.RunAsync(request);
+
     [Function(nameof(AppealMatchActivity))]
     public Task<AppealMatchResult> AppealMatchActivity([ActivityTrigger] AppealMatchInput input) =>
         appealMatch.RunAsync(input.Request, input.Assessment);
 
     [Function(nameof(CriticActivity))]
     public Task<CriticReview> CriticActivity([ActivityTrigger] CriticInput input) =>
-        critic.RunAsync(input.Request, input.NeedsAuth, input.Gap, input.Appeal);
+        critic.RunAsync(input.Request, input.NeedsAuth, input.Gap, input.Appeal, input.Contradiction);
 
     [Function(nameof(DraftActivity))]
     public async Task<SubmissionDraft> DraftActivity([ActivityTrigger] DraftInput input)

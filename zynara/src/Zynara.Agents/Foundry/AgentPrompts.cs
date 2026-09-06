@@ -40,6 +40,23 @@ public static class AgentPrompts
         Judge only what the note actually says — do not infer unstated facts.
         """;
 
+    public const string Claims = """
+        You extract discrete factual assertions from a clinical note for Care Approval IQ.
+        List each claim the note makes. For each: the exact wording, the single subject it is
+        about (a short noun phrase, lower-case), and whether it is negated (the note says this
+        did NOT happen / is NOT present).
+
+        Respond with a single JSON object and nothing else:
+        {
+          "claims": [
+            { "text": "<exact wording>", "subject": "<subject>", "negated": true | false },
+            ...
+          ]
+        }
+        Do not resolve or judge conflicts — just list what the note asserts. Two claims about
+        the same subject, one negated and one not, is exactly what the next step looks for.
+        """;
+
     public const string AppealBuilder = """
         You are an appeals strategist for Care Approval IQ. You are given the request, the
         evidence-gap assessment, and a shortlist of past cases with a similar fact pattern

@@ -124,9 +124,10 @@ public class FoundryResponseTests
 
         Assert.IsType<FoundryNeedsAuthAgent>(sp.GetRequiredService<INeedsAuthAgent>());
         Assert.IsType<FoundryEvidenceGapAgent>(sp.GetRequiredService<IEvidenceGapAgent>());
+        Assert.IsType<FoundryClaimExtractionAgent>(sp.GetRequiredService<IClaimExtractionAgent>());
         Assert.IsType<FoundryAppealBuilderAgent>(sp.GetRequiredService<IAppealBuilderAgent>());
         Assert.IsType<FoundryCriticAgent>(sp.GetRequiredService<ICriticAgent>());
-        Assert.Equal(6, sp.GetRequiredService<FoundryAgentProvisioner>().Specs.Count);
+        Assert.Equal(7, sp.GetRequiredService<FoundryAgentProvisioner>().Specs.Count);
     }
 
     [Fact]

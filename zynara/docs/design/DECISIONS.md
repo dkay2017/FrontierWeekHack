@@ -5,6 +5,32 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D17 · Contradiction-detection flow — claims → pair → never resolved silently
+
+**2026-09-06.** Evaluator finding #4 / P2-3 / review re-read note #2. P0-3 only
+gave us "evidence contradicts a *criterion*"; this adds the note-against-itself
+check the review's flowchart draws.
+
+- New `IClaimExtractionAgent` (stub + Foundry, prompt `AgentPrompts.Claims`) —
+  pulls discrete assertions `{ text, subject, negated }` from the clinical note.
+- New deterministic spoke `ContradictionCheck` — groups claims by subject; a
+  subject with both an affirmed and a negated claim is a `ClaimConflict`.
+- Runs after `evidence-gap`, before `appeal-match` (pipeline + orchestrator
+  `ContradictionActivity`). Feeds the Gate (`noteConflicts > 0` → **HumanReview**,
+  before the appeal/mandatory checks — never picked apart automatically), the
+  Critic (check 4 also weighs `NoteConflicts` → Block), and the reviewer
+  Conflicts panel.
+- New demo scenario `demo-contradiction`: one sentence says physiotherapy was
+  completed, another that the patient could not attend → routed to a human.
+
+Touched: `Zynara.Core/Agents/ClaimContracts.cs`, `Pipeline/ContradictionCheck.cs`,
+`Model/Results.cs` (`ContradictionResult`), `Gating/Gate.cs`, `Pipeline/{AuthPipeline,CriticCheck}.cs`,
+`Agents/Contracts.cs` (`CriticContext.NoteConflicts`), `View/CaseViewBuilder.cs`,
+`Zynara.Agents/{Stubs,Foundry}` (+ provisioner, +1 agent → 7 Specs, roster),
+`Zynara.Orchestrator` (activity + inputs), `Demo/DemoCatalog.cs`,
+`Zynara.Core.Tests` (+4), `Zynara.Agents.Tests`, `Zynara.Orchestrator.Tests`.
+**92 tests green.**
+
 ## D16 · Before / after benchmark — measured pipeline, labelled manual estimate
 
 **2026-09-06.** Evaluator P2-2 / §16. `AuthPipeline` now records

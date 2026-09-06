@@ -33,6 +33,8 @@ public sealed class FoundryCriticAgent(
             sb.AppendLine($"  [{f.CriterionId}] {f.Status}{(f.Evidence is { Length: > 0 } e ? $" — \"{e}\"" : "")}");
         if (c.UnmetMandatory.Count > 0)
             sb.AppendLine($"  UNMET MANDATORY: {string.Join(", ", c.UnmetMandatory)}");
+        foreach (var conflict in c.NoteConflicts)
+            sb.AppendLine($"  NOTE CONTRADICTS ITSELF: {conflict.Describe()}");
 
         sb.AppendLine().AppendLine("Precedents considered:");
         foreach (var p in c.Precedents)

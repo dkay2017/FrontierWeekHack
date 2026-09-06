@@ -26,7 +26,7 @@ public class BenchmarkTests
 
         var m = record.Result.Metrics;
         Assert.Equal(3, m.CriteriaChecked);
-        Assert.Equal(4, m.ReasoningStepsRun);
+        Assert.Equal(5, m.ReasoningStepsRun);
         Assert.True(m.PrecedentsConsidered > 0);
         Assert.True(m.AssembledInMs >= 0);
     }

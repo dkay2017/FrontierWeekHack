@@ -50,6 +50,7 @@ public static class DependencyInjection
 
         services.AddScoped<INeedsAuthAgent, FoundryNeedsAuthAgent>();
         services.AddScoped<IEvidenceGapAgent, FoundryEvidenceGapAgent>();
+        services.AddScoped<IClaimExtractionAgent, FoundryClaimExtractionAgent>();
         services.AddScoped<IAppealBuilderAgent, FoundryAppealBuilderAgent>();
         services.AddScoped<ICriticAgent, FoundryCriticAgent>();
         services.AddScoped<IExpiryWatchAgent, FoundryExpiryWatchAgent>();
@@ -70,6 +71,7 @@ public static class DependencyInjection
         services.AddSingleton<IAgentRoster>(AgentRoster.Stub());
         services.AddSingleton<INeedsAuthAgent, StubNeedsAuthAgent>();
         services.AddSingleton<IEvidenceGapAgent, StubEvidenceGapAgent>();
+        services.AddSingleton<IClaimExtractionAgent, StubClaimExtractionAgent>();
         services.AddSingleton<IAppealBuilderAgent, StubAppealBuilderAgent>();
         services.AddSingleton<ICriticAgent, StubCriticAgent>();
         services.AddSingleton<IExpiryWatchAgent, StubExpiryWatchAgent>();

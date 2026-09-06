@@ -65,6 +65,24 @@ public static class DemoCatalog
             }),
 
         new DemoScenario(
+            "demo-contradiction",
+            "The note contradicts itself — human resolves it",
+            "One sentence says physiotherapy was completed, another that the patient could not attend it. " +
+            "Claims-extraction flags the conflict; the Gate does not pick a side — it routes to a human.",
+            new Request
+            {
+                Id = "demo-contradiction",
+                Procedure = DemoWorld.Procedure,
+                PayerPlan = DemoWorld.Payer,
+                Region = Region.UK,
+                EstimatedValue = 350m,
+                ClinicalNote =
+                    "Imaging changes management and would alter the surgical plan. Physiotherapy " +
+                    "completed for eight weeks with good adherence. On later review the patient reports " +
+                    "they were unable to attend physiotherapy.",
+            }),
+
+        new DemoScenario(
             "demo-appeal",
             "Denied — appeal with winning precedents",
             "Denial on record; two comparable cases won on appeal → precedent-backed appeal, human-approved.",

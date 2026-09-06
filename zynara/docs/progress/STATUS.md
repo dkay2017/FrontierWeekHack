@@ -247,6 +247,15 @@ needs the same restyle port.
   before/after). No improvement % claimed. `Zynara.Core.Tests` +2.
   **88 tests green.**
 
+## Done — 2026-09-06 — P2-3
+
+- **Contradiction-detection flow** (D17). New `claims-extraction` agent
+  (stub + Foundry) + deterministic `ContradictionCheck` spoke: pulls assertions
+  from the note, pairs affirmed vs negated on the same subject. `noteConflicts > 0`
+  → Gate HumanReview + Critic Block + surfaced in the Conflicts panel. Runs after
+  evidence-gap (pipeline + orchestrator activity). New `demo-contradiction`
+  scenario. `Zynara.Core.Tests` +4. **92 tests green.** (review re-read note #2)
+
 ## Next — remaining P1 / P2 (resume point)
 
 > Full re-read of the COMPLETE evaluator review (text + 4 flowcharts) logged in
