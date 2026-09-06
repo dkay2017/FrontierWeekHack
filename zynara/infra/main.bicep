@@ -54,7 +54,9 @@ param staticWebAppSku string = 'Standard'
 @description('Extra tags. environment=hack and azd-env-name are always added.')
 param tags object = {}
 
-var suffix = uniqueString(subscription().id, environmentName)
+// Seeded on the target RG so names are stable per-RG and don't collide with a
+// different environment's leftovers.
+var suffix = uniqueString(subscription().id, resourceGroupName)
 var allTags = union({ environment: 'hack', 'azd-env-name': environmentName }, tags)
 
 resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
