@@ -25,6 +25,7 @@ param corpusStorageBlobEndpoint string
 param keyVaultUri string
 param foundryEndpoint string
 param modelDeploymentName string
+param vectorStoreId string = ''
 param appInsightsConnectionString string
 
 resource hostStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
@@ -61,6 +62,7 @@ var reasoningSettings = concat(commonSettings, [
   { name: 'ZYNARA_AGENTS', value: agentsMode }
   { name: 'PROJECT_ENDPOINT', value: foundryEndpoint }
   { name: 'MODEL_DEPLOYMENT_NAME', value: modelDeploymentName }
+  { name: 'VECTOR_STORE_ID', value: vectorStoreId }
   { name: 'CORPUS_BLOB_ENDPOINT', value: corpusStorageBlobEndpoint }
 ])
 

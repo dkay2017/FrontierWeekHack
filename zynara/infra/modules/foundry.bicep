@@ -1,15 +1,14 @@
-// Foundry stack: AI Services account + project + one model deployment, plus
-// Log Analytics + App Insights (TDD §12 · TD-6). Only the REASONING identity is
-// granted Cognitive Services User — the Submission Adapter never calls a model.
+// Foundry stack — REFERENCES an existing AI Services account + project + model
+// deployment (created once by the Challenge-0 / de-risk spike; agents live in it
+// already). This module only adds the observability pair (Log Analytics + App
+// Insights) and grants the reasoning identity inference access on the account.
+// Same pattern as TireForge: the Foundry account is a prerequisite, not something
+// azd recreates on every provision.
 
 param location string
 param tags object
-param accountName string
-param projectName string
-param modelDeploymentName string
-param modelName string
-param modelVersion string
-param modelCapacity int
+param existingAccountName string
+param existingProjectName string
 param logAnalyticsName string
 param appInsightsName string
 param reasoningPrincipalId string
@@ -29,40 +28,13 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   properties: { Application_Type: 'web', WorkspaceResourceId: logs.id }
 }
 
-resource account 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
-  name: accountName
-  location: location
-  tags: tags
-  kind: 'AIServices'
-  sku: { name: 'S0' }
-  identity: { type: 'SystemAssigned' }
-  properties: {
-    customSubDomainName: accountName
-    publicNetworkAccess: 'Enabled' // TODO: 'Disabled' + private endpoint for production
-    disableLocalAuth: true         // managed identity only — no API keys
-  }
-}
-
-resource project 'Microsoft.CognitiveServices/accounts/projects@2025-06-01' = {
-  parent: account
-  name: projectName
-  location: location
-  tags: tags
-  identity: { type: 'SystemAssigned' }
-  properties: {}
-}
-
-resource model 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = {
-  parent: account
-  name: modelDeploymentName
-  sku: { name: 'GlobalStandard', capacity: modelCapacity }
-  properties: {
-    model: { format: 'OpenAI', name: modelName, version: modelVersion }
-    versionUpgradeOption: 'NoAutoUpgrade'
-  }
+resource account 'Microsoft.CognitiveServices/accounts@2025-06-01' existing = {
+  name: existingAccountName
 }
 
 // Cognitive Services User — inference only, and only for the reasoning plane.
+// Read + invoke is enough: the five agents already exist in the project and the
+// provisioner skips existing agents, so no agent-write role is needed.
 var cognitiveServicesUser = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b65f3-24c7-4388-baec-2e87135dc908')
 
 resource reasoningInference 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
@@ -75,6 +47,6 @@ resource reasoningInference 'Microsoft.Authorization/roleAssignments@2022-04-01'
   }
 }
 
-output projectEndpoint string = 'https://${account.name}.services.ai.azure.com/api/projects/${projectName}'
+output projectEndpoint string = 'https://${existingAccountName}.services.ai.azure.com/api/projects/${existingProjectName}'
 output appInsightsConnectionString string = appInsights.properties.ConnectionString
-output accountName string = account.name
+output accountName string = existingAccountName

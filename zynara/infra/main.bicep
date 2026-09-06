@@ -28,20 +28,24 @@ param environmentName string
 @description('Primary location for all resources (e.g. swedencentral).')
 param location string
 
-@description('Resource group to create/use.')
-param resourceGroupName string = 'zynara-care-approval-rg-${environmentName}'
+@description('Resource group to deploy into. Defaults to the RG that already holds the Foundry account.')
+param resourceGroupName string = 'zynara-spike-rg'
 
-@description('Model deployment name — Zynara.Agents reads it as MODEL_DEPLOYMENT_NAME.')
+@description('Existing AI Services (Foundry) account — created by the Challenge-0 / de-risk spike, holds the agents + vector store.')
+param foundryAccountName string = 'zynara-foundry-28985'
+
+@description('Existing Foundry project inside that account.')
+param foundryProjectName string = 'care-approval'
+
+@description('Model deployment name on the existing account — Zynara.Agents reads it as MODEL_DEPLOYMENT_NAME.')
 param modelDeploymentName string = 'gpt-5.4'
 
-@description('Model + version to deploy.')
-param modelName string = 'gpt-5.4'
-param modelVersion string = '2026-03-05'
-param modelCapacity int = 10
+@description('File Search vector store id (created in the portal). Empty = agents run on inline data only.')
+param vectorStoreId string = ''
 
 @description('Agent DI mode for the orchestrator + api-proxy: stub | foundry.')
 @allowed([ 'stub', 'foundry' ])
-param agentsMode string = 'foundry'
+param agentsMode string = 'stub'
 
 @description('Static Web App SKU. Standard = linked backend (same-origin /api).')
 @allowed([ 'Free', 'Standard' ])
@@ -66,19 +70,15 @@ module identity './modules/identity.bicep' = {
   params: { location: location, tags: allTags, suffix: suffix }
 }
 
-// --- 2 · Foundry stack — account + project + model + observability ---------
+// --- 2 · Foundry — reference the EXISTING account/project + add observability
 module foundry './modules/foundry.bicep' = {
   name: 'foundry'
   scope: rg
   params: {
     location: location
     tags: allTags
-    accountName: 'zynara-foundry-${suffix}'
-    projectName: 'care-approval-project'
-    modelDeploymentName: modelDeploymentName
-    modelName: modelName
-    modelVersion: modelVersion
-    modelCapacity: modelCapacity
+    existingAccountName: foundryAccountName
+    existingProjectName: foundryProjectName
     logAnalyticsName: 'zynara-logs-${environmentName}'
     appInsightsName: 'zynara-insights-${environmentName}'
     // only the reasoning identity gets Cognitive Services User (inference)
@@ -132,6 +132,7 @@ module apps './modules/apps.bicep' = {
     keyVaultUri: keyvault.outputs.vaultUri
     foundryEndpoint: foundry.outputs.projectEndpoint
     modelDeploymentName: modelDeploymentName
+    vectorStoreId: vectorStoreId
     appInsightsConnectionString: foundry.outputs.appInsightsConnectionString
   }
 }
