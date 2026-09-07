@@ -14,6 +14,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11" />
     <ProjectReference Include="..\..\src\Zynara.Core\Zynara.Core.csproj" />
     <ProjectReference Include="..\..\src\Zynara.Agents\Zynara.Agents.csproj" />
+    <ProjectReference Include="..\..\src\Zynara.Workflow\Zynara.Workflow.csproj" />
   </ItemGroup>
 
 </Project>

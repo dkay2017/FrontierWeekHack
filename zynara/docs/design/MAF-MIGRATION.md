@@ -171,6 +171,28 @@ The Gate **routing switch** (to a review port / submit) is deferred to Phase 3
 with the `RequestPort` — Phase 1 keeps the graph linear through `finalize`, using
 a conditional edge only for the not-required early stop.
 
+### Phase 2 done (2026-09-07)
+
+**Minimal-diff swap:** `FoundryAgentClient.InvokeAsync` now goes through the MAF
+`AIAgent` — `_project.AsAIAgent(new AgentReference(name))` (binds to the existing
+server-side agent version by name) + `agent.RunAsync(prompt)`. The 5
+`Foundry*Agent` classes are **unchanged** — they still call
+`client.InvokeAsync(name, prompt)`; MAF is now underneath. The stub path is
+untouched (the `IEvidenceGapAgent` port + `Stub*Agent` is already the test seam —
+no fake `IChatClient` needed).
+
+- Packages: `Microsoft.Agents.AI` 1.20.0 + `Microsoft.Agents.AI.Foundry`
+  1.20.0-preview added to `Zynara.Agents`; `Azure.AI.Projects` +
+  `Azure.AI.Projects.Agents` + `Azure.AI.Extensions.OpenAI` bumped 2.0.x →
+  2.1.0-beta.4 (MAF.Foundry's floor). The v1 provisioner
+  (`AgentAdministrationClient`) still compiles against the new versions.
+- `FoundryChatClient` has no public ctor — the entry point is
+  `AIProjectClient.AsAIAgent(AgentReference)` → `FoundryAgent : AIAgent`.
+- `tools/Zynara.FoundrySpike` now runs **both** paths per scenario (v1
+  `CaseService` + MAF `CareApprovalRunner`) and asserts the routes match —
+  the against-real-GPT-5.4 check (user runs it).
+- **119 tests green.** v1 fully intact.
+
 ## 6 · Open questions (resolve in later phases)
 
 1. Exact package versions available on nuget.org for .NET 8 (some are `--prerelease`).

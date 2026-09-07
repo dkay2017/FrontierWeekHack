@@ -5,6 +5,7 @@ using Zynara.Core;
 using Zynara.Core.Abstractions;
 using Zynara.Core.Demo;
 using Zynara.Core.View;
+using Zynara.Workflow;
 
 // De-risk spike (STATUS "next" #1). Runs the WHOLE pipeline against the HOSTED
 // Foundry agents — needs-auth, evidence-gap, claims-extraction, precedent-strategist,
@@ -33,6 +34,7 @@ var sp = new ServiceCollection()
     .AddSingleton<IZynaraStore>(_ => DemoWorld.Seed(new InMemoryZynaraStore()))
     .AddZynaraAgents(config)
     .AddZynaraCore()
+    .AddZynaraWorkflow()
     .BuildServiceProvider();
 
 Console.WriteLine($"Foundry project : {config["PROJECT_ENDPOINT"]}");
@@ -54,6 +56,7 @@ catch (Exception ex)
 }
 
 var cases = sp.GetRequiredService<CaseService>();
+var workflow = sp.GetRequiredService<CareApprovalRunner>();
 var scenarios = new[] { "demo-ready", "demo-appeal-critic" };
 var allOk = true;
 
@@ -68,6 +71,12 @@ foreach (var id in scenarios)
         var record = await cases.RunAsync(scenario.Request);
         sw.Stop();
         var v = record.View;
+
+        // Same case through the MAF Workflow — must route the same way.
+        var wfResult = await workflow.RunAsync(scenario.Request);
+        var match = wfResult.Gate?.Route == record.Result.Gate?.Route;
+        Console.WriteLine($"  maf vs v1  : workflow route {wfResult.Gate?.Route} {(match ? "== " : "!= ")}pipeline route {record.Result.Gate?.Route}  {(match ? "✓" : "✗ MISMATCH")}");
+        if (!match) allOk = false;
 
         Console.WriteLine($"  status     : {v.Status}   (expected route ≈ {scenario.Expectation.Split('→').Last().Trim().TrimEnd('.')})");
         Console.WriteLine($"  gate       : {v.Gate?.Route} — {v.Gate?.Reason.Split(". [")[0]}");

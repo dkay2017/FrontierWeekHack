@@ -1,18 +1,22 @@
 using System.Collections.Concurrent;
 using Azure.AI.Extensions.OpenAI;
+using Azure.AI.Projects;
 using Azure.AI.Projects.Agents;
 using Azure.Core;
 using Azure.Identity;
+using Microsoft.Agents.AI;
 using OpenAI.Responses;
 using Zynara.Core.Diagnostics;
 
 namespace Zynara.Agents.Foundry;
 
 /// <summary>
-/// Thin wrapper over the Foundry projects 2.x agent API (pattern carried from the
-/// prior project's Stage-M spike): create-or-ensure a persistent agent version,
-/// and invoke a hosted agent once — running the function-tool loop when a handler
-/// is supplied.
+/// Wrapper over the Foundry agent surface. Provisioning (create-or-ensure a
+/// persistent agent version) still uses <see cref="AgentAdministrationClient"/>;
+/// invocation goes through the <b>Microsoft Agent Framework</b>
+/// <see cref="FoundryChatClient"/> (bound to the existing server-side agent by
+/// name) — an <c>IChatClient</c>, so it carries MAF's middleware / telemetry and
+/// is trivially fakeable in tests.
 /// </summary>
 public sealed class FoundryAgentClient
 {
@@ -20,7 +24,9 @@ public sealed class FoundryAgentClient
     private readonly TokenCredential _credential;
     private readonly string _model;
     private readonly AgentAdministrationClient _admin;
+    private readonly AIProjectClient _project;
     private readonly ConcurrentDictionary<string, byte> _ensured = new();
+    private readonly ConcurrentDictionary<string, AIAgent> _agents = new();
 
     public FoundryAgentClient(FoundryAgentOptions options, TokenCredential? credential = null)
     {
@@ -28,6 +34,7 @@ public sealed class FoundryAgentClient
         _credential = credential ?? new DefaultAzureCredential();
         _model = options.Model;
         _admin = new AgentAdministrationClient(_endpoint, _credential);
+        _project = new AIProjectClient(_endpoint, _credential);
     }
 
     /// <summary>
@@ -74,57 +81,28 @@ public sealed class FoundryAgentClient
     }
 
     /// <summary>
-    /// Invoke a hosted agent once. If <paramref name="toolHandler"/> is supplied it
-    /// is called for every <c>function_call</c> the model emits, and the loop
-    /// continues until the model returns a plain answer.
+    /// Invoke a hosted agent once, via the Microsoft Agent Framework
+    /// <see cref="AIAgent"/> bound to the existing server-side agent version.
     /// </summary>
     public async Task<AgentInvocation> InvokeAsync(
         string agentName,
         string userText,
-        Func<string, string, string>? toolHandler = null,
+        Func<string, string, string>? toolHandler = null,   // unused — the agents carry their tools server-side
         CancellationToken ct = default)
     {
-        var responses = new ProjectResponsesClient(
-            _endpoint, _credential, new AgentReference(agentName, version: null),
-            defaultConversationId: null, options: null);
-
-        var toolCalls = 0;
-        var inTokens = 0;
-        var outTokens = 0;
+        var agent = _agents.GetOrAdd(agentName,
+            name => _project.AsAIAgent(new AgentReference(name, version: null)));
 
         using var chat = ZynaraTelemetry.StartChat(_model);
         chat?.SetTag("zynara.agent", agentName);
 
-        ResponseResult result = (await responses.CreateResponseAsync(userText, null, ct)).Value;
-        Accumulate(result.Usage);
+        var response = await agent.RunAsync(userText, cancellationToken: ct);
 
-        while (toolHandler is not null)
-        {
-            var calls = result.OutputItems.OfType<FunctionCallResponseItem>().ToList();
-            if (calls.Count == 0)
-                break;
+        var inTokens = (int)(response.Usage?.InputTokenCount ?? 0);
+        var outTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
+        ZynaraTelemetry.RecordChatUsage(chat, inTokens, outTokens, toolCalls: 0);
 
-            var outputs = new List<ResponseItem>();
-            foreach (var call in calls)
-            {
-                toolCalls++;
-                var args = call.FunctionArguments?.ToString() ?? "{}";
-                var output = toolHandler(call.FunctionName, args);
-                outputs.Add(ResponseItem.CreateFunctionCallOutputItem(call.CallId, output));
-            }
-
-            result = (await responses.CreateResponseAsync(outputs, result.Id, ct)).Value;
-            Accumulate(result.Usage);
-        }
-
-        ZynaraTelemetry.RecordChatUsage(chat, inTokens, outTokens, toolCalls);
-        return new AgentInvocation(result.GetOutputText() ?? "", toolCalls, inTokens, outTokens);
-
-        void Accumulate(ResponseTokenUsage? u)
-        {
-            inTokens += u?.InputTokenCount ?? 0;
-            outTokens += u?.OutputTokenCount ?? 0;
-        }
+        return new AgentInvocation(response.Text ?? "", ToolCalls: 0, inTokens, outTokens);
     }
 }
 
