@@ -5,6 +5,36 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D31 · Live deploy finished — full flow + hosted agents verified (S-4)
+
+**2026-09-07.** Session 9. The deploy is demo-ready:
+
+- **`AuthOrchestrator` persists the case** — extracted `CaseService.PersistAsync`
+  (project + audit + save from an already-computed `PipelineResult`) and added a
+  `PersistCaseActivity` after Draft (and on the not-required early stop), so
+  `POST /api/requests` populates the same review queue the api-proxy path does.
+- **Dashboard is interactive in live mode** — a "run scenario ▾" control
+  (`POST /api/demo/scenarios/{id}/run`), and the approve / reject / send buttons
+  hit the live endpoints: `POST /api/cases/{id}/decision` (with `X-Reviewer-Role`)
+  then, on approve-send, `POST /api/cases/{id}/submit`. Live mode auto-detects a
+  same-origin `/api` (the SWA linked backend), no `?api=` needed.
+- **`SendCase`** on the api-proxy (`/api/cases/{id}/submit`) forwards to the
+  Submission Adapter at `SUBMISSION_URL` — the dashboard talks to one origin only.
+  `/api/submit/{id}` is Anonymous (guarded by `SubmissionService`).
+- **Hosted agents flipped on** (`AGENTSMODE=foundry`) — the reasoning identity
+  already had Cognitive Services User on the existing Foundry account and the 5
+  agents already exist there, so no re-provisioning. A live orchestration ran the
+  real GPT-5.4 pipeline; App Insights shows the nested trace
+  `AuthOrchestrator → spoke.evidence-gap → invoke_agent evidence-gap → chat gpt-5.4`
+  (~10 s model span) — Challenge 2 proven in production.
+- `docs/runbooks/deploy.md` written (steps + the D30 shakedown fixes + the two
+  known SWA behaviours: Easy Auth on the api-proxy, Anonymous `/api/submit`).
+
+Touched: `Zynara.Core/View/CaseService.cs`, `Zynara.Orchestrator/Orchestration/*`,
+`Zynara.ApiProxy/{CaseFunctions,Program}.cs`, `Zynara.Submission/SubmissionFunctions.cs`,
+`Zynara.Dashboard/index.html`, `infra/modules/apps.bicep`,
+`tests/Zynara.Orchestrator.Tests/*`. **108 tests green.**
+
 ## D30 · Live deploy — one RG, existing Foundry, Consumption Y1 (S-4)
 
 **2026-09-06.** First `azd up` to a real subscription. Decisions taken under fire:

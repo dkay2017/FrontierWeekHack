@@ -4,9 +4,10 @@
 current at every checkpoint and **commit + push** — uncommitted work is lost on a
 Codespace rebuild.
 
-_Last updated: 2026-09-06 (session 8 — **LIVE on Azure**: `azd up` to
-`zynara-spike-rg`, orchestrator verified end-to-end against Cosmos; 108 tests.
-S-1/2/3/5/10 done, S-4 live with 2 gaps). Deadline: **2026-09-23 midnight US**.
+_Last updated: 2026-09-07 (session 9 — **S-4 DONE**: full flow live on Azure
+(`POST /api/requests` → Durable → persist → dashboard → approve → submit), hosted
+GPT-5.4 agents flipped on, Challenge 2 traces verified in App Insights; 108 tests.
+Remaining: S-6 SVG, S-7 pitch, S-8 video). Deadline: **2026-09-23 midnight US**.
 Submission: 3-min video (required) + repo + architecture doc + TDD + dashboard UI._
 
 ## What this is
@@ -325,7 +326,7 @@ their own tests / the spike — full stack together is S-4.)
 | ~~S-1~~ | **`Zynara.Submission`** — the outbound adapter — ✅ **done (D27)** | — | Function app on `id-submission` (KV secret + Cosmos write, no Foundry). `POST /api/submit/{id}` sends only a reviewer-approved case, once (idempotent). `SubmissionService` + `CosmosSubmissionStore` + `submissions` container. Stub payer gateway by default; `KeyVaultPayerGateway` reads the credential to prove the boundary. **108 tests.** |
 | ~~S-2~~ | **Challenge 2 — agent-keyed traces** — ✅ **done (D26)** | — | `ZynaraTelemetry` ActivitySource: `pipeline.run → spoke.* → invoke_agent * → chat *`. Azure Monitor OTel exporter wired in both Function hosts (gated on `APPLICATIONINSIGHTS_CONNECTION_STRING`). `TelemetryTests` assert the tree. **102 tests.** Visual check at deploy (S-4). |
 | ~~S-3~~ | **Challenge 4 — Foundry portal workflow** — ✅ **built + run (2026-09-06)** | — | `care-approval-reasoning` = `evidence-gap → precedent-strategist → critic → End`, ran end to end in preview. Critic node returns `block` (incomplete context on a linear chain) — expected, documented in the runbook as the case for the deterministic orchestrator. Persistent-agents half done via the provisioner. |
-| S-4 | **Challenge 0 — `azd provision` / deploy** — 🟡 **LIVE, verified end to end (2026-09-06); 2 gaps left** | M | Deployed to **`zynara-spike-rg`** (one RG, next to the existing Foundry). See "Deploy state" below. |
+| ~~S-4~~ | **Challenge 0 — deploy** — ✅ **DONE (D30, D31)** | — | Live on **`zynara-spike-rg`**. Full flow verified: `POST /api/requests` → Durable orchestrator → `PersistCaseActivity` → Cosmos → dashboard → approve (ApprovalAuthority + audit) → api-proxy `SendCase` → Submission Adapter (reads KV payer credential) → `submissions`. Hosted GPT-5.4 agents on; Challenge 2 traces (`AuthOrchestrator → spoke.* → invoke_agent * → chat gpt-5.4`) confirmed in App Insights. Runbook: `docs/runbooks/deploy.md`. |
 | ~~S-5~~ | **`Zynara.Dashboard/index.html`** — light house style — ✅ **done (D29)** | — | The old dark version is deleted; `index.html` is the light-first console (was `standalone.html`). Inlined snapshot by default; `?api=<host>` pulls live cases/recovery/benchmark/profiles and re-renders, falling back to the snapshot on error. |
 | S-6 | **Architecture SVG** — `appeal-builder` → `precedent-strategist`, add the contradiction step + the "upstream / not built" band | S | Another session edits this file — coordinate; do not `git add -A`. |
 | S-7 | **Pitch + 5-point doc** | M | Submission artifact. |
@@ -335,38 +336,22 @@ their own tests / the spike — full stack together is S-4.)
 
 ## TODO — resume point for session 9
 
-**Finish S-4 (deploy), then S-7, then S-8.**
+### A · Live deploy — ✅ DONE (2026-09-07, D31)
 
-### A · Make the live deploy demo-ready
-1. **Scenario-runner control in the dashboard** (`src/Zynara.Dashboard/index.html`).
-   The old dark `index.html` had a "Run a scenario ▾" dropdown; the light rebuild
-   (S-5) dropped it. Add it back: `<select>` of `DATA.scenarios` in the masthead →
-   `POST {api}/api/demo/scenarios/{id}/run` → re-`boot()`. This is the "create an
-   entry" page. ~20 lines. Re-inject the snapshot + republish the artifact.
-2. **Populate the live queue** — `POST /api/demo/scenarios/{id}/run` for all 7
-   scenarios against `func-zynara-apiproxy-itbahognjguwy` (via the SWA URL) so the
-   dashboard has content. (`demo-ready` already fired — 1 case in Cosmos.)
-3. **Orchestrator persist gap** — `AuthOrchestrator` returns `PipelineResult` but
-   never writes a `CaseRecord`. Decide: (a) add a `PersistCaseActivity` that calls
-   `CaseService`-style save so `POST /api/requests` also populates the queue, or
-   (b) declare the api-proxy scenario-run the demo entry path and document it.
-4. **Verify the decision + submission flow live** — approve a case
-   (`POST /api/cases/{id}/decision`, `X-Reviewer-Role`), check the audit trail,
-   then `POST /api/submit/{id}` on the submission app, check the `submissions`
-   container.
-5. **Easy Auth note** — the SWA linked backend auto-enabled it on the api-proxy
-   (direct calls 401, SWA proxy works). Document in the deploy runbook, or drop
-   the linked backend + Free SWA + `?api=` if direct access is wanted.
-6. **Flip to hosted agents** — `azd env set AGENTSMODE foundry` + re-provision.
-   The deployed apps already point at the `care-approval` project (= the spike
-   project), so the 5 agents + vector store `vs_Aw9xAi58sHDnWqxN5kDy5jFJ` are
-   already there. Set `VECTOR_STORE_ID` in the azd env first. Then re-run the
-   orchestrator E2E test and watch the traces land in App Insights (Challenge 2
-   visual proof).
-7. **Write `docs/runbooks/deploy.md`** — the `azd up` steps + every shakedown fix
-   from D30 + the live URLs.
+1–7 all done. `POST /api/requests` → Durable orchestrator → `PersistCaseActivity`
+→ Cosmos → dashboard queue → approve (ApprovalAuthority + audit) →
+`POST /api/cases/{id}/submit` → Submission Adapter reads the KV payer credential
+→ `submissions` container. **Verified live in both `stub` and `foundry` modes.**
+Challenge 2 traces confirmed in App Insights: `AuthOrchestrator` → `spoke.*` →
+`invoke_agent *` → `chat gpt-5.4` (10s hosted-model spans). Runbook:
+`docs/runbooks/deploy.md`. The dashboard has a "run scenario ▾" control and wires
+the approve/reject/send buttons to the live endpoints.
 
-### B · Submission artifacts
+**Live URLs:** dashboard `https://proud-water-0e35b1603.6.azurestaticapps.net` ·
+api-proxy behind the SWA proxy · orchestrator
+`func-zynara-orchestrator-itbahognjguwy.azurewebsites.net/api/requests`.
+
+### B · Submission artifacts (the remaining work)
 8. **S-7 — pitch + 5-point doc.** The four review questions (§20), the challenge
    mapping, the eval numbers, the live URL.
 9. **S-6 — architecture SVG** (other session owns the file): `appeal-builder` →
