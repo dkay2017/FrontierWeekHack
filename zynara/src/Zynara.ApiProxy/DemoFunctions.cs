@@ -6,7 +6,7 @@ using Zynara.Core.View;
 namespace Zynara.ApiProxy;
 
 /// <summary>Drives the scripted demo: list the scenarios, (re-)run one on demand.</summary>
-public sealed class DemoFunctions(CaseService cases)
+public sealed class DemoFunctions(CaseService cases, WorkflowClient workflow)
 {
     [Function("ListScenarios")]
     public Task<HttpResponseData> List(
@@ -24,7 +24,11 @@ public sealed class DemoFunctions(CaseService cases)
         if (scenario is null)
             return await Json.Error(req, System.Net.HttpStatusCode.NotFound, $"no scenario '{id}'.");
 
-        var record = await cases.RunAsync(scenario.Request);
-        return await Json.Ok(req, record.View);
+        var record = workflow.Enabled
+            ? await workflow.RunAsync(scenario.Request)
+            : await cases.RunAsync(scenario.Request);
+        return record is null
+            ? await Json.Accepted(req, new { status = "assembling", requestId = scenario.Id })
+            : await Json.Ok(req, record.View);
     }
 }

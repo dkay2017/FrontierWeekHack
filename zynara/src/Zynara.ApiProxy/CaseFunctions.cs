@@ -14,7 +14,8 @@ namespace Zynara.ApiProxy;
 /// no clinical judgement, no outbound action. The dashboard is the only client.
 /// </summary>
 public sealed class CaseFunctions(
-    CaseService cases, IHttpClientFactory http, IConfiguration config, ILogger<CaseFunctions> log)
+    CaseService cases, WorkflowClient workflow, IHttpClientFactory http,
+    IConfiguration config, ILogger<CaseFunctions> log)
 {
     [Function("Health")]
     public Task<HttpResponseData> Health(
@@ -63,7 +64,12 @@ public sealed class CaseFunctions(
         if (request is null || string.IsNullOrWhiteSpace(request.Id))
             return await Json.Error(req, HttpStatusCode.BadRequest, "a request with a non-empty 'id' is required.");
 
-        var record = await cases.RunAsync(request);
+        // With the MAF host wired, start a durable workflow run; otherwise run the
+        // pipeline in-process (offline demo / tests).
+        var record = workflow.Enabled ? await workflow.RunAsync(request) : await cases.RunAsync(request);
+        if (record is null)
+            return await Json.Accepted(req, new { status = "assembling", requestId = request.Id });
+
         log.LogInformation("Ran case {RequestId} → {Status}.", record.RequestId, record.View.Status);
         return await Json.Created(req, record.View);
     }
@@ -83,7 +89,12 @@ public sealed class CaseFunctions(
             ? parsed : ReviewerRole.Reviewer;
         var by = req.Headers.TryGetValues("X-Reviewer-Id", out var iv) ? iv.FirstOrDefault() : body.By;
 
-        var outcome = await cases.RecordDecisionAsync(id, body.Action, by, role, body.Note);
+        // With the MAF host wired, deliver the decision to the workflow's review
+        // port (it records it and, on an authorised approve-send, submits);
+        // otherwise record it here.
+        var outcome = workflow.Enabled
+            ? await workflow.RespondAsync(id, body.Action, by, role, body.Note)
+            : await cases.RecordDecisionAsync(id, body.Action, by, role, body.Note);
 
         if (!outcome.Found)
             return await Json.Error(req, HttpStatusCode.NotFound, $"no case '{id}'.");

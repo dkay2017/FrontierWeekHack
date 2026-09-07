@@ -28,6 +28,13 @@ internal static class Json
         return res;
     }
 
+    public static async Task<HttpResponseData> Accepted<T>(HttpRequestData req, T value)
+    {
+        var res = req.CreateResponse(HttpStatusCode.Accepted);
+        await WriteJson(res, value);
+        return res;
+    }
+
     public static async Task<HttpResponseData> Error(HttpRequestData req, HttpStatusCode code, string message)
     {
         var res = req.CreateResponse(code);

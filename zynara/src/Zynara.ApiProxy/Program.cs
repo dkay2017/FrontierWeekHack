@@ -26,6 +26,7 @@ var host = new HostBuilder()
         services.AddZynaraAgents(context.Configuration);
         services.AddZynaraCore();
         services.AddHttpClient();
+        services.AddScoped<WorkflowClient>();
 
         // Challenge 2 — agent-keyed traces (see the orchestrator Program.cs).
         var appInsights = context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
