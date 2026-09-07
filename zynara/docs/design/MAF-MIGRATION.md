@@ -153,6 +153,24 @@ routes `demo-ready / demo-review-mandatory / demo-abstain` to exactly the v1
 
 **Decision: GO.** Proceed to Phase 1.
 
+### Phase 1 done (2026-09-07)
+
+Full graph in `CareApprovalWorkflow.Build` — `intake → needs-auth ─┬(not
+required)→ finalize │ └(required)→ evidence-gap → contradiction → precedent-match
+→ critic → gate → finalize`. `finalize` assembles the same `PipelineResult` v1
+produced. `CareApprovalRunner` is the drop-in for `AuthPipeline.RunAsync`;
+`AddZynaraWorkflow()` registers it.
+
+`tests/Zynara.Workflow.Tests` — **11 tests**: all 7 demo scenarios route to the
+v1 `GateRoute`; the not-required stop; complete-note auto-submit + cited draft;
+mandatory-missing → HumanReview + Critic Block; the accumulator carries every
+spoke. **Full solution: 119 green.** v1 (`AuthPipeline`, `Zynara.Orchestrator`,
+eval) untouched and still green.
+
+The Gate **routing switch** (to a review port / submit) is deferred to Phase 3
+with the `RequestPort` — Phase 1 keeps the graph linear through `finalize`, using
+a conditional edge only for the not-required early stop.
+
 ## 6 · Open questions (resolve in later phases)
 
 1. Exact package versions available on nuget.org for .NET 8 (some are `--prerelease`).
