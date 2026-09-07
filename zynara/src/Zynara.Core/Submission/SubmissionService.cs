@@ -6,6 +6,7 @@ using Zynara.Core.Model;
 namespace Zynara.Core.Submission;
 
 /// <summary>Why a submit call did or did not go through.</summary>
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
 public enum SubmissionResultKind
 {
     /// <summary>Sent and acknowledged (or already sent — this call is idempotent).</summary>

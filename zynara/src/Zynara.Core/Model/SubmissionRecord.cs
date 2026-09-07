@@ -1,6 +1,7 @@
 namespace Zynara.Core.Model;
 
 /// <summary>What became of a submission the Submission Adapter sent out.</summary>
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
 public enum SubmissionStatus
 {
     /// <summary>Handed to the payer and acknowledged.</summary>

@@ -227,6 +227,47 @@ Deferred to **Phase 4** (needs the deployed workflow host): retarget the dashboa
 approve/reject buttons to `/respond/{runId}`; drop the api-proxy `SendCase` +
 `/submit` two-phase.
 
+### Phase 4 in progress (2026-09-07) — host built, runs locally, two blockers found
+
+`src/Zynara.WorkflowHost` — `FunctionsApplication.CreateBuilder(args)` +
+`builder.ConfigureDurableWorkflows(w => w.AddWorkflow(wf))`. **It works:** `func
+start` registers the full generated function set —
+
+```
+http-CareApprovalPipeline          POST /api/workflows/CareApprovalPipeline/run
+http-CareApprovalPipeline-respond  POST /api/workflows/CareApprovalPipeline/respond/{runId}   ← the review port
+dafx-CareApprovalPipeline          orchestrationTrigger
+dafx-{intake,needs-auth,evidence-gap,claims-extraction,precedent-match,critic,
+      gate,persist,review-card,auto-approve,apply-decision}   activityTrigger  ← one per executor
+```
+
+A live `POST /run` dispatched the orchestration and `intake → needs-auth →
+evidence-gap` all **Succeeded** as Durable activities.
+
+**Blockers hit:**
+1. *(fixed)* The build-time Functions metadata generator does not pull the
+   Durable Task binding extension unless user code has a `[DurableClient]` — MAF
+   generates its functions at runtime. → added a trivial `HealthFunction` with a
+   `[DurableClient]` param; `extensions.json` now carries `DurableTask` 3.8.2.
+2. *(fixed)* Enum members (`Region` etc.) failed to deserialise over the Durable
+   activity boundary (`$.region | BytePositionInLine: 94`). → `[JsonConverter(
+   typeof(JsonStringEnumConverter))]` on all 14 `Zynara.Core` enums (a good
+   consistency change anyway — the Cosmos + api-proxy serializers already do this).
+   **122 tests still green.**
+3. *(open)* `CustomStatus is too large: limit 16 KB, actual 23.5 KB`. MAF stores
+   the workflow message (`PipelineState`, which accumulates every result) in the
+   Durable `CustomStatus`, capped at 16 KB. **Fix:** the workflow message must be
+   small — accumulate the bulky results into **scoped shared workflow state**
+   (`QueueStateUpdateAsync(..., scopeName)`) instead of threading them on the
+   `PipelineState` message; the edges carry just the `Request` + a small status.
+   `persist` already writes the full `CaseRecord` to Cosmos, so post-`persist`
+   executors can re-read by id.
+
+**Remaining Phase 4:** apply fix 3; wire the host into `infra/` (a 4th Function
+app, `AzureWebJobsStorage` is the Durable backend — no DTS resource); retarget
+the dashboard to `/respond/{runId}`; redeploy; verify the live chain; merge to
+`main`.
+
 ## 6 · Open questions (resolve in later phases)
 
 1. Exact package versions available on nuget.org for .NET 8 (some are `--prerelease`).

@@ -1,6 +1,7 @@
 namespace Zynara.Core.Model;
 
 /// <summary>Payer-agnostic region. Flips the criteria set, terminology and appeal route.</summary>
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
 public enum Region
 {
     UK,
@@ -8,6 +9,7 @@ public enum Region
 }
 
 /// <summary>Recorded outcome of a past submission — the fact the design is built on.</summary>
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
 public enum AppealOutcome
 {
     NotAppealed,

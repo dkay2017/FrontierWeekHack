@@ -6,6 +6,7 @@ namespace Zynara.Core.Authority;
 /// Reviewer roles, ranked. Real deployments map these to Entra ID app roles;
 /// the demo passes the role in a header.
 /// </summary>
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
 public enum ReviewerRole
 {
     Coordinator = 0,

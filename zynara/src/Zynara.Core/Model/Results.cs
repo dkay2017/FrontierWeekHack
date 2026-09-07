@@ -35,6 +35,7 @@ public sealed record EvidenceGapResult(
 }
 
 /// <summary>How strongly the precedent corpus supports the case.</summary>
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
 public enum PrecedentSupport
 {
     Strong,
@@ -76,6 +77,7 @@ public sealed record DriftResult(
     EarlyWarning? Warning);
 
 /// <summary>The four routes the Gate can take (evaluator finding #3).</summary>
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
 public enum GateRoute
 {
     /// <summary>Ready — auto-submit the draft.</summary>

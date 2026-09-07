@@ -35,6 +35,7 @@ public interface IEvidenceGapAgent
         string clinicalNote, Criteria criteria, CancellationToken ct = default);
 }
 
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
 public enum CriterionStatus
 {
     /// <summary>The note clearly satisfies this criterion.</summary>
@@ -51,6 +52,7 @@ public enum CriterionStatus
 }
 
 /// <summary>Overall quality of the clinical evidence supplied — drives the abstain route.</summary>
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
 public enum EvidenceQuality
 {
     High,
@@ -98,6 +100,7 @@ public sealed record EvidenceGapAssessment(
 // recommends submit / strengthen / appeal from their recorded outcomes, and drafts
 // the appeal argument when a denial has occurred.
 // ---------------------------------------------------------------------------
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
 public enum StrategyVerdict
 {
     /// <summary>Gap-checked and ready — send it.</summary>
@@ -160,6 +163,7 @@ public sealed record CriticContext(
     public IReadOnlyList<ClaimConflict> NoteConflicts { get; init; } = Array.Empty<ClaimConflict>();
 }
 
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
 public enum CriticVerdict
 {
     /// <summary>No material concern — proceed to the Gate.</summary>

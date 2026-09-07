@@ -19,6 +19,7 @@ public sealed record DenialCohort(
     DateOnly WindowEnd);
 
 /// <summary>How much weight the sample size lets the estimate carry.</summary>
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
 public enum RecoveryConfidence
 {
     Low,

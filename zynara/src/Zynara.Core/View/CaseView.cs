@@ -9,6 +9,7 @@ namespace Zynara.Core.View;
 // working and decide. Zynara.ApiProxy serialises this; the dashboard renders it.
 
 /// <summary>Where the case stands — the Gate route, or "not required" / "blocked".</summary>
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
 public enum CaseStatus
 {
     /// <summary>needs-auth resolved to "no prior authorisation required".</summary>
@@ -28,6 +29,7 @@ public enum CaseStatus
 }
 
 /// <summary>A presentation confidence, <b>derived</b> from the decision model — never a free-standing number.</summary>
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
 public enum ConfidenceLevel
 {
     NotApplicable,
