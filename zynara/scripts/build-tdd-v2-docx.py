@@ -34,6 +34,13 @@ sec = doc.sections[0]
 sec.left_margin = sec.right_margin = Inches(0.8)
 sec.top_margin = sec.bottom_margin = Inches(0.75)
 
+# running header on every page (the first page shows the full masthead below it)
+hp = sec.header.paragraphs[0]
+hp.text = ""
+_a = hp.add_run("zynara  ·  Care Approval IQ"); _a.bold = True; _a.font.size = Pt(8); _a.font.color.rgb = TEAL
+_b = hp.add_run("      Technical Design Document · v2  ·  Microsoft Agent Framework")
+_b.font.size = Pt(8); _b.font.color.rgb = GREY
+
 def shade(cell, hx):
     tcPr = cell._tc.get_or_add_tcPr()
     e = OxmlElement("w:shd"); e.set(qn("w:val"), "clear"); e.set(qn("w:fill"), hx); tcPr.append(e)
@@ -104,14 +111,11 @@ def callout(title, lines):
     c.width = Inches(6.9)
     doc.add_paragraph().paragraph_format.space_after = Pt(2)
 
-# ================= TITLE =================
-h = doc.add_paragraph(); h.paragraph_format.space_after = Pt(2)
-r = h.add_run("Care Approval IQ"); r.bold = True; r.font.size = Pt(22); r.font.color.rgb = TEAL
-r2 = h.add_run("   Technical Design Document · v2"); r2.bold = True; r2.font.size = Pt(12); r2.font.color.rgb = INK
-p("Proof beats paperwork.", italic=True, size=11, color=TEAL, after=2)
-p("Zynara Health (fictional) · Deepak Kumar · Architect Track · Microsoft Agent-a-thon 2026 · "
-  "built on the Microsoft Agent Framework", size=9, color=GREY, after=4)
-hr()
+# ================= MASTHEAD =================
+# Branded header — the same seal / wordmark / MAF pill / rule as the architecture SVG.
+mh = doc.add_paragraph(); mh.alignment = WD_ALIGN_PARAGRAPH.CENTER
+mh.paragraph_format.space_before = Pt(0); mh.paragraph_format.space_after = Pt(4)
+mh.add_run().add_picture(f"{FIG}/masthead.png", width=Inches(7.0))
 p("The whole system in one line: five reasoning agents build and challenge a prior-authorisation "
   "case, deterministic code decides, a human authorises, and one adapter talks to the payer — "
   "with the payer's own denial history telling us which appeals win.", size=10.5, bold=False, after=8)
