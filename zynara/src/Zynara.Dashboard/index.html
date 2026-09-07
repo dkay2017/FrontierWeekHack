@@ -967,6 +967,29 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
     Array.prototype.forEach.call(foot.querySelectorAll(".act:not([disabled])"), function (btn) {
       btn.addEventListener("click", function () {
         var action = btn.dataset.a;
+
+        if (apiBase !== null) {
+          // Live: record the decision, then (on approve-send) hand off to the
+          // Submission Adapter, then reload from the API.
+          Array.prototype.forEach.call(foot.querySelectorAll(".act"), function (b) { b.disabled = true; });
+          fetch(apiBase + "/api/cases/" + c.requestId + "/decision", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Reviewer-Role": role },
+            body: JSON.stringify({ action: action, by: "reviewer@zynara", note: "via dashboard" })
+          }).then(function (r) {
+            if (r.status === 403) { toast("Not authorised — needs " + roleLabel(need)); return loadLive(); }
+            var next = action === "approve-send"
+              ? fetch(apiBase + "/api/cases/" + c.requestId + "/submit", { method: "POST" })
+                  .then(function (s) { return s.json(); })
+                  .then(function (j) { toast("Sent — payer ref " + (j.record ? j.record.payerReference : (j.payerReference || "?"))); })
+                  .catch(function () { toast("Decision recorded; submission call failed"); })
+              : Promise.resolve(toast(btn.textContent.trim().split(" — ")[0] + " — recorded"));
+            return next.then(function () { return loadLive(); });
+          }).then(function () { openCase(c.requestId); })
+            .catch(function () { toast("Action failed"); return loadLive(); });
+          return;
+        }
+
         c._decision = action;
         c._audit = (c._audit || (c.audit ? c.audit.slice() : [])).concat([{
           kind: "decision",

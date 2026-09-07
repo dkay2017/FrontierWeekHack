@@ -19,10 +19,15 @@ public sealed class SubmissionFunctions(SubmissionService submissions, ILogger<S
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "health")] HttpRequestData req) =>
         Json.Ok(req, new { status = "ok", service = "Zynara.Submission" });
 
-    /// <summary>Send an approved case. Idempotent — a second call returns the existing record.</summary>
+    /// <summary>
+    /// Send an approved case. Idempotent — a second call returns the existing record.
+    /// Anonymous for the demo (the guard is `SubmissionService`: only an
+    /// <c>approve-send</c> case is ever sent); production fronts this with the
+    /// api-proxy + a function key, or the identity boundary.
+    /// </summary>
     [Function("Submit")]
     public async Task<HttpResponseData> Submit(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "submit/{requestId}")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "submit/{requestId}")] HttpRequestData req,
         string requestId)
     {
         var outcome = await submissions.SubmitAsync(requestId);

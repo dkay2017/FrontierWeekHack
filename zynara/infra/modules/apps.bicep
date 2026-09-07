@@ -131,6 +131,7 @@ resource apiProxy 'Microsoft.Web/sites@2024-04-01' = {
         { name: 'AzureWebJobsStorage__clientId', value: reasoningClientId }
         { name: 'AZURE_CLIENT_ID', value: reasoningClientId }
         { name: 'WEBSITE_CONTENTSHARE', value: apiProxyName }
+        { name: 'SUBMISSION_URL', value: 'https://${submission.properties.defaultHostName}' }
       ], reasoningExtra)
     }
   }
@@ -150,6 +151,7 @@ resource submission 'Microsoft.Web/sites@2024-04-01' = {
       linuxFxVersion: 'DOTNET-ISOLATED|8.0'
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
+      cors: { allowedOrigins: [ '*' ] }
       appSettings: concat(commonSettings, [
         { name: 'AzureWebJobsStorage__clientId', value: submissionClientId }
         { name: 'AZURE_CLIENT_ID', value: submissionClientId }

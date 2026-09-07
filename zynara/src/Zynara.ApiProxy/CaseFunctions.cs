@@ -1,6 +1,7 @@
 using System.Net;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Zynara.Core.Authority;
 using Zynara.Core.Model;
@@ -12,7 +13,8 @@ namespace Zynara.ApiProxy;
 /// The reviewer read API. Everything here is a projection or a stored decision —
 /// no clinical judgement, no outbound action. The dashboard is the only client.
 /// </summary>
-public sealed class CaseFunctions(CaseService cases, ILogger<CaseFunctions> log)
+public sealed class CaseFunctions(
+    CaseService cases, IHttpClientFactory http, IConfiguration config, ILogger<CaseFunctions> log)
 {
     [Function("Health")]
     public Task<HttpResponseData> Health(
@@ -90,6 +92,32 @@ public sealed class CaseFunctions(CaseService cases, ILogger<CaseFunctions> log)
 
         log.LogInformation("Case {RequestId}: {Role} {Action}.", id, role, body.Action);
         return await Json.Ok(req, new { summary = CaseSummary.From(outcome.Record!), audit = outcome.Record!.Audit });
+    }
+
+    /// <summary>
+    /// Hands an approved case to the Submission Adapter (the sole outbound path).
+    /// The dashboard talks only to this origin; the api-proxy forwards to the
+    /// submission Function app named by <c>SUBMISSION_URL</c>.
+    /// </summary>
+    [Function("SendCase")]
+    public async Task<HttpResponseData> Send(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "cases/{id}/submit")] HttpRequestData req,
+        string id)
+    {
+        var submissionUrl = config["SUBMISSION_URL"];
+        if (string.IsNullOrWhiteSpace(submissionUrl))
+            return await Json.Error(req, HttpStatusCode.ServiceUnavailable, "SUBMISSION_URL is not configured.");
+
+        var client = http.CreateClient();
+        var upstream = await client.PostAsync($"{submissionUrl.TrimEnd('/')}/api/submit/{id}", content: null);
+        var payload = await upstream.Content.ReadAsStringAsync();
+
+        log.LogInformation("Case {RequestId}: forwarded to submission → {Status}.", id, (int)upstream.StatusCode);
+
+        var res = req.CreateResponse(upstream.StatusCode);
+        res.Headers.Add("Content-Type", "application/json; charset=utf-8");
+        await res.WriteStringAsync(string.IsNullOrWhiteSpace(payload) ? "{}" : payload);
+        return res;
     }
 }
 
