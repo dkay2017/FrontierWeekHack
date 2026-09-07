@@ -1,13 +1,16 @@
+using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.Agents.AI.Hosting.AzureFunctions;
 using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Zynara.Agents;
 using Zynara.Core;
 using Zynara.Core.Abstractions;
 using Zynara.Core.Demo;
-
+using Zynara.Core.Diagnostics;
 using Zynara.Core.Pipeline;
 using Zynara.Core.Submission;
 using Zynara.Core.View;
@@ -26,6 +29,16 @@ var builder = FunctionsApplication.CreateBuilder(args);
 
 builder.Services.AddZynaraAgents(builder.Configuration);
 builder.Services.AddZynaraCore();
+
+// Challenge 2 — agent-keyed traces. Agents now run in this host (the `assemble`
+// executor), so export the pipeline ActivitySource here (was on the v1
+// orchestrator). pipeline.run → spoke.* → invoke_agent * → chat *.
+var appInsights = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+if (!string.IsNullOrWhiteSpace(appInsights))
+    builder.Services.AddOpenTelemetry().WithTracing(t => t
+        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("zynara-workflowhost"))
+        .AddSource(ZynaraTelemetry.SourceName)
+        .AddAzureMonitorTraceExporter(o => o.ConnectionString = appInsights));
 
 var cosmos = builder.Configuration["COSMOS_ENDPOINT"];
 if (!string.IsNullOrWhiteSpace(cosmos))
