@@ -193,6 +193,40 @@ no fake `IChatClient` needed).
   the against-real-GPT-5.4 check (user runs it).
 - **119 tests green.** v1 fully intact.
 
+### Phase 3 done (2026-09-07)
+
+`CareApprovalWorkflow.BuildWithReview` — the full flow with the human-in-the-loop
+port:
+
+```
+… → gate → persist ─┬(AutoSubmit)→ auto-approve → submit
+                    └(else)→ review-card → review PORT ─→ apply-decision
+                                                          └(approve-send, authorised)→ submit
+```
+
+- **`persist`** writes the `CaseRecord` (dashboard read model) via
+  `CaseService.PersistAsync`, and stashes the request id in **shared workflow
+  state** (`QueueStateUpdateAsync(key, id, scopeName: "zynara")` — a *named* scope
+  so `apply-decision` after the pause can read it; the null default scope is
+  per-executor and would not carry).
+- **`review`** = `builder.AddExternalCall<ReviewCard, ReviewDecision>(toCard, "review")`.
+  The workflow pauses; `run.NewEvents` yields a `RequestInfoEvent` carrying the
+  `ReviewCard`. The host answers with `run.ResumeAsync([request.CreateResponse(decision)])`.
+- **`apply-decision`** reads the request id from shared state, runs
+  `CaseService.RecordDecisionAsync` (which enforces `ApprovalAuthority` and audits
+  a refusal), and on an authorised `approve-send` calls `SubmissionService.SubmitAsync`.
+- **AutoSubmit** never pauses — the system records `approve-send` by `"system"`
+  and submits.
+
+`ReviewPortTests` (3): a HumanReview route pauses → Senior approve-send → decision
+recorded + `submissions` row `Submitted`; a Coordinator on an appeal is **refused**
+(audit `REFUSED`, nothing sent); an AutoSubmit route sends with no pause.
+**122 tests green.** v1 intact.
+
+Deferred to **Phase 4** (needs the deployed workflow host): retarget the dashboard
+approve/reject buttons to `/respond/{runId}`; drop the api-proxy `SendCase` +
+`/submit` two-phase.
+
 ## 6 · Open questions (resolve in later phases)
 
 1. Exact package versions available on nuget.org for .NET 8 (some are `--prerelease`).
