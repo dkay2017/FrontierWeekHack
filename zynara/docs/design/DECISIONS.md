@@ -5,6 +5,36 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D32 · v1 baseline tagged; orchestration moves to Microsoft Agent Framework
+
+**2026-09-07.** The Durable Functions implementation is **complete, deployed and
+green** (108 tests, full flow verified live — D31). Tagged **`v1.0-durable`** as
+the working baseline.
+
+**Decision: rebuild the orchestration layer on the Microsoft Agent Framework
+(MAF).** Not a compromise for the deadline — a deliberate investment. This repo
+is the **reference pattern for the team's forthcoming agent projects**, and MAF
+(the Semantic Kernel + AutoGen successor) is Microsoft's recommended pattern:
+a typed Workflow graph of executors, built-in checkpointing / human-in-the-loop
+ports / OpenTelemetry, native Foundry-agent binding.
+
+**What the earlier TD-1 got wrong.** It rejected *"agents orchestrating via
+connected agents"* — a strawman. MAF Workflows are a **deterministic typed
+graph**, not free-form agent chatter; a deterministic Gate node and an explicit
+human seam are first-class. The hybrid principle (deterministic code owns every
+decision value; agents produce prose) is *preserved* — it just becomes graph
+executors instead of Durable activities.
+
+**What stays unchanged:** `Zynara.Core` domain model, the Gate logic, the
+structured decision model, `ApprovalAuthority`, the eval suite, `Zynara.Data`,
+`Zynara.Submission`, the dashboard, the infra. The migration is confined to the
+orchestration + agent-invocation layer.
+
+**Plan:** `docs/design/MAF-MIGRATION.md` (target architecture + phased steps).
+Durable Functions may remain as the *host* (durable timers for `expiry-watch`,
+multi-day durable wait for the payer round-trip) with a MAF Workflow as the
+pipeline — decided in the migration doc.
+
 ## D31 · Live deploy finished — full flow + hosted agents verified (S-4)
 
 **2026-09-07.** Session 9. The deploy is demo-ready:
