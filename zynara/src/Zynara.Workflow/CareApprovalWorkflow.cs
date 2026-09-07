@@ -43,8 +43,8 @@ public static class CareApprovalWorkflow
         return new WorkflowBuilder(intake)
             .WithName("CareApprovalAssembly")
             .AddEdge(intake, na)
-            .AddEdge<PipelineState>(na, finalize, s => !s.AuthRequired)
-            .AddEdge<PipelineState>(na, gap, s => s.AuthRequired)
+            .AddEdge<PipelineState>(na, finalize, s => s is { AuthRequired: false })
+            .AddEdge<PipelineState>(na, gap, s => s is { AuthRequired: true })
             .AddEdge(gap, contra).AddEdge(contra, precedent).AddEdge(precedent, criticStep)
             .AddEdge(criticStep, gateStep).AddEdge(gateStep, finalize)
             .WithOutputFrom(finalize)
@@ -52,37 +52,49 @@ public static class CareApprovalWorkflow
     }
 
     /// <summary>
-    /// The full flow with the human-in-the-loop <c>review</c> port. After the Gate
-    /// the case is persisted; an AutoSubmit route is sent by the system, every
-    /// other route pauses at the port until the host answers
-    /// (<c>/respond/{runId}</c>) with a <see cref="ReviewDecision"/>.
+    /// The full flow with the human-in-the-loop <c>review</c> port, sized for the
+    /// <b>durable</b> host. Durable Task caps the serialised workflow snapshot at
+    /// 16&nbsp;KB, so the graph is coarse: <c>assemble</c> runs the whole
+    /// reasoning pipeline in-process and persists the <see cref="PipelineResult"/>
+    /// to the case store; the message from there on is the tiny <see cref="Flow"/>
+    /// (request + route). An AutoSubmit route is sent by the system; every other
+    /// route pauses at the port until the host answers <c>/respond/{runId}</c>.
+    ///
+    ///   Request → intake → assemble ─┬(AutoSubmit)→ auto-approve → submit
+    ///                                └(else)→ review-card → PORT ─→ apply-decision
+    ///                                                               └(approve-send, authorised)→ submit
+    ///
+    /// The fine-grained per-step graph (<see cref="Build"/>) is kept for
+    /// in-process runs and the tests — that is where the per-step retry / stub /
+    /// route-agreement coverage lives.
     /// </summary>
-    public static Microsoft.Agents.AI.Workflows.Workflow BuildWithReview(
-        IZynaraStore store, CaseService cases, SubmissionService submissions,
-        NeedsAuthCheck needsAuth, EvidenceGapMatch evidenceGap, ContradictionCheck contradiction,
-        AppealMatch appealMatch, CriticCheck critic, Gate gate)
+    public static Microsoft.Agents.AI.Workflows.Workflow BuildDurable(
+        AuthPipeline pipeline, CaseService cases, SubmissionService submissions)
     {
-        var (intake, na, gap, contra, precedent, criticStep, gateStep) =
-            Spokes(needsAuth, evidenceGap, contradiction, appealMatch, critic, gate);
+        var intake = Step("intake", (Request r) => new Flow(r));
 
-        var persist = Step("persist", async (PipelineState s, IWorkflowContext ctx) =>
+        var assemble = Step("assemble", async (Flow f, IWorkflowContext ctx) =>
         {
-            var result = ToResult(await store.GetCriteriaAsync(s.Request.PayerPlan, s.Request.Procedure, s.Request.Region), s);
-            await cases.PersistAsync(s.Request, result);
-            await ctx.QueueStateUpdateAsync(ReqIdKey, s.Request.Id, SharedScope);
-            return s;
+            var result = await pipeline.RunAsync(f.Request);
+            await cases.PersistAsync(f.Request, result);
+            await ctx.QueueStateUpdateAsync(ReqIdKey, f.Request.Id, SharedScope);
+            return f with
+            {
+                AuthRequired = !result.StoppedEarly,
+                Route = result.Gate?.Route ?? GateRoute.AutoSubmit,
+            };
         });
 
-        var autoApprove = Step("auto-approve", async (PipelineState s) =>
+        var autoApprove = Step("auto-approve", async (Flow f) =>
         {
-            await cases.RecordDecisionAsync(s.Request.Id, "approve-send", "system", ReviewerRole.Coordinator, "auto-submit");
-            await submissions.SubmitAsync(s.Request.Id);
-            return s.Request.Id;
+            await cases.RecordDecisionAsync(f.Request.Id, "approve-send", "system", ReviewerRole.Coordinator, "auto-submit");
+            await submissions.SubmitAsync(f.Request.Id);
+            return f.Request.Id;
         });
 
-        var toCard = Step("review-card", (PipelineState s) =>
-            new ReviewCard(s.Request.Id, s.Request.Procedure, s.Request.PayerPlan, s.Decision!.Route.ToString(),
-                s.Gap is null ? "not required" : $"{s.Gap.Assessment.Summary}"));
+        var toCard = Step("review-card", (Flow f) =>
+            new ReviewCard(f.Request.Id, f.Request.Procedure, f.Request.PayerPlan, f.Route.ToString(),
+                f.AuthRequired ? "assembled — awaiting a reviewer" : "prior authorisation not required"));
 
         var applyDecision = Step("apply-decision", async (ReviewDecision d, IWorkflowContext ctx) =>
         {
@@ -95,13 +107,9 @@ public static class CareApprovalWorkflow
 
         var builder = new WorkflowBuilder(intake)
             .WithName("CareApprovalPipeline")
-            .AddEdge(intake, na)
-            .AddEdge<PipelineState>(na, persist, s => !s.AuthRequired)
-            .AddEdge<PipelineState>(na, gap, s => s.AuthRequired)
-            .AddEdge(gap, contra).AddEdge(contra, precedent).AddEdge(precedent, criticStep)
-            .AddEdge(criticStep, gateStep).AddEdge(gateStep, persist)
-            .AddEdge<PipelineState>(persist, autoApprove, s => s.Decision?.Route == GateRoute.AutoSubmit)
-            .AddEdge<PipelineState>(persist, toCard, s => s.Decision is { Route: not GateRoute.AutoSubmit });
+            .AddEdge(intake, assemble)
+            .AddEdge<Flow>(assemble, autoApprove, f => f is { Route: GateRoute.AutoSubmit })
+            .AddEdge<Flow>(assemble, toCard, f => f is not null && f.Route != GateRoute.AutoSubmit);
 
         builder.AddExternalCall<ReviewCard, ReviewDecision>(toCard, "review");
         builder.AddEdge("review", applyDecision);

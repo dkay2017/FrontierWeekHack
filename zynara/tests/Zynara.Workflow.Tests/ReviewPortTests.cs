@@ -34,16 +34,10 @@ public class ReviewPortTests
             .BuildServiceProvider();
         var s = sp.CreateScope().ServiceProvider;
 
-        var wf = CareApprovalWorkflow.BuildWithReview(
-            s.GetRequiredService<IZynaraStore>(),
+        var wf = CareApprovalWorkflow.BuildDurable(
+            s.GetRequiredService<AuthPipeline>(),
             s.GetRequiredService<CaseService>(),
-            s.GetRequiredService<SubmissionService>(),
-            s.GetRequiredService<NeedsAuthCheck>(),
-            s.GetRequiredService<EvidenceGapMatch>(),
-            s.GetRequiredService<ContradictionCheck>(),
-            s.GetRequiredService<AppealMatch>(),
-            s.GetRequiredService<CriticCheck>(),
-            s.GetRequiredService<Gate>());
+            s.GetRequiredService<SubmissionService>());
 
         return new Kit(wf, s.GetRequiredService<CaseService>(),
             s.GetRequiredService<SubmissionService>(), s.GetRequiredService<ISubmissionStore>());

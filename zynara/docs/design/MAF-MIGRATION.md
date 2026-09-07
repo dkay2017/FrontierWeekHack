@@ -227,7 +227,7 @@ Deferred to **Phase 4** (needs the deployed workflow host): retarget the dashboa
 approve/reject buttons to `/respond/{runId}`; drop the api-proxy `SendCase` +
 `/submit` two-phase.
 
-### Phase 4 in progress (2026-09-07) — host built, runs locally, two blockers found
+### Phase 4 in progress (2026-09-07) — host built, runs locally, three blockers found & fixed
 
 `src/Zynara.WorkflowHost` — `FunctionsApplication.CreateBuilder(args)` +
 `builder.ConfigureDurableWorkflows(w => w.AddWorkflow(wf))`. **It works:** `func
@@ -254,18 +254,27 @@ evidence-gap` all **Succeeded** as Durable activities.
    typeof(JsonStringEnumConverter))]` on all 14 `Zynara.Core` enums (a good
    consistency change anyway — the Cosmos + api-proxy serializers already do this).
    **122 tests still green.**
-3. *(open)* `CustomStatus is too large: limit 16 KB, actual 23.5 KB`. MAF stores
-   the workflow message (`PipelineState`, which accumulates every result) in the
-   Durable `CustomStatus`, capped at 16 KB. **Fix:** the workflow message must be
-   small — accumulate the bulky results into **scoped shared workflow state**
-   (`QueueStateUpdateAsync(..., scopeName)`) instead of threading them on the
-   `PipelineState` message; the edges carry just the `Request` + a small status.
-   `persist` already writes the full `CaseRecord` to Cosmos, so post-`persist`
-   executors can re-read by id.
+3. *(fixed)* `CustomStatus is too large: limit 16 KB, actual 23.5 KB` at
+   "Superstep 4". MAF serialises the whole workflow snapshot (message + state)
+   into the Durable `CustomStatus`, hard-capped at 16 KB; the fine-grained graph
+   threaded a `PipelineState` accumulator (~23.5 KB with gap/appeal/critic/draft).
+   **Fix — the coarse durable graph.** A new `BuildDurable(AuthPipeline,
+   CaseService, SubmissionService)` replaces `BuildWithReview`: one `assemble`
+   executor runs the *entire* `AuthPipeline.RunAsync` in-process, persists the
+   `PipelineResult` to Cosmos via `CaseService.PersistAsync`, and stashes the
+   request id in a named shared-state scope (`"zynara"`). From there the message
+   is the tiny `Flow` record (`Request` + `bool AuthRequired` + `GateRoute
+   Route`). Route switch: `AutoSubmit` → `auto-approve` → `SubmitAsync`; every
+   other route → `review-card` → the `review` external-call port →
+   `apply-decision` (re-reads the id from shared state, `RecordDecisionAsync`
+   enforces `ApprovalAuthority.Check`, then `SubmitAsync` on an authorised
+   approve-send). The fine-grained per-step `Build` graph is kept for
+   `InProcessExecution` / the eval harness / the tests — that is where per-step
+   route-agreement coverage lives. **Build + 122 tests green.**
 
-**Remaining Phase 4:** apply fix 3; wire the host into `infra/` (a 4th Function
-app, `AzureWebJobsStorage` is the Durable backend — no DTS resource); retarget
-the dashboard to `/respond/{runId}`; redeploy; verify the live chain; merge to
+**Remaining Phase 4:** wire the host into `infra/` (a 4th Function app,
+`AzureWebJobsStorage` is the Durable backend — no DTS resource); retarget the
+dashboard to `/respond/{runId}`; redeploy; verify the live chain; merge to
 `main`.
 
 ## 6 · Open questions (resolve in later phases)

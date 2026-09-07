@@ -7,7 +7,7 @@ using Zynara.Agents;
 using Zynara.Core;
 using Zynara.Core.Abstractions;
 using Zynara.Core.Demo;
-using Zynara.Core.Gating;
+
 using Zynara.Core.Pipeline;
 using Zynara.Core.Submission;
 using Zynara.Core.View;
@@ -33,19 +33,13 @@ if (!string.IsNullOrWhiteSpace(cosmos))
 else
     builder.Services.AddSingleton<IZynaraStore>(_ => DemoWorld.Seed(new InMemoryZynaraStore()));
 
-// The spokes / Gate / CaseService are stateless (all state is in the store), so
+// The pipeline / CaseService are stateless (all state is in the store), so
 // capturing one scope's instances at build time is safe for the host.
 var scope = builder.Services.BuildServiceProvider().CreateScope().ServiceProvider;
-var wf = CareApprovalWorkflow.BuildWithReview(
-    scope.GetRequiredService<IZynaraStore>(),
+var wf = CareApprovalWorkflow.BuildDurable(
+    scope.GetRequiredService<AuthPipeline>(),
     scope.GetRequiredService<CaseService>(),
-    scope.GetRequiredService<SubmissionService>(),
-    scope.GetRequiredService<NeedsAuthCheck>(),
-    scope.GetRequiredService<EvidenceGapMatch>(),
-    scope.GetRequiredService<ContradictionCheck>(),
-    scope.GetRequiredService<AppealMatch>(),
-    scope.GetRequiredService<CriticCheck>(),
-    scope.GetRequiredService<Gate>());
+    scope.GetRequiredService<SubmissionService>());
 
 builder.ConfigureDurableWorkflows(w => w.AddWorkflow(wf));
 
