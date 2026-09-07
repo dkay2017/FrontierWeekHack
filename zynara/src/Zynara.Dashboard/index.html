@@ -462,6 +462,13 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
       <span>Proof beats paperwork.</span>
     </div>
     <div class="mast-right">
+      <label class="rolepick" id="scenarioPick" hidden
+             title="Run a demo request through the live pipeline">
+        <span>run</span>
+        <select id="scenarioRunner" aria-label="Run a scenario">
+          <option value="">scenario…</option>
+        </select>
+      </label>
       <label class="rolepick" title="You are reviewing as (demo — real deployments use Entra ID roles)">
         <span>as</span>
         <select id="rolePicker" aria-label="Reviewer role">
@@ -1075,31 +1082,61 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
   }
   boot();
 
-  /* Optional live mode: ?api=<ApiProxy base url> pulls real cases instead of the
-     inlined snapshot. Falls back to the snapshot on any error. */
-  (function liveMode() {
-    var api = new URLSearchParams(location.search).get("api");
-    if (!api) return;
-    api = api.replace(/\/+$/, "");
-    var cap = document.getElementById("reviewCap");
-    Promise.all([
-      fetch(api + "/api/cases").then(function (r) { return r.json(); }),
-      fetch(api + "/api/recovery").then(function (r) { return r.json(); }),
-      fetch(api + "/api/benchmark").then(function (r) { return r.json(); }),
-      fetch(api + "/api/profiles").then(function (r) { return r.json(); }),
-      fetch(api + "/api/demo/scenarios").then(function (r) { return r.json(); })
+  /* Live mode: ?api=<ApiProxy base url>, or same-origin /api when the dashboard
+     is served by the Static Web App with a linked backend. Falls back to the
+     inlined snapshot on any error. */
+  var apiBase = null;
+
+  function loadLive() {
+    var a = apiBase, cap = document.getElementById("reviewCap");
+    return Promise.all([
+      fetch(a + "/api/cases").then(function (r) { return r.json(); }),
+      fetch(a + "/api/recovery").then(function (r) { return r.json(); }),
+      fetch(a + "/api/benchmark").then(function (r) { return r.json(); }),
+      fetch(a + "/api/profiles").then(function (r) { return r.json(); }),
+      fetch(a + "/api/demo/scenarios").then(function (r) { return r.json(); })
     ]).then(function (parts) {
       return Promise.all(parts[0].map(function (s) {
-        return fetch(api + "/api/cases/" + s.requestId)
+        return fetch(a + "/api/cases/" + s.requestId)
           .then(function (r) { return r.json(); }).then(function (x) { return x.view; });
       })).then(function (views) {
         DATA = { cases: views, recovery: parts[1], benchmark: parts[2],
                  profiles: parts[3], scenarios: parts[4] };
         boot();
-        if (cap) cap.textContent = DATA.cases.length + " cases · live · " + api;
+        renderScenarioRunner();
+        if (cap) cap.textContent = DATA.cases.length + " case(s) · live" + (a ? " · " + a : " · same-origin");
       });
+    });
+  }
+
+  function renderScenarioRunner() {
+    var pick = document.getElementById("scenarioPick");
+    var sel = document.getElementById("scenarioRunner");
+    if (!DATA.scenarios || !DATA.scenarios.length) { pick.hidden = true; return; }
+    sel.innerHTML = '<option value="">scenario…</option>' + DATA.scenarios.map(function (s) {
+      return '<option value="' + esc(s.id) + '">' + esc(s.label) + "</option>";
+    }).join("");
+    pick.hidden = false;
+    sel.onchange = function () {
+      var id = sel.value; if (!id) return;
+      sel.disabled = true;
+      fetch(apiBase + "/api/demo/scenarios/" + id + "/run", { method: "POST" })
+        .then(function () { return loadLive(); })
+        .then(function () { sel.disabled = false; sel.value = ""; openCase(id); })
+        .catch(function () { sel.disabled = false; sel.value = ""; });
+    };
+  }
+
+  (function connect() {
+    var q = new URLSearchParams(location.search).get("api");
+    var probe = q ? q.replace(/\/+$/, "") : "";
+    fetch(probe + "/api/health").then(function (r) {
+      if (!r.ok) throw new Error("no api");
+      apiBase = probe;
+      return loadLive();
     }).catch(function () {
-      if (cap) cap.textContent += " · live API unreachable — showing demo data";
+      var cap = document.getElementById("reviewCap");
+      if (cap && q) cap.textContent += " · live API unreachable — showing demo data";
     });
   })();
 
