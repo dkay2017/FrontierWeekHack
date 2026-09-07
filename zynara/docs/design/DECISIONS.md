@@ -5,6 +5,57 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D35 · Every send pauses for a human — `AutoSubmit` no longer auto-sends
+
+**2026-09-07.** The re-evaluation (`Evaluate Review V2.docx`) flagged a real
+contradiction: the TDD said *"every outbound action is human-approved"* but the
+`AutoSubmit` route in `CareApprovalWorkflow.BuildDurable` went to an `auto-approve`
+executor that recorded a `"system"` decision and submitted with **no human pause**.
+
+Fixed the architecture, not the wording. `BuildDurable` now routes **every** case
+that needs a submission through the `review` RequestPort; the `auto-approve`
+executor is deleted. The Gate route only sets the reviewer's headline —
+`AutoSubmit` → *"ready — one click to send"*, `HumanReview` → *"needs your
+judgement"*, etc. (a new `Headline(GateRoute)` helper). Cases where prior auth is
+not required end at a `finalize` node with no reviewer. `GateRoute.AutoSubmit`
+keeps its name (it is still the Gate's *assessment*); only the workflow behaviour
+changed. Now literally true: **no payer submission without an explicit human
+`/respond`.**
+
+Touched: `src/Zynara.Workflow/CareApprovalWorkflow.cs`,
+`tests/Zynara.Workflow.Tests/ReviewPortTests.cs` (the "sent by the system with no
+pause" test → "a ready case still pauses for a one-click approval"), the V2 SVG
+orchestrator strip, `docs/design/tdd-v2-figures/fig-pipeline-flow.svg`, the V2 TDD
+(§2, §5, §6). **122 tests green.** *Live redeploy of `workflowhost` pending.*
+
+## D34 · Re-evaluation follow-ups — surface the evidence that already exists
+
+**2026-09-07.** The re-eval put the submission at 8.9/10 with a path to 9.3+. Of
+its six asks, four were already built and only needed surfacing:
+
+- **Agent → executor relationship** — documented (V2 TDD §2): the agent reasons
+  in prose and returns a typed recommendation; the deterministic executor
+  validates it (catching an off-record criterion / precedent), normalises it, and
+  commits it to the Gate's contract.
+- **20-case eval result** — the `Zynara.Eval` scorecard is now a table in the V2
+  TDD §3 (precision/recall 100%, mandatory FN 0/3, hallucinated refs 0, route
+  agreement 100%, safe abstention 2/2, unsafe automation 0).
+- **Multi-agent vs. one generalist** — surfaced from the existing
+  `GeneralistBaseline`: route agreement pipeline 100% / baseline 55%; unsafe
+  automations pipeline 0 / baseline 5. The `EvalGateTests` already fail the build
+  if the pipeline is not measurably safer.
+- **"CI-gated" is real** — `.github/workflows/zynara-ci.yml` already runs
+  `dotnet test` (incl. the eval gate) on every push; the V1 analysis note that it
+  was missing was wrong (checked from the wrong directory).
+- **Wording** — the eval is framed as "20 labelled *synthetic* cases, route
+  agreement + safety metrics", never a headline accuracy figure.
+
+Still open (for the video / a later pass): the Critic visibly challenging a case
+on camera; a richer per-dimension baseline table (the straw-man only emits a
+route today); optionally growing the case set toward ~40–50.
+
+Touched: `scripts/build-tdd-v2-docx.py` + `Care-Approval-IQ-TDD-V2.docx`.
+
 ## D33 · MAF migration Phases 0–3 done — checkpoint
 
 **2026-09-07.** `maf-migration` branch, 5 commits, **122 tests green**, `main`

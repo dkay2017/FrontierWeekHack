@@ -56,13 +56,17 @@ public static class CareApprovalWorkflow
     /// <b>durable</b> host. Durable Task caps the serialised workflow snapshot at
     /// 16&nbsp;KB, so the graph is coarse: <c>assemble</c> runs the whole
     /// reasoning pipeline in-process and persists the <see cref="PipelineResult"/>
-    /// to the case store; the message from there on is the tiny <see cref="Flow"/>
-    /// (request + route). An AutoSubmit route is sent by the system; every other
-    /// route pauses at the port until the host answers <c>/respond/{runId}</c>.
+    /// to the case store; the message from there on is the tiny <see cref="Flow"/>.
     ///
-    ///   Request → assemble ─┬(AutoSubmit)→ auto-approve → submit
-    ///                       └(else)→ review-card → PORT ─→ apply-decision
-    ///                                                      └(approve-send, authorised)→ submit
+    /// <b>No payer submission happens without an explicit human <c>/respond</c>.</b>
+    /// Every case that needs a submission pauses at the port — the Gate route only
+    /// changes the headline the reviewer sees (an AutoSubmit case is "ready — one
+    /// click to send"; a HumanReview case "needs your judgement"). Cases where
+    /// prior authorisation is not required end without a reviewer.
+    ///
+    ///   Request → assemble ─┬(not required)→ finalize
+    ///                       └(needs submission)→ review-card → PORT ─→ apply-decision
+    ///                                                                 └(approve-send, authorised)→ submit
     ///
     /// The fine-grained per-step graph (<see cref="Build"/>) is kept for
     /// in-process runs and the tests — that is where the per-step retry / stub /
@@ -86,16 +90,11 @@ public static class CareApprovalWorkflow
             };
         });
 
-        var autoApprove = Step("auto-approve", async (Flow f) =>
-        {
-            await cases.RecordDecisionAsync(f.RequestId, "approve-send", "system", ReviewerRole.Coordinator, "auto-submit");
-            await submissions.SubmitAsync(f.RequestId);
-            return f.RequestId;
-        });
+        // prior authorisation not required — nothing to submit, no reviewer needed.
+        var finalize = Step("finalize", (Flow f) => f.RequestId);
 
         var toCard = Step("review-card", (Flow f) =>
-            new ReviewCard(f.RequestId, f.Procedure, f.PayerPlan, f.Route.ToString(),
-                f.AuthRequired ? "assembled — awaiting a reviewer" : "prior authorisation not required"));
+            new ReviewCard(f.RequestId, f.Procedure, f.PayerPlan, f.Route.ToString(), Headline(f.Route)));
 
         // The human-in-the-loop port as its own node on the linear path:
         //   review-card ─(ReviewCard)→ [review] ─(pause; ReviewDecision)→ apply-decision
@@ -114,13 +113,24 @@ public static class CareApprovalWorkflow
 
         var builder = new WorkflowBuilder(assemble)
             .WithName("CareApprovalPipeline")
-            .AddEdge<Flow>(assemble, autoApprove, f => f is { Route: GateRoute.AutoSubmit })
-            .AddEdge<Flow>(assemble, toCard, f => f is not null && f.Route != GateRoute.AutoSubmit)
+            .AddEdge<Flow>(assemble, finalize, f => f is { AuthRequired: false })
+            .AddEdge<Flow>(assemble, toCard, f => f is { AuthRequired: true })
             .AddEdge(toCard, reviewPort)
             .AddEdge(reviewPort, applyDecision);
 
-        return builder.WithOutputFrom(autoApprove, applyDecision).Build();
+        return builder.WithOutputFrom(finalize, applyDecision).Build();
     }
+
+    /// <summary>The one-line summary the reviewer sees for each Gate route. The route
+    /// sets the urgency and the default action, never whether a human is asked.</summary>
+    private static string Headline(GateRoute route) => route switch
+    {
+        GateRoute.AutoSubmit  => "ready — every criterion met; one click to send",
+        GateRoute.Strengthen  => "nearly ready — a supporting criterion needs evidence first",
+        GateRoute.HumanReview => "needs your judgement — see the Gate reason",
+        GateRoute.Abstain     => "not enough reliable evidence to advise — your call",
+        _ => "assembled — awaiting a reviewer",
+    };
 
     // --- the shared reasoning spine --------------------------------------------
     private static (ExecutorBinding intake, ExecutorBinding na, ExecutorBinding gap, ExecutorBinding contra,

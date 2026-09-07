@@ -145,14 +145,48 @@ bullet([("Challenge it — ", True),
          "human ever sees it.", False)])
 bullet([("Decide, then authorise — ", True),
         ("a deterministic Gate (never an agent) routes to AutoSubmit / Strengthen / HumanReview / "
-         "Abstain, each with its working; every outbound action is human-approved; the Submission "
-         "Adapter is the only path to a payer.", False)])
+         "Abstain, each with its working. The route sets the reviewer's headline and default action; "
+         "it never decides whether a person is asked. No payer submission happens without an explicit "
+         "human /respond, and the Submission Adapter is the only path to a payer.", False)])
+rich([("Why an agent AND an executor per step. ", True),
+      ("The agent does the unstructured reasoning and returns a typed recommendation; the deterministic "
+       "executor then validates it (catching a criterion id or precedent that isn't on record), "
+       "normalises it, and commits it to the workflow contract the Gate consumes. The agent proposes "
+       "in prose; code decides what is true.", False)])
 
 # ================= 3 · THE FOUR CORE SKILLS =================
 doc.add_heading("3 · Built on the four core skills", level=1)
 p("The four skills the course is built around — Build, Monitor, Evaluate, Orchestrate — each "
   "maps to one challenge, and each is carried end to end into a system that runs live.", after=6)
 fig(f"{FIG}/fig-four-skills.png")
+
+rich([("The evaluation, in numbers. ", True),
+      ("Zynara.Eval replays 20 labelled synthetic cases (ground truth per criterion, expected route, "
+       "expected citations) through the pipeline with deterministic reasoning stubs, so CI is "
+       "repeatable. It reports route agreement and safety-shaped metrics — not a headline "
+       "accuracy figure, which 20 cases could not support. The gate tests fail the build on any "
+       "regression. Current run:", False)], after=4)
+table(
+    ["Metric", "Result", "CI gate"],
+    [
+        ["Evidence extraction — precision / recall", "100% / 100%", "—"],
+        ["Mandatory-criterion false-negatives", "0 / 3", "must be 0"],
+        ["Policy-citation accuracy", "100%", "≥ 95%"],
+        ["Precedent-citation accuracy", "100%", "≥ 80%"],
+        ["Hallucinated references", "0", "must be 0"],
+        ["Appeal-recommendation agreement (19 cases)", "100%", "≥ 80%"],
+        ["Safe-abstention rate", "2 / 2 (100%)", "≥ 80%"],
+        ["Unsafe automations", "0", "must be 0"],
+    ],
+    widths=[3.4, 1.6, 1.7],
+)
+rich([("Multi-agent vs. one generalist (same 20 cases). ", True),
+      ("A deterministic single-prompt baseline scores its cases the naive way and auto-submits when "
+       "every keyword hits — no notion of a mandatory criterion, no contradiction check, never "
+       "abstains. Result: route agreement — the pipeline 100%, the baseline 55%. Unsafe automations — "
+       "the pipeline 0, the baseline 5 (it would have auto-submitted five cases with a contradiction "
+       "in the note, an over-limit value, or only partial evidence). The gate test fails if the "
+       "pipeline is not measurably safer than the baseline.", False)])
 
 # ================= 4 · BUSINESS VALUE =================
 doc.add_heading("4 · The business value", level=1)
@@ -175,7 +209,8 @@ table(
         ["2", [("Compute · Orchestration", True), (" — Microsoft Agent Framework", False)],
          "CareApprovalWorkflow, a typed executor graph hosted on Zynara.WorkflowHost (Azure Functions + "
          "ConfigureDurableWorkflows). Executors run as Durable Task activities — checkpointed, retried, "
-         "replay-safe. The orchestrator owns the Gate; human review is a MAF RequestPort."],
+         "replay-safe. The orchestrator owns the Gate; every send pauses at a MAF RequestPort until a "
+         "human answers /respond."],
         ["3", [("AI Foundry · Agent Service", True)],
          "needs-auth · evidence-gap · claims-extraction · precedent-strategist · critic — bound as MAF "
          "AIAgents to the existing server-side Foundry agents (bind-to-existing, never re-create)."],
@@ -200,18 +235,20 @@ rich([("Cross-cutting: ", True),
 
 # ================= 6 · VERIFIED LIVE =================
 doc.add_heading("6 · Verified live", level=1)
-callout("Deployed to zynara-spike-rg and run end to end against real GPT-5.4:", [
-    [("• ", False), ("Auto-submit path — ", True),
-     ("Gate → AutoSubmit → the system records a decision and submits; no human pause.", False)],
-    [("• ", False), ("Human-review path — ", True),
-     ("Gate → HumanReview → the workflow pauses on the review RequestPort → a reviewer approves → "
-      "the workflow resumes, the authority check passes, the case is submitted.", False)],
+callout("Deployed to zynara-spike-rg; verified end to end against real GPT-5.4:", [
+    [("• ", False), ("Every route pauses. ", True),
+     ("The workflow assembles, persists to Cosmos, and suspends on the review RequestPort. The Gate "
+      "route only changes the card — “ready — one click to send” (AutoSubmit) or “needs your "
+      "judgement” (HumanReview). The reviewer's /respond resumes it; the authority check runs in the "
+      "apply-decision executor; on an authorised approve-send the case is submitted.", False)],
     [("• ", False), ("No CustomStatus error ", True),
      ("with real agents (the coarse-graph design keeps the workflow snapshot under Durable Task's "
       "16 KB cap).", False)],
     [("• ", False), ("App Insights ", True),
      ("shows the full pipeline.run → spoke.* → invoke_agent * → chat gpt-5.4 → submission.send "
       "trace tree from the workflow host.", False)],
+    [("• ", False), ("122 tests green ", True),
+     ("(unit + workflow + the Zynara.Eval gate) on every commit via zynara-ci.yml.", False)],
 ])
 
 # ================= 7 · TECHNOLOGY DECISIONS =================

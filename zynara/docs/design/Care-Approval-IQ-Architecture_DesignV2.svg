@@ -116,7 +116,7 @@
     <rect x="11" y="7" width="20" height="20" rx="5" fill="#2563EB"/><g transform="translate(15,11)" class="gl"><circle cx="2.4" cy="3.4" r="1.7"/><circle cx="9.6" cy="2.2" r="1.7"/><circle cx="8.4" cy="9" r="1.7"/><path d="M4 2.9 L7.8 2.4 M3.7 4.7 L7.2 8"/></g>
     <rect x="40" y="9" width="64" height="14" rx="7" fill="#1D4ED8"/><text x="72" y="18.6" text-anchor="middle" style="fill:#FFFFFF" font-size="7.1" font-weight="800" letter-spacing=".05em">WORKFLOW</text>
     <text x="113" y="15" class="cn" font-size="10.5" fill="#1D4ED8">orchestrator<tspan class="mut" font-size="8.3" fill="#33427A" font-weight="600">  ·  a Microsoft Agent Framework workflow graph</tspan></text>
-    <text x="113" y="27" class="sm" font-size="8.2">sequences the five checks · owns the <tspan font-weight="800">Gate</tspan> — auto-submit / strengthen / human review / abstain · human review is a MAF <tspan font-weight="800">RequestPort</tspan> · Durable Task checkpoint + replay · writes Cosmos</text>
+    <text x="113" y="27" class="sm" font-size="8.2">sequences the five checks · owns the <tspan font-weight="800">Gate</tspan> — auto-submit / strengthen / human review / abstain · <tspan font-weight="800">every send pauses at a MAF RequestPort</tspan> until a human answers · Durable Task checkpoint + replay · writes Cosmos</text>
   </g>
 
   <!-- arrows: orchestrator → executors (blue) -->
@@ -135,7 +135,7 @@
 
   <!-- relay notes below the strip -->
   <path d="M300 332 V346" fill="none" stroke="#0E7490" stroke-width="1.4" marker-end="url(#at)"/>
-  <text x="308" y="350" class="lbl" fill="#0E6F86">api-proxy relays <tspan font-style="normal" font-weight="700">POST /run</tspan> + <tspan font-style="normal" font-weight="700">/respond/{runId}</tspan>  — human review resumes here</text>
+  <text x="308" y="350" class="lbl" fill="#0E6F86">api-proxy relays <tspan font-style="normal" font-weight="700">POST /run</tspan> + <tspan font-style="normal" font-weight="700">/respond/{runId}</tspan>  — the reviewer's decision resumes the workflow</text>
   <path d="M980 338 V352" fill="none" stroke="#047857" stroke-width="1.4" marker-end="url(#am)"/>
   <text x="988" y="349" class="lbl" fill="#2E6B54">Submission Adapter (Fn) → payer · portal / X12 278 / FHIR / fax</text>
 

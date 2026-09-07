@@ -93,18 +93,26 @@ public class ReviewPortTests
     }
 
     [Fact]
-    public async Task An_auto_submit_route_is_sent_by_the_system_with_no_pause()
+    public async Task A_ready_case_still_pauses_for_a_one_click_human_approval()
     {
         var kit = Build();
         await using var run = await InProcessExecution.RunAsync(kit.Wf, Scenario("demo-ready"));
 
-        Assert.Empty(run.NewEvents.OfType<RequestInfoEvent>());          // never paused
+        // even a clean AutoSubmit case pauses — no payer submission without a person
+        var ask = run.NewEvents.OfType<RequestInfoEvent>().Single();
+        Assert.True(ask.Request.TryGetDataAs<ReviewCard>(out var card));
+        Assert.Equal("AutoSubmit", card!.Route);
+        Assert.Contains("ready", card.Headline);
 
-        var submission = await kit.SubStore.GetAsync("demo-ready");
-        Assert.Equal(SubmissionStatus.Submitted, submission!.Status);
+        var response = ask.Request.CreateResponse(
+            new ReviewDecision("approve-send", "coord@zynara", ReviewerRole.Coordinator, "ready — sent"));
+        await run.ResumeAsync([response]);
 
         var record = await kit.Cases.GetAsync("demo-ready");
         Assert.Equal("approve-send", record!.Decision!.Action);
-        Assert.Equal("system", record.Decision.By);
+        Assert.Equal("coord@zynara", record.Decision.By);               // a person, never "system"
+
+        var submission = await kit.SubStore.GetAsync("demo-ready");
+        Assert.Equal(SubmissionStatus.Submitted, submission!.Status);
     }
 }
