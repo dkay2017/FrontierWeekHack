@@ -4,11 +4,33 @@
 current at every checkpoint and **commit + push** — uncommitted work is lost on a
 Codespace rebuild.
 
-_Last updated: 2026-09-07 (session 9 — **S-4 DONE**: full flow live on Azure
-(`POST /api/requests` → Durable → persist → dashboard → approve → submit), hosted
-GPT-5.4 agents flipped on, Challenge 2 traces verified in App Insights; 108 tests.
-Remaining: S-6 SVG, S-7 pitch, S-8 video). Deadline: **2026-09-23 midnight US**.
-Submission: 3-min video (required) + repo + architecture doc + TDD + dashboard UI._
+_Last updated: 2026-09-07 (session 9 — S-4 DONE (v1 live on Azure); then
+**pivoted to the Microsoft Agent Framework** — `v1.0-durable` tagged as the
+rollback baseline, `maf-migration` branch, **Phases 0–3 done, 122 tests**).
+Deadline: **2026-09-23 midnight US**. Submission: 3-min video + repo + arch doc
++ TDD + dashboard UI._
+
+## ⚑ Active work — MAF migration (`maf-migration` branch)
+
+**Decision (D32):** rebuild the orchestration layer on the Microsoft Agent
+Framework — the reference pattern for the team's forthcoming agent projects, and
+Microsoft's recommended pattern. Not a deadline compromise. Rollback = tag
+**`v1.0-durable`** (`git checkout v1.0-durable && azd deploy`); `main` stays there
+until Phase 4 merges. Plan + findings: `docs/design/MAF-MIGRATION.md`. Decisions:
+D32 (why), D33 (Phase 0–3 checkpoint).
+
+| Phase | State |
+|---|---|
+| 0 · Spike | ✅ GO — pattern proven, blast radius small, tests simpler than `FakeOrchestrationContext` |
+| 1 · Full graph | ✅ `CareApprovalWorkflow.Build` → `PipelineResult`; `CareApprovalRunner` drop-in for `AuthPipeline` |
+| 2 · Agents via MAF | ✅ `AsAIAgent` over the existing Foundry agents; **verified against real GPT-5.4** (routes match v1) |
+| 3 · HITL review port | ✅ `BuildWithReview` — `AddExternalCall` pause/resume + `ApprovalAuthority` + submission edge |
+| 4 · Durable hosting + deploy | ⏳ next — `.Hosting.AzureFunctions` + Durable Task Scheduler in `infra/`, dashboard retarget, redeploy, merge to `main` |
+| 5 · Cleanup + docs | ⏳ delete v1 orchestrator, TDD/ARCH/SVG, `v2.0-maf` tag |
+
+**Unchanged by the migration:** `Zynara.Core` domain + Gate + `ApprovalAuthority`
++ the pipeline logic + `eval/` + `Zynara.Data` + `Zynara.Submission` + the
+dashboard design + most of `infra/`.
 
 ## What this is
 

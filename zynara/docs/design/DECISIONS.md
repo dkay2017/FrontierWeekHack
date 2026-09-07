@@ -5,6 +5,46 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D33 · MAF migration Phases 0–3 done — checkpoint
+
+**2026-09-07.** `maf-migration` branch, 5 commits, **122 tests green**, `main`
+(v1) untouched and still deployed. Full detail: `docs/design/MAF-MIGRATION.md`
+§§5a–3.
+
+- **Phase 0 (spike) — GO.** `src/Zynara.Workflow`. Executors are ~3-line lambdas
+  over the *unchanged* `Zynara.Core.Pipeline.*` classes
+  (`handler.BindAsExecutor(id)`); a `PipelineState` record accumulates down the
+  spine. `Microsoft.Agents.AI.Workflows` **1.20.0 stable** carries Phases 0–1.
+- **Phase 1 (graph).** `CareApprovalWorkflow.Build` — the whole assembly pipeline
+  as a graph, producing the same `PipelineResult` v1's `AuthPipeline` did.
+  `CareApprovalRunner` is a drop-in for `AuthPipeline.RunAsync`.
+- **Phase 2 (agents).** `FoundryAgentClient.InvokeAsync` now runs through
+  `AIProjectClient.AsAIAgent(new AgentReference(name))` + `agent.RunAsync(prompt)`
+  — bound to the *existing* server-side agents. The 5 `Foundry*Agent` classes are
+  unchanged. Packages: `Microsoft.Agents.AI` 1.20.0 + `.Foundry` preview;
+  `Azure.AI.Projects` bumped 2.0.1 → 2.1.0-beta.4 (MAF's floor). **Verified
+  against real GPT-5.4** — `tools/Zynara.FoundrySpike` runs both the v1 pipeline
+  and the MAF workflow per scenario and the routes match on both.
+- **Phase 3 (HITL).** `CareApprovalWorkflow.BuildWithReview` — after the Gate the
+  case is persisted, an AutoSubmit route is sent by the system, every other route
+  **pauses** at an `AddExternalCall<ReviewCard, ReviewDecision>` port. On resume,
+  `apply-decision` enforces `ApprovalAuthority` (audits refusals) and hands an
+  authorised `approve-send` to the Submission Adapter.
+
+**Key learnings (fed back to the plan):**
+1. The `Zynara.Core.Agents` *ports* + stub twins are already the test seam — no
+   fake `IChatClient` needed; the stub path never changed.
+2. MAF shared state (`QueueStateUpdateAsync`) is **per-executor** unless a
+   `scopeName` is given — a named scope is required to carry the request id past
+   the review pause.
+3. `FoundryChatClient` has no public ctor — `AIProjectClient.AsAIAgent(AgentReference)`
+   is the entry point, and it **binds to** an existing agent, it does not create one.
+4. The preview `.DurableTask` / `.Hosting.AzureFunctions` packages lag at
+   1.16-preview vs 1.20 core — the version-skew risk to manage in Phase 4.
+
+Deferred to Phase 4: durable hosting + a Durable Task Scheduler in `infra/`, the
+dashboard retarget to `/respond/{runId}`, redeploy, merge to `main`.
+
 ## D32 · v1 baseline tagged; orchestration moves to Microsoft Agent Framework
 
 **2026-09-07.** The Durable Functions implementation is **complete, deployed and
