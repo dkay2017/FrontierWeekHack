@@ -129,7 +129,31 @@ fights us, we ship v1 and keep this branch for after.
 
 ---
 
-## 6 · Open questions (resolve in Phase 0)
+## 5a · Phase 0 findings (2026-09-07 — GO)
+
+Spike done: `src/Zynara.Workflow` + `tests/Zynara.Workflow.Tests` (4 tests green).
+`Request → needs-auth → evidence-gap → contradiction → precedent-match → critic →
+gate` runs as a MAF graph via `InProcessExecution.RunAsync` (22 ms, no infra) and
+routes `demo-ready / demo-review-mandatory / demo-abstain` to exactly the v1
+`GateRoute`.
+
+- **Packages:** `Microsoft.Agents.AI.Workflows` **1.20.0 (stable)** is enough for
+  Phases 0–1. `.Foundry` is `1.20.0-preview`; `.DurableTask` + `.Hosting.AzureFunctions`
+  lag at `1.16.0-preview` — a version-skew risk to manage in Phase 4.
+- **Executors are ~3-line lambdas.** `handler.BindAsExecutor(id)` on a
+  `Func<TIn, ValueTask<TOut>>` wraps the unchanged `Zynara.Core.Pipeline.*` class.
+  No `Executor` subclass, no source generator, no `[MessageHandler]`.
+- **Accumulator pattern works** — a `PipelineState` record threaded on the
+  sequential spine; each executor returns `state with { … }`; the Gate executor
+  reads the whole state. Cleaner than fan-in for a mostly-linear pipeline.
+- **Output:** `WorkflowBuilder.WithOutputFrom(gateStep)` + read the
+  `WorkflowOutputEvent` from `run.NewEvents` and `.As<PipelineState>()`.
+- **The hybrid principle holds unchanged** — the Gate is a plain lambda executor.
+- Blast radius confirmed **small**; tests are simpler than `FakeOrchestrationContext`.
+
+**Decision: GO.** Proceed to Phase 1.
+
+## 6 · Open questions (resolve in later phases)
 
 1. Exact package versions available on nuget.org for .NET 8 (some are `--prerelease`).
 2. DTS vs Azure Storage backend — cost, region (swedencentral), infra complexity.
