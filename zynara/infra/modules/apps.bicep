@@ -162,6 +162,8 @@ resource apiProxy 'Microsoft.Web/sites@2024-04-01' = {
         { name: 'WEBSITE_CONTENTSHARE', value: apiProxyName }
         { name: 'SUBMISSION_URL', value: 'https://${submission.properties.defaultHostName}' }
         { name: 'WORKFLOW_URL', value: 'https://${workflowHost.properties.defaultHostName}' }
+        // MAF's generated /run + /respond endpoints are AuthorizationLevel.Function.
+        { name: 'WORKFLOW_KEY', value: listKeys('${workflowHost.id}/host/default', workflowHost.apiVersion).functionKeys.default }
       ], reasoningExtra)
     }
   }

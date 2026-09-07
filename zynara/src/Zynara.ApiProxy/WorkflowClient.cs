@@ -22,9 +22,18 @@ public sealed class WorkflowClient(
     private const string WorkflowName = "CareApprovalPipeline";
 
     private string? Base => config["WORKFLOW_URL"]?.TrimEnd('/');
+    private string? Key => config["WORKFLOW_KEY"];
 
     /// <summary>True when the workflow host is configured — the api-proxy defers to it.</summary>
     public bool Enabled => !string.IsNullOrWhiteSpace(Base);
+
+    private HttpClient Client()
+    {
+        var client = http.CreateClient();
+        if (!string.IsNullOrWhiteSpace(Key))
+            client.DefaultRequestHeaders.Add("x-functions-key", Key);
+        return client;
+    }
 
     /// <summary>
     /// Starts a durable run and waits (bounded) for <c>assemble</c> to persist the
@@ -33,7 +42,7 @@ public sealed class WorkflowClient(
     /// </summary>
     public async Task<CaseRecord?> RunAsync(Request request, CancellationToken ct = default)
     {
-        var client = http.CreateClient();
+        var client = Client();
         var url = $"{Base}/api/workflows/{WorkflowName}/run?runId={Uri.EscapeDataString(request.Id)}";
         var res = await client.PostAsJsonAsync(url, request, ct);
         res.EnsureSuccessStatusCode();
@@ -57,7 +66,7 @@ public sealed class WorkflowClient(
         if (before is null) return DecisionOutcome.NotFound;
         var auditBefore = before.Audit.Count;
 
-        var client = http.CreateClient();
+        var client = Client();
         var url = $"{Base}/api/workflows/{WorkflowName}/respond/{Uri.EscapeDataString(requestId)}";
         var body = new { eventName = "review", response = new { Action = action, By = by, Role = role, Note = note } };
         var res = await client.PostAsJsonAsync(url, body, ct);
