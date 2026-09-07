@@ -86,6 +86,7 @@ var reasoningExtra = [
 ]
 
 var orchestratorName = 'func-zynara-orchestrator-${suffix}'
+var workflowHostName = 'func-zynara-workflowhost-${suffix}'
 var apiProxyName = 'func-zynara-apiproxy-${suffix}'
 var submissionName = 'func-zynara-submission-${suffix}'
 
@@ -112,6 +113,34 @@ resource orchestrator 'Microsoft.Web/sites@2024-04-01' = {
   }
 }
 
+// The MAF Workflow host (v2 orchestrator). Same identity + data plane as the v1
+// orchestrator — Foundry inference, Cosmos, and the host storage as the Durable
+// Task backend. Its own task hub (host.json: ZynaraMafPipeline) so it does not
+// collide with the v1 orchestrator's hub on the shared storage account.
+resource workflowHost 'Microsoft.Web/sites@2024-04-01' = {
+  name: workflowHostName
+  location: location
+  tags: union(tags, { 'azd-service-name': 'workflowhost' })
+  kind: 'functionapp,linux'
+  identity: { type: 'UserAssigned', userAssignedIdentities: { '${reasoningIdentityId}': {} } }
+  properties: {
+    serverFarmId: plan.id
+    httpsOnly: true
+    keyVaultReferenceIdentity: reasoningIdentityId
+    siteConfig: {
+      linuxFxVersion: 'DOTNET-ISOLATED|8.0'
+      ftpsState: 'Disabled'
+      minTlsVersion: '1.2'
+      cors: { allowedOrigins: [ '*' ] }
+      appSettings: concat(commonSettings, [
+        { name: 'AzureWebJobsStorage__clientId', value: reasoningClientId }
+        { name: 'AZURE_CLIENT_ID', value: reasoningClientId }
+        { name: 'WEBSITE_CONTENTSHARE', value: workflowHostName }
+      ], reasoningExtra)
+    }
+  }
+}
+
 resource apiProxy 'Microsoft.Web/sites@2024-04-01' = {
   name: apiProxyName
   location: location
@@ -132,6 +161,7 @@ resource apiProxy 'Microsoft.Web/sites@2024-04-01' = {
         { name: 'AZURE_CLIENT_ID', value: reasoningClientId }
         { name: 'WEBSITE_CONTENTSHARE', value: apiProxyName }
         { name: 'SUBMISSION_URL', value: 'https://${submission.properties.defaultHostName}' }
+        { name: 'WORKFLOW_URL', value: 'https://${workflowHost.properties.defaultHostName}' }
       ], reasoningExtra)
     }
   }
@@ -242,6 +272,8 @@ resource dashboardBackend 'Microsoft.Web/staticSites/linkedBackends@2024-04-01' 
 }
 
 output orchestratorName string = orchestrator.name
+output workflowHostName string = workflowHost.name
+output workflowHostUrl string = 'https://${workflowHost.properties.defaultHostName}'
 output apiProxyName string = apiProxy.name
 output submissionName string = submission.name
 output apiProxyHostName string = apiProxy.properties.defaultHostName

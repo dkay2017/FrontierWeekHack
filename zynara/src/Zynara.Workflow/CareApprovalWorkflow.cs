@@ -60,9 +60,9 @@ public static class CareApprovalWorkflow
     /// (request + route). An AutoSubmit route is sent by the system; every other
     /// route pauses at the port until the host answers <c>/respond/{runId}</c>.
     ///
-    ///   Request → intake → assemble ─┬(AutoSubmit)→ auto-approve → submit
-    ///                                └(else)→ review-card → PORT ─→ apply-decision
-    ///                                                               └(approve-send, authorised)→ submit
+    ///   Request → assemble ─┬(AutoSubmit)→ auto-approve → submit
+    ///                       └(else)→ review-card → PORT ─→ apply-decision
+    ///                                                      └(approve-send, authorised)→ submit
     ///
     /// The fine-grained per-step graph (<see cref="Build"/>) is kept for
     /// in-process runs and the tests — that is where the per-step retry / stub /
@@ -71,14 +71,15 @@ public static class CareApprovalWorkflow
     public static Microsoft.Agents.AI.Workflows.Workflow BuildDurable(
         AuthPipeline pipeline, CaseService cases, SubmissionService submissions)
     {
-        var intake = Step("intake", (Request r) => new Flow(r));
-
-        var assemble = Step("assemble", async (Flow f, IWorkflowContext ctx) =>
+        // `assemble` is the start node — it takes the full Request, runs the whole
+        // pipeline in-process, persists the bulky result to Cosmos, then emits the
+        // slim Flow. Nothing downstream ever sees the clinical note again.
+        var assemble = Step("assemble", async (Request r, IWorkflowContext ctx) =>
         {
-            var result = await pipeline.RunAsync(f.Request);
-            await cases.PersistAsync(f.Request, result);
-            await ctx.QueueStateUpdateAsync(ReqIdKey, f.Request.Id, SharedScope);
-            return f with
+            var result = await pipeline.RunAsync(r);
+            await cases.PersistAsync(r, result);
+            await ctx.QueueStateUpdateAsync(ReqIdKey, r.Id, SharedScope);
+            return new Flow(r.Id, r.Procedure, r.PayerPlan)
             {
                 AuthRequired = !result.StoppedEarly,
                 Route = result.Gate?.Route ?? GateRoute.AutoSubmit,
@@ -87,14 +88,20 @@ public static class CareApprovalWorkflow
 
         var autoApprove = Step("auto-approve", async (Flow f) =>
         {
-            await cases.RecordDecisionAsync(f.Request.Id, "approve-send", "system", ReviewerRole.Coordinator, "auto-submit");
-            await submissions.SubmitAsync(f.Request.Id);
-            return f.Request.Id;
+            await cases.RecordDecisionAsync(f.RequestId, "approve-send", "system", ReviewerRole.Coordinator, "auto-submit");
+            await submissions.SubmitAsync(f.RequestId);
+            return f.RequestId;
         });
 
         var toCard = Step("review-card", (Flow f) =>
-            new ReviewCard(f.Request.Id, f.Request.Procedure, f.Request.PayerPlan, f.Route.ToString(),
+            new ReviewCard(f.RequestId, f.Procedure, f.PayerPlan, f.Route.ToString(),
                 f.AuthRequired ? "assembled — awaiting a reviewer" : "prior authorisation not required"));
+
+        // The human-in-the-loop port as its own node on the linear path:
+        //   review-card ─(ReviewCard)→ [review] ─(pause; ReviewDecision)→ apply-decision
+        // (not AddExternalCall, whose bidirectional edge routes the response back
+        // to review-card — which the durable runner re-dispatches and fails.)
+        var reviewPort = RequestPort.Create<ReviewCard, ReviewDecision>("review");
 
         var applyDecision = Step("apply-decision", async (ReviewDecision d, IWorkflowContext ctx) =>
         {
@@ -105,14 +112,12 @@ public static class CareApprovalWorkflow
             return reqId;
         });
 
-        var builder = new WorkflowBuilder(intake)
+        var builder = new WorkflowBuilder(assemble)
             .WithName("CareApprovalPipeline")
-            .AddEdge(intake, assemble)
             .AddEdge<Flow>(assemble, autoApprove, f => f is { Route: GateRoute.AutoSubmit })
-            .AddEdge<Flow>(assemble, toCard, f => f is not null && f.Route != GateRoute.AutoSubmit);
-
-        builder.AddExternalCall<ReviewCard, ReviewDecision>(toCard, "review");
-        builder.AddEdge("review", applyDecision);
+            .AddEdge<Flow>(assemble, toCard, f => f is not null && f.Route != GateRoute.AutoSubmit)
+            .AddEdge(toCard, reviewPort)
+            .AddEdge(reviewPort, applyDecision);
 
         return builder.WithOutputFrom(autoApprove, applyDecision).Build();
     }

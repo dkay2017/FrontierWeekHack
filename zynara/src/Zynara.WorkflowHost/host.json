@@ -4,5 +4,10 @@
     "applicationInsights": {
       "samplingSettings": { "isEnabled": true, "excludedTypes": "Request" }
     }
+  },
+  "extensions": {
+    "durableTask": {
+      "hubName": "ZynaraMafPipeline"
+    }
   }
 }

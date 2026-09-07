@@ -22,11 +22,13 @@ public sealed record PipelineState(Request Request)
 
 /// <summary>
 /// The <b>small</b> message threaded down the durable graph
-/// (<see cref="CareApprovalWorkflow.BuildDurable"/>). The bulky pipeline result
-/// is persisted to the case store by the <c>assemble</c> step, not carried here —
-/// Durable Task caps the serialised workflow snapshot at 16&nbsp;KB.
+/// (<see cref="CareApprovalWorkflow.BuildDurable"/>) once <c>assemble</c> has run
+/// the pipeline and persisted the result to the case store. It carries only what
+/// the routing edges and the later steps read — never the clinical note or the
+/// denial letter. MAF auto-yields every handler's return value into the workflow
+/// snapshot, which Durable Task caps at 16&nbsp;KB (UTF-16).
 /// </summary>
-public sealed record Flow(Request Request)
+public sealed record Flow(string RequestId, string Procedure, string PayerPlan)
 {
     public bool AuthRequired { get; init; } = true;
     public GateRoute Route { get; init; } = GateRoute.HumanReview;

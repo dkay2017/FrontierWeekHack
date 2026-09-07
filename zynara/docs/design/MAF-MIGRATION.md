@@ -272,10 +272,34 @@ evidence-gap` all **Succeeded** as Durable activities.
    `InProcessExecution` / the eval harness / the tests — that is where per-step
    route-agreement coverage lives. **Build + 122 tests green.**
 
-**Remaining Phase 4:** wire the host into `infra/` (a 4th Function app,
-`AzureWebJobsStorage` is the Durable backend — no DTS resource); retarget the
-dashboard to `/respond/{runId}`; redeploy; verify the live chain; merge to
-`main`.
+   Two follow-ons surfaced only on the durable host (both invisible to
+   `InProcessExecution`, which tolerated them):
+   - **`AddExternalCall(source, portId)` is bidirectional** — it also edges the
+     response *back to the source*. `review-card` (typed `Flow → ReviewCard`)
+     then got re-dispatched with the `ReviewDecision` and threw *"Error invoking
+     handler for Zynara.Workflow.Flow"*. Fix: an explicit
+     `RequestPort.Create<ReviewCard, ReviewDecision>("review")` on the linear
+     path — `review-card → reviewPort → apply-decision`, no back-edge.
+   - **MAF auto-yields every handler's return value into the snapshot.** With the
+     full `Request` (clinical note + denial letter) still on `Flow`, the completed
+     snapshot was 17.1 KB — still over 16. Fix: `Flow` now carries only
+     `RequestId` / `Procedure` / `PayerPlan` / `AuthRequired` / `Route`; `assemble`
+     is the start node and takes the `Request` directly, so the bulky text lives
+     only on the one `Request → assemble` hop. Verified end-to-end on the durable
+     host (Azurite): auto-submit and the HITL review→respond→submit path both
+     complete `Succeeded`, no CustomStatus error.
+
+**Infra wiring (done):** `Zynara.WorkflowHost` is the 4th Function app —
+`func-zynara-workflowhost-<suffix>`, the reasoning UAMI, its own Durable task hub
+(`ZynaraMafPipeline`) on the shared host storage, `azure.yaml` service
+`workflowhost`. It runs *alongside* the v1 `orchestrator` through Phase 4 so the
+live v1 flow is never down; `orchestrator` is retired in Phase 5. The api-proxy
+gets a `WORKFLOW_URL` setting.
+
+**Remaining Phase 4:** point the api-proxy `/run` + `/decision` at the workflow
+host (`/run?runId={requestId}` and `/respond/{runId}` — `runId` = the request id,
+so no id-mapping and the dashboard barely changes); redeploy; verify the live
+chain; merge to `main`.
 
 ## 6 · Open questions (resolve in later phases)
 

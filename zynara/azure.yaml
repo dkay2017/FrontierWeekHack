@@ -13,6 +13,14 @@ services:
     project: src/Zynara.Orchestrator
     language: dotnet
     host: function
+  workflowhost:
+    # The MAF Workflow host — v2 of the orchestrator, rebuilt on the Microsoft
+    # Agent Framework (Microsoft.Agents.AI.Workflows + DurableTask). Runs
+    # alongside `orchestrator` through Phase 4 so the v1 flow stays live while
+    # the MAF chain is verified; `orchestrator` is retired in Phase 5.
+    project: src/Zynara.WorkflowHost
+    language: dotnet
+    host: function
   apiproxy:
     project: src/Zynara.ApiProxy
     language: dotnet
