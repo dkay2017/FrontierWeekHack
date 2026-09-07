@@ -15,3 +15,5 @@ public sealed record CriticInput(
 
 public sealed record DraftInput(
     Request Request, NeedsAuthResult NeedsAuth, EvidenceGapResult Gap, AppealMatchResult Appeal);
+
+public sealed record PersistInput(Request Request, PipelineResult Result);

@@ -42,8 +42,15 @@ public class AuthOrchestratorTests
         nameof(SpokeActivities.AppealMatchActivity) => await s.AppealMatchActivity((AppealMatchInput)input!),
         nameof(SpokeActivities.CriticActivity) => await s.CriticActivity((CriticInput)input!),
         nameof(SpokeActivities.DraftActivity) => await s.DraftActivity((DraftInput)input!),
+        nameof(SpokeActivities.PersistCaseActivity) => await Persist(s, (PersistInput)input!),
         _ => throw new InvalidOperationException($"unknown activity '{name}'"),
     };
+
+    private static async Task<object?> Persist(SpokeActivities s, PersistInput input)
+    {
+        await s.PersistCaseActivity(input);
+        return null;
+    }
 
     private static void SeedMriWorld(InMemoryZynaraStore store)
     {
@@ -86,6 +93,7 @@ public class AuthOrchestratorTests
             nameof(SpokeActivities.AppealMatchActivity),
             nameof(SpokeActivities.CriticActivity),
             nameof(SpokeActivities.DraftActivity),
+            nameof(SpokeActivities.PersistCaseActivity),
         }, ctx.Calls);
 
         Assert.False(result.StoppedEarly);
@@ -104,7 +112,11 @@ public class AuthOrchestratorTests
         var ctx = new FakeOrchestrationContext(Sample("n/a"), Dispatcher(spokes));
         var result = await orch.Run(ctx);
 
-        Assert.Equal(new[] { nameof(SpokeActivities.NeedsAuthActivity) }, ctx.Calls);
+        Assert.Equal(new[]
+        {
+            nameof(SpokeActivities.NeedsAuthActivity),
+            nameof(SpokeActivities.PersistCaseActivity),
+        }, ctx.Calls);
         Assert.True(result.StoppedEarly);
         Assert.Null(result.Gate);
     }

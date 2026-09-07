@@ -3,6 +3,7 @@ using Zynara.Core.Abstractions;
 using Zynara.Core.Agents;
 using Zynara.Core.Model;
 using Zynara.Core.Pipeline;
+using Zynara.Core.View;
 
 namespace Zynara.Orchestrator.Orchestration;
 
@@ -18,6 +19,7 @@ public sealed class SpokeActivities(
     ContradictionCheck contradiction,
     AppealMatch appealMatch,
     CriticCheck critic,
+    CaseService cases,
     IZynaraStore store)
 {
     [Function(nameof(NeedsAuthActivity))]
@@ -48,4 +50,13 @@ public sealed class SpokeActivities(
 
         return DraftBuilder.Build(input.Request, input.NeedsAuth, input.Gap, input.Appeal, criteria);
     }
+
+    /// <summary>
+    /// Projects the finished pipeline result to a <see cref="CaseView"/> and stores
+    /// the <see cref="CaseRecord"/> — so <c>POST /api/requests</c> lands in the same
+    /// review queue the in-process path populates.
+    /// </summary>
+    [Function(nameof(PersistCaseActivity))]
+    public Task PersistCaseActivity([ActivityTrigger] PersistInput input) =>
+        cases.PersistAsync(input.Request, input.Result);
 }

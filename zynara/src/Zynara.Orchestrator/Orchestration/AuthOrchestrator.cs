@@ -30,7 +30,12 @@ public sealed class AuthOrchestrator(Gate gate)
 
         // Unambiguous "not required" is the only path that stops the pipeline.
         if (!needsAuth.AuthRequired)
-            return new PipelineResult(request.Id, needsAuth, null, null, null, null, null);
+        {
+            var stopped = new PipelineResult(request.Id, needsAuth, null, null, null, null, null);
+            await context.CallActivityAsync(
+                nameof(SpokeActivities.PersistCaseActivity), new PersistInput(request, stopped), Retry);
+            return stopped;
+        }
 
         var gap = await context.CallActivityAsync<EvidenceGapResult>(
             nameof(SpokeActivities.EvidenceGapActivity), request, Retry);
@@ -51,9 +56,15 @@ public sealed class AuthOrchestrator(Gate gate)
         var draft = await context.CallActivityAsync<SubmissionDraft>(
             nameof(SpokeActivities.DraftActivity), new DraftInput(request, needsAuth, gap, appeal), Retry);
 
-        return new PipelineResult(request.Id, needsAuth, gap, appeal, critic, decision, draft)
+        var result = new PipelineResult(request.Id, needsAuth, gap, appeal, critic, decision, draft)
         {
             Contradiction = conflict,
         };
+
+        // Persist the assembled case so it shows up in the reviewer queue.
+        await context.CallActivityAsync(
+            nameof(SpokeActivities.PersistCaseActivity), new PersistInput(request, result), Retry);
+
+        return result;
     }
 }

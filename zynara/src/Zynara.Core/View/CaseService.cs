@@ -25,6 +25,17 @@ public sealed class CaseService(
     public async Task<CaseRecord> RunAsync(Request request, CancellationToken ct = default)
     {
         var result = await pipeline.RunAsync(request, ct);
+        return await PersistAsync(request, result, ct);
+    }
+
+    /// <summary>
+    /// Project + store a case from an already-computed <see cref="PipelineResult"/>.
+    /// The Durable orchestrator's persist step calls this so <c>POST /api/requests</c>
+    /// populates the same review queue the in-process path does.
+    /// </summary>
+    public async Task<CaseRecord> PersistAsync(
+        Request request, PipelineResult result, CancellationToken ct = default)
+    {
         var criteria = await store.GetCriteriaAsync(
             request.PayerPlan, request.Procedure, request.Region, ct);
 
