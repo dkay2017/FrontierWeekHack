@@ -296,10 +296,37 @@ evidence-gap` all **Succeeded** as Durable activities.
 live v1 flow is never down; `orchestrator` is retired in Phase 5. The api-proxy
 gets a `WORKFLOW_URL` setting.
 
-**Remaining Phase 4:** point the api-proxy `/run` + `/decision` at the workflow
-host (`/run?runId={requestId}` and `/respond/{runId}` — `runId` = the request id,
-so no id-mapping and the dashboard barely changes); redeploy; verify the live
-chain; merge to `main`.
+### Phase 4 — DONE (2026-09-07), verified live
+
+- **api-proxy → workflow host.** `WorkflowClient`: when `WORKFLOW_URL` is set,
+  `POST /api/cases` and the demo runner call `/api/workflows/CareApprovalPipeline/run?runId={requestId}`
+  and the reviewer decision goes to `/respond/{runId}` (`runId` = the request id —
+  no id-mapping). The api-proxy shares the Cosmos case store with the host, so it
+  polls the store to return the assembled view / applied decision — the dashboard
+  contract is unchanged. Falls back to the in-process `CaseService` when
+  `WORKFLOW_URL` is absent (offline demo / tests).
+- **Auth.** MAF's generated `/run` + `/respond` are `AuthorizationLevel.Function`;
+  the api-proxy sends `x-functions-key` from `WORKFLOW_KEY` (bicep `listKeys` on
+  the workflow host's default host key).
+- **Challenge 2 traces.** Agents run in the host's `assemble` executor now, so the
+  `ZynaraTelemetry` ActivitySource → Azure Monitor export moved to
+  `Zynara.WorkflowHost/Program.cs` (service `zynara-workflowhost`).
+- **Live verification** (`zynara-spike-rg`, real GPT-5.4):
+  - `maf-verify-2` — Gate `AutoSubmit` → `auto-approve` (by system) → submission
+    `ACK-maf-verify-2`, no human pause.
+  - `maf-verify-1` — Gate `HumanReview` → paused at the port → SeniorReviewer
+    approve-send → `apply-decision` → submission `ACK-maf-verify-1`
+    (approvedBy `alex@zynara`).
+  - App Insights shows the full tree from `zynara-workflowhost`:
+    `pipeline.run → spoke.* → invoke_agent * → chat gpt-5.4` (each `chat` carries
+    `zynara.agent` + `gen_ai.system=azure.ai.foundry`) `→ submission.send`.
+  - No CustomStatus error with real agents.
+
+**Deployed shape:** `func-zynara-workflowhost` runs alongside the v1
+`func-zynara-orchestrator` (v1 still reachable at `POST /api/requests`). Phase 5
+retires v1.
+
+**Remaining:** merge `maf-migration` → `main`; Phase 5 cleanup.
 
 ## 6 · Open questions (resolve in later phases)
 

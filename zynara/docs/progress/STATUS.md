@@ -4,9 +4,9 @@
 current at every checkpoint and **commit + push** — uncommitted work is lost on a
 Codespace rebuild.
 
-_Last updated: 2026-09-07 (session 10 — MAF **Phase 4**: durable host built &
-verified end-to-end locally, coarse-graph CustomStatus fix, infra + api-proxy
-wired. Left: `azd` deploy + live verify + merge. `v1.0-durable` = rollback).
+_Last updated: 2026-09-07 (session 10 — MAF **Phase 4 DONE**: durable host
+deployed to `zynara-spike-rg` & verified live (real GPT-5.4, both submit paths,
+Challenge 2 traces). Left: merge → `main`, then Phase 5. `v1.0-durable` = rollback).
 Deadline: **2026-09-23 midnight US**. Submission: 3-min video + repo + arch doc
 + TDD + dashboard UI._
 
@@ -25,8 +25,8 @@ D32 (why), D33 (Phase 0–3 checkpoint).
 | 1 · Full graph | ✅ `CareApprovalWorkflow.Build` → `PipelineResult`; `CareApprovalRunner` drop-in for `AuthPipeline` |
 | 2 · Agents via MAF | ✅ `AsAIAgent` over the existing Foundry agents; **verified against real GPT-5.4** (routes match v1) |
 | 3 · HITL review port | ✅ explicit `RequestPort` pause/resume + `ApprovalAuthority` + submission edge |
-| 4 · Durable hosting + deploy | ⏳ **host verified end-to-end locally** (Azurite) — both paths complete, no CustomStatus error. Infra + api-proxy wired & committed. **Left: `azd provision` + `azd deploy` (user-run), verify live chain, merge to `main`.** |
-| 5 · Cleanup + docs | ⏳ delete v1 orchestrator, TDD/ARCH/SVG, `v2.0-maf` tag |
+| 4 · Durable hosting + deploy | ✅ **DONE — verified live** on `zynara-spike-rg` with real GPT-5.4. Auto-submit + HITL both submit; Challenge 2 tree from `zynara-workflowhost`; no CustomStatus error. `func-zynara-workflowhost` runs alongside v1 orchestrator. **Left: merge `maf-migration` → `main`.** |
+| 5 · Cleanup + docs | ⏳ delete v1 orchestrator, `FakeOrchestrationContext`; TDD §12 / ARCH / SVG; `v2.0-maf` tag |
 
 **Phase 4 detail** (`docs/design/MAF-MIGRATION.md` §"Phase 4"):
 `Zynara.WorkflowHost` = `FunctionsApplication` + `ConfigureDurableWorkflows`.
