@@ -26,9 +26,19 @@ The memorable line (say it verbatim near the end):
 - [ ] `demo-cases.json` regenerated: `dotnet run --project tools/Zynara.DemoDump -- src/Zynara.Dashboard/demo-cases.json`
 - [ ] Dashboard served (offline is fine): open `src/Zynara.Dashboard/index.html`.
       For a live run: `func start` in `src/Zynara.ApiProxy`, then `index.html?api=http://localhost:7071`.
+- [ ] If running live: **clear the Cosmos `cases` container** and do **one** scenario pass, so the
+      queue is a handful of distinct rows, not a pile of identical re-runs.
 - [ ] Window sized so the review card fits without scrolling to the precedent panel.
 - [ ] Start on the **Review Queue** tab with **`demo-appeal-critic`** selected.
 - [ ] Recording at 1080p, cursor visible, no notifications.
+
+## Optional 15-second opener — the Pipeline Simulator tab
+
+The **Pipeline simulator** tab (illustrative, canned) steps the eight stages —
+Intake → Needs-auth → Evidence → Contradiction → Precedent → Critic → Gate →
+Decision — with a trace log. Run the **"only 1 of 3 criteria evidenced"** case
+once to plant the shape of the pipeline, then switch to Review queue for the real
+thing. Skip it if you are tight on time — the real card is the story.
 
 ---
 
@@ -47,12 +57,20 @@ The memorable line (say it verbatim near the end):
 
 ---
 
-## If you have 20 seconds more (coda)
+## Coda — carry one case through to the send (re-eval §18, 2:40–3:00)
+
+The re-eval asks the demo to end on the *whole* path, not just the safety catch.
+If the abstain beat runs short, or as the deliberate close:
 
 Click `demo-appeal` — the clean version: all three criteria documented, same two
-winning precedents, Critic **Clear**, Gate still routes to a human (it's an
-appeal), primary action **Approve & send**. "Same pipeline — when the evidence is
-actually there, it's a one-click approval."
+winning precedents, Critic **Clear**, Gate route **Ready to submit**, primary
+action **Approve & send**. Say: *"Same pipeline. When the evidence is actually
+there, the reviewer approves and the Submission Adapter sends — one outbound path,
+one trace from the request through every agent to the payer acknowledgement, one
+append-only audit record."* Click **Approve & send**; the confirmation and the
+audit-trail entry appear in the drawer. (The App Insights trace tree is a
+pre-captured screenshot if you want to hold it up for 3 seconds — do **not**
+navigate Azure live.)
 
 ## Backup if the live API is down
 
@@ -72,6 +90,6 @@ needs the API — the "Request more evidence" click is recorded in the page.
 | **Critic challenges an unsupported claim** | **1:30–2:05** |
 | Correct / request evidence / abstain | 2:25–2:45 |
 | Deterministic Gate | 2:05–2:25 |
-| Human approval | 2:25–2:45 |
-| Submission Adapter sends | out of scope for the demo — stated, not shown |
-| Evidence trail + trace | visible throughout the card |
+| Human approval | 2:25–2:45 · and the coda (Approve & send) |
+| Submission Adapter sends | the coda — Approve & send on `demo-appeal`, drawer confirmation + audit entry |
+| Evidence trail + trace | visible throughout the card; trace tree as a held-up screenshot in the coda |

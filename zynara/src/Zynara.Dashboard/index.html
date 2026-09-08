@@ -430,6 +430,42 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
 .toast.on{opacity:1;transform:translate(-50%,0);}
 .toast svg{width:14px;height:14px;stroke:#5EEAD4;fill:none;stroke-width:2.6;}
 
+/* ===== pipeline simulator ===== */
+.sim-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line-soft);}
+.sim-sel{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:12px;color:var(--ink);font-family:var(--sans);max-width:100%;}
+.sim-run{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:10px;font-size:12px;font-weight:700;color:#fff;
+  background:linear-gradient(135deg,var(--pane-hue),var(--pane-hue2));box-shadow:0 8px 20px -8px var(--pane-hue);transition:transform .12s var(--ease),opacity .15s;}
+.sim-run:hover{transform:translateY(-1px);}
+.sim-run[disabled]{opacity:.45;pointer-events:none;}
+.sim-run svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.4;}
+.sim-tag{font-size:10.5px;color:var(--faint);font-style:italic;max-width:46ch;line-height:1.45;}
+.flow{display:flex;align-items:flex-start;padding:20px 16px;gap:0;overflow-x:auto;}
+.node{flex:1 1 0;min-width:92px;text-align:center;padding:12px 8px;border-radius:12px;border:1px solid var(--line);
+  background:var(--surface-2);opacity:.5;transition:opacity .3s var(--ease),border-color .3s,background .3s;}
+.node .ni{width:28px;height:28px;border-radius:9px;margin:0 auto 7px;background:var(--sunk);color:var(--faint);display:flex;align-items:center;justify-content:center;}
+.node .ni svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.node .nn{font-family:var(--mono);font-size:8.5px;letter-spacing:.09em;color:var(--faint);text-transform:uppercase;}
+.node .nt{font-size:11px;font-weight:600;margin-top:2px;line-height:1.25;color:var(--muted);}
+.node.on{opacity:1;border-color:var(--pane-hue);background:var(--pane-soft);}
+.node.on .ni{background:var(--pane-hue);color:#fff;}
+.node.ok{opacity:1;border-color:var(--ok-line);} .node.ok .ni{background:var(--ok-soft);color:var(--ok);} .node.ok .nt{color:var(--ink);}
+.node.warn{opacity:1;border-color:var(--warn-line);} .node.warn .ni{background:var(--warn-soft);color:var(--warn);} .node.warn .nt{color:var(--ink);}
+.node.stop{opacity:1;border-color:var(--crit-line);} .node.stop .ni{background:var(--crit-soft);color:var(--crit);} .node.stop .nt{color:var(--ink);}
+.node.skip{opacity:.25;}
+.arm{width:18px;flex:none;margin-top:33px;height:2px;background:var(--line);position:relative;}
+.arm.lit{background:var(--pane-hue);}
+.arm i{position:absolute;top:-3px;left:0;width:8px;height:8px;border-radius:50%;background:var(--pane-hue);opacity:0;box-shadow:0 0 10px 2px var(--pane-hue);}
+.arm.run i{animation:simrun .5s linear forwards;}
+@keyframes simrun{from{left:0;opacity:1;}to{left:calc(100% - 8px);opacity:0;}}
+.sim-log{padding:14px 16px;border-top:1px solid var(--line-soft);font-family:var(--mono);font-size:11px;color:var(--muted);
+  display:flex;flex-direction:column;gap:7px;min-height:130px;}
+.sim-log .tr{font-size:10px;color:var(--faint);}
+.sim-log .ln b{color:var(--ink);font-weight:700;}
+.sim-log .ln.ok b{color:var(--ok);}
+.sim-log .ln.warn b{color:var(--warn);}
+.sim-log .ln.stop b{color:var(--crit);}
+.sim-log .ln.meta{color:var(--faint);font-style:italic;}
+
 @media (max-width:720px){
   .mast-row,.tabbar-row,.page,.foot-in{padding-left:15px;padding-right:15px;}
   .wordmark span{display:none;}
@@ -497,6 +533,8 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
     <svg viewBox="0 0 20 20"><path d="M10 3l7 13H3z"/><path d="M10 8v4M10 14h.01"/></svg>Early warnings</button>
   <button class="tab" role="tab" aria-selected="false" data-tab="cost">
     <svg viewBox="0 0 20 20"><path d="M3 17V8M9 17V4M15 17v-6"/></svg>Impact</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="sim">
+    <svg viewBox="0 0 20 20"><circle cx="4" cy="10" r="2"/><circle cx="10" cy="10" r="2"/><circle cx="16" cy="10" r="2"/><path d="M6 10h2M12 10h2"/></svg>Pipeline simulator</button>
 </div></nav>
 
 <main class="page">
@@ -609,6 +647,40 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
         <p>Per-case token and tool-call cost is recorded by <code>IAgentCallRecorder</code> when the
         hosted Foundry agents run (<code>ZYNARA_AGENTS=foundry</code>). This demo runs the
         deterministic stub agents, so there is no inference cost to show.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="pane" id="pane-sim"
+    style="--pane-hue:var(--crc);--pane-hue2:var(--crit);--pane-soft:var(--crc-soft);">
+    <div class="phead">
+      <div class="phead-id">
+        <span class="phead-ic"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2.4"/><circle cx="12" cy="12" r="2.4"/><circle cx="19" cy="12" r="2.4"/><path d="M7.4 12h2.2M14.4 12h2.2"/></svg></span>
+        <div>
+          <h1>Pipeline simulator</h1>
+          <p>An illustrative walk of the eight stages — needs-auth, the three assembly agents, the
+             contradiction check, the adversarial Critic, and the deterministic Gate. The live
+             pipeline runs server-side; the Review queue shows its real output.</p>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sim-controls">
+        <select class="sim-sel" id="simScenario" aria-label="Case scenario">
+          <option value="ready">Denied MRI — all 3 criteria evidenced, 2 winning precedents</option>
+          <option value="strengthen" selected>Denied MRI — only 1 of 3 criteria evidenced</option>
+          <option value="review">Denied MRI — the clinical note contradicts itself</option>
+          <option value="abstain">Denied MRI — thin note, no comparable history</option>
+        </select>
+        <button class="sim-run" id="simRun">
+          <svg viewBox="0 0 14 14"><path d="M3 2.5l8 4.5-8 4.5V2.5z"/></svg>Run pipeline
+        </button>
+        <span class="sim-tag">Illustrative and canned so it runs the same every time — the real pipeline is server-side.</span>
+      </div>
+      <div class="flow" id="simFlow"></div>
+      <div class="sim-log" id="simLog">
+        <span class="tr">trace —</span>
+        <span class="ln">Idle. Pick a case and run the pipeline end to end.</span>
       </div>
     </div>
   </section>
@@ -1068,7 +1140,7 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
       Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (x) {
         x.setAttribute("aria-selected", String(x === t));
       });
-      ["review", "warnings", "cost"].forEach(function (name) {
+      ["review", "warnings", "cost", "sim"].forEach(function (name) {
         document.getElementById("pane-" + name).classList.toggle("on", name === t.dataset.tab);
       });
     });
@@ -1095,6 +1167,115 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
     document.getElementById("scrim").classList.add("on");
     document.getElementById("profileModal").classList.add("on");
   });
+
+  /* ---- pipeline simulator (illustrative, canned) ------------- */
+  var SIM_NODES = [
+    ["01", "Intake",        '<path d="M3 5h14v10H3z"/><path d="M3 9h14"/>'],
+    ["02", "Needs-auth",    '<path d="M10 2.5l6.5 3v4.7c0 4-2.7 6.8-6.5 7.8-3.8-1-6.5-3.8-6.5-7.8V5.5z"/>'],
+    ["03", "Evidence",      '<path d="M4 4h9l3 3v9H4z"/><path d="M7 10l2 2 4-4"/>'],
+    ["04", "Contradiction", '<circle cx="10" cy="10" r="7.5"/><path d="M10 6v5M10 14h.01"/>'],
+    ["05", "Precedent",     '<circle cx="9" cy="9" r="5.5"/><path d="M13 13l4 4"/>'],
+    ["06", "Critic",        '<path d="M3 15h14"/><path d="M4 11l3.5-6 3 4 2.5-5 3 7"/>'],
+    ["07", "Gate",          '<path d="M10 2.5l6.5 3v4.7c0 4-2.7 6.8-6.5 7.8-3.8-1-6.5-3.8-6.5-7.8V5.5z"/><path d="M7.5 10l2 2 3.5-4"/>'],
+    ["08", "Decision",      '<path d="M4 10.5l3.8 3.8L16 6"/>']
+  ];
+
+  var SIM_SCENARIOS = {
+    ready: [
+      { n: 0, t: "<b>Intake</b> · request received — MRI lumbar spine, Bupa/Comprehensive, denied under MN-01." },
+      { n: 1, t: "<b>Needs-auth</b> · prior authorisation required — plan rule and denial code resolved." },
+      { n: 2, t: "<b>Evidence</b> · 3 / 3 written criteria documented — each with the quoted note sentence, its source and the policy clause.", k: "ok" },
+      { n: 3, t: "<b>Contradiction</b> · no conflicting assertions in the note.", k: "ok" },
+      { n: 4, t: "<b>Precedent</b> · 2 comparable cases on the payer's own record — both denied under MN-01, both won on appeal under clause 2.1.", k: "ok" },
+      { n: 5, t: "<b>Critic</b> · verdict Clear — the recommendation is supported by the evidence and the precedents.", k: "ok" },
+      { n: 6, t: "<b>Gate</b> · mandatory criteria met · evidence strong · precedent support strong → route READY_TO_SUBMIT.", k: "ok", state: "ok" },
+      { n: 7, t: "<b>Decision</b> · reviewer opens the evidence and provenance, then approves the send.", k: "ok", state: "ok" },
+      { meta: true, t: "Submission Adapter executes → payer ACK. One trace (pipeline.run → spoke.* → invoke_agent → chat), one append-only audit record." }
+    ],
+    strengthen: [
+      { n: 0, t: "<b>Intake</b> · request received — MRI lumbar spine, denied under MN-01." },
+      { n: 1, t: "<b>Needs-auth</b> · prior authorisation required." },
+      { n: 2, t: "<b>Evidence</b> · 1 / 3 criteria documented — physiotherapy is evidenced; radiculopathy and imaging-changes-management are not in the note.", k: "warn" },
+      { n: 3, t: "<b>Contradiction</b> · no conflicting assertions.", k: "ok" },
+      { n: 4, t: "<b>Precedent</b> · 2 comparable cases, both won on appeal.", k: "ok" },
+      { n: 5, t: "<b>Critic</b> · verdict Concerns — the recommendation is firmer than the low-quality evidence supports.", k: "warn", state: "warn" },
+      { n: 6, t: "<b>Gate</b> · undocumented supporting criteria + Critic Concerns → route STRENGTHEN.", k: "warn", state: "warn" },
+      { n: 7, t: "<b>Decision</b> · the reviewer's suggested next step is request the missing evidence — not approve.", k: "warn", state: "warn" },
+      { meta: true, t: "No send. The case returns to the clinician; the request is logged against it." }
+    ],
+    review: [
+      { n: 0, t: "<b>Intake</b> · request received — MRI lumbar spine, denied under MN-01." },
+      { n: 1, t: "<b>Needs-auth</b> · prior authorisation required." },
+      { n: 2, t: "<b>Evidence</b> · 2 / 3 criteria documented." },
+      { n: 3, t: "<b>Contradiction</b> · the note both affirms and denies the same finding — “no red-flag symptoms” vs “progressive weakness”.", k: "warn", state: "warn" },
+      { n: 4, t: "<b>Precedent</b> · 1 comparable case." },
+      { n: 5, t: "<b>Critic</b> · verdict Block — an unresolved contradiction cannot go to a payer.", k: "stop", state: "stop" },
+      { n: 6, t: "<b>Gate</b> · contradiction present + Critic Block → route HUMAN_REVIEW.", k: "stop", state: "stop" },
+      { n: 7, t: "<b>Decision</b> · a human reviewer takes the case — an appeal never files itself.", k: "stop", state: "stop" },
+      { meta: true, t: "No send. Routed to Pending Review with the contradiction surfaced in the Conflicts panel." }
+    ],
+    abstain: [
+      { n: 0, t: "<b>Intake</b> · request received — MRI lumbar spine, denied." },
+      { n: 1, t: "<b>Needs-auth</b> · prior authorisation required." },
+      { n: 2, t: "<b>Evidence</b> · the note is thin — 0 / 3 criteria clearly documented.", k: "warn" },
+      { n: 3, t: "<b>Contradiction</b> · nothing definite to check." },
+      { n: 4, t: "<b>Precedent</b> · no comparable case on the payer's record.", k: "warn" },
+      { n: 5, t: "<b>Critic</b> · verdict Abstain — not enough reliable evidence to advise.", k: "stop", state: "stop" },
+      { n: 6, t: "<b>Gate</b> · weak evidence + no precedent + Critic Abstain → route ABSTAIN.", k: "stop", state: "stop" },
+      { n: 7, t: "<b>Decision</b> · the system declines to recommend and stops. That is the trust boundary.", k: "stop", state: "stop" },
+      { meta: true, t: "No send, no guess. The case is flagged as needing a clinician, not an appeal." }
+    ]
+  };
+
+  var simRunning = false;
+  function simRenderFlow() {
+    document.getElementById("simFlow").innerHTML = SIM_NODES.map(function (n, i) {
+      return (i ? '<div class="arm" data-a="' + (i - 1) + '"><i></i></div>' : "") +
+        '<div class="node" data-n="' + i + '"><div class="ni"><svg viewBox="0 0 20 20">' + n[2] + "</svg></div>" +
+        '<div class="nn">' + n[0] + '</div><div class="nt">' + n[1] + "</div></div>";
+    }).join("");
+  }
+  function simSetLog(trace, lines) {
+    document.getElementById("simLog").innerHTML =
+      '<span class="tr">trace ' + trace + "</span>" +
+      lines.map(function (l) {
+        return '<span class="ln ' + (l.meta ? "meta" : (l.k || "")) + '">' + l.t + "</span>";
+      }).join("");
+  }
+  function simRun() {
+    if (simRunning) return;
+    simRunning = true;
+    var btn = document.getElementById("simRun");
+    btn.disabled = true;
+    var nodes = document.querySelectorAll("#simFlow .node");
+    var arms = document.querySelectorAll("#simFlow .arm");
+    Array.prototype.forEach.call(nodes, function (el) { el.className = "node"; });
+    Array.prototype.forEach.call(arms, function (el) { el.className = "arm"; });
+
+    var steps = SIM_SCENARIOS[document.getElementById("simScenario").value];
+    var trace = "caiq-" + Math.random().toString(16).slice(2, 10);
+    var shown = [];
+    var i = 0;
+    (function step() {
+      if (i >= steps.length) { simRunning = false; btn.disabled = false; return; }
+      var it = steps[i];
+      shown.push(it);
+      simSetLog(trace, shown);
+      if (it.meta) { i++; setTimeout(step, 520); return; }
+      var node = document.querySelector('#simFlow .node[data-n="' + it.n + '"]');
+      var arm = it.n > 0 ? document.querySelector('#simFlow .arm[data-a="' + (it.n - 1) + '"]') : null;
+      if (arm) arm.className = "arm lit run";
+      node.classList.add("on");
+      setTimeout(function () {
+        node.classList.remove("on");
+        node.classList.add(it.state || "ok");
+        i++;
+        step();
+      }, 560);
+    })();
+  }
+  document.getElementById("simRun").addEventListener("click", simRun);
+  simRenderFlow();
 
   /* ---- go ---------------------------------------------------- */
   function boot() {

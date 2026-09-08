@@ -424,24 +424,20 @@ baseline experiment moves the score (→ ~9.4–9.5). Work order:
      generalist's free-form output.
    - Risk: a well-prompted modern generalist may do fine on easy cases → weakens
      the story; hence the hard-case curation.
-2. **Rehearse the exact 3-min demo** (§18): denied case → mandatory criteria /
-   evidence / contradiction → precedent + outcome → Critic challenge →
-   deterministic Gate picks route → reviewer opens provenance → reviewer approves →
-   Submission Adapter executes → single trace / audit record. **No Azure-service
-   tour.** Material: `docs/runbooks/demo-script.md`, `local-demo.md`.
-3. **Pipeline Simulator for the Zynara dashboard** (user's idea, not a re-eval
-   point — serves the "shift effort to demo / presentation" advice). TireForge has
-   one (`../../../tireforge/src/TireForge.Dashboard/index.html` — ~160 lines:
-   `simEmit()` + `PIPE` stage array + `STEP_TIMELINE` + a `/* SIMULATOR */` CSS
-   block; explicitly *illustrative* / canned). Zynara has only the "run scenario ▾"
-   control (re-runs the real server-side pipeline) — no visual stepper. Build a
-   **real** (not illustrative) stepper: Intake → Needs-Auth → Evidence Gap →
-   Contradiction → Precedent → Critic → Gate → Human approval → Submit, replaying
-   the actual run stage by stage. Stage data already exists in `PipelineResult` /
-   `CaseView` (per-criterion evidence + source, Critic verdict + flags, Gate
-   decision model) — only backend work is shaping it as an ordered timeline in the
-   scenario-run / case response. Reuse TireForge's simulator CSS + stage-card
-   markup. Front-end ~0.5–1 day; **timebox to 1 day.**
+2. **Rehearse the exact 3-min demo** (§18) — 🔸 **script updated 2026-09-08**
+   (`docs/runbooks/demo-script.md`): §18 opener via the new simulator tab, and a
+   coda that carries `demo-appeal` through Approve & send → drawer audit entry +
+   a held-up trace screenshot (no live Azure). **Left: the user actually rehearses
+   + records.** No Azure-service tour.
+3. **Pipeline Simulator for the Zynara dashboard** — ✅ **built 2026-09-08**
+   (`src/Zynara.Dashboard/index.html`, no build step). A 4th tab `pane-sim`:
+   8-node animated flow (Intake · Needs-auth · Evidence · Contradiction · Precedent
+   · Critic · Gate · Decision) + trace log, 4 canned scenarios
+   (ready / strengthen / review / abstain) mirroring the demo cases. **Illustrative
+   and labelled as such** (canned, not a live replay — the honest version; a real
+   `CaseView`-driven replay would need the API to return an ordered stage timeline,
+   deferred). CSS adapted from TireForge. Not browser-tested here (no runtime) —
+   eyeball it after deploy.
 4. **Scrub "will win" / outcome-guarantee phrasing** (§13) → "the payer's own
    history shows which arguments have succeeded in comparable cases." Grep docs +
    TDD-V3 + pitch / slide copy (a grep over `docs/` on 2026-09-07 found nothing —
