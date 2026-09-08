@@ -5,6 +5,36 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D36 · MAF migration Phase 5 — retire the v1 Durable orchestrator
+
+**2026-09-08.** With the MAF Workflow host (`Zynara.WorkflowHost`) verified live
+(Phase 4, D33), the v1 Durable Functions orchestrator is dead code. Removed:
+
+- `src/Zynara.Orchestrator/` (the `AuthOrchestrator` hub, `SpokeActivities`,
+  `Http/RequestEndpoints`, `ActivityInputs`) and `tests/Zynara.Orchestrator.Tests/`
+  (incl. `FakeOrchestrationContext`). The MAF graph in `src/Zynara.Workflow`
+  (`InProcessExecution` tests) is the reference pipeline now; `AuthPipeline` stays
+  as the in-process assembler the durable `assemble` executor wraps.
+- Both projects out of `Zynara.sln`; the `orchestrator` service out of
+  `azure.yaml`; the `orchestrator` Function app + `orchestratorName` var +
+  `ORCHESTRATOR_APP_NAME` output out of `infra/` (`modules/apps.bicep`,
+  `main.bicep`). The live `func-zynara-orchestrator-<suffix>` app is deleted
+  out-of-band (azd will not remove an app whose bicep is gone).
+
+Also swept in the same pass: empty placeholder dirs
+(`tests/Zynara.ApiProxy.Tests`, `tests/Zynara.TestSupport`), redundant `.gitkeep`
+files in populated dirs, and the superseded TDD generators — `build-tdd-v2-docx.py`
++ `tdd-v2-figures/` deleted, `build-tdd-v3-docx.py` → `build-tdd-docx.py`
+(`DEST` = `Care-Approval-IQ-TDD.docx`), `tdd-v3-figures/` → `tdd-figures/`. The
+old single-version `Care-Approval-IQ-TDD-V{2,3}.docx` + `*_DesignV2.*` diagrams +
+evaluator-review docx were removed by the author.
+
+Touched: as above + light-touch doc updates (`ARCHITECTURE.md` mermaid node,
+`infra/README.md`, `Care-Approval-IQ-TDD.md` §2, `challenge-4-portal-workflow.md`,
+`STATUS.md`). Deep TDD §12 rewrite (TD-1a, TD-1/TD-2 for MAF) stays with the S-6
+doc/SVG pass. **Build + tests to be re-verified in the Codespace** (no toolchain
+on the authoring machine).
+
 ## D35 · Every send pauses for a human — `AutoSubmit` no longer auto-sends
 
 **2026-09-07.** The re-evaluation (`Evaluate Review V2.docx`) flagged a real

@@ -239,7 +239,7 @@ flowchart TB
       DASH[Zynara.Dashboard<br/>Static Web App, Standard + linked backend]
     end
     subgraph Compute [Function Apps · Consumption Y1 · .NET 8 isolated]
-      ORC[Zynara.Orchestrator<br/>Intake API POST /api/requests<br/>+ Durable pipeline + activities · owns the Gate]
+      ORC[Zynara.WorkflowHost<br/>MAF Workflow · POST /api/workflows/CareApprovalPipeline/run<br/>+ Durable executors · owns the Gate]
       ADP[Zynara.SubmissionAdapter<br/>sole outbound path to payers]
       API[API Proxy<br/>read models + reviewer actions]
     end

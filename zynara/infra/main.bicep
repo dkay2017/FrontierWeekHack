@@ -43,7 +43,7 @@ param modelDeploymentName string = 'gpt-5.4'
 @description('File Search vector store id (created in the portal). Empty = agents run on inline data only.')
 param vectorStoreId string = ''
 
-@description('Agent DI mode for the orchestrator + api-proxy: stub | foundry.')
+@description('Agent DI mode for the workflow host + api-proxy: stub | foundry.')
 @allowed([ 'stub', 'foundry' ])
 param agentsMode string = 'stub'
 
@@ -159,7 +159,6 @@ output PROJECT_ENDPOINT string = foundry.outputs.projectEndpoint
 output MODEL_DEPLOYMENT_NAME string = modelDeploymentName
 output APPLICATIONINSIGHTS_CONNECTION_STRING string = foundry.outputs.appInsightsConnectionString
 output COSMOS_ENDPOINT string = data.outputs.cosmosEndpoint
-output ORCHESTRATOR_APP_NAME string = apps.outputs.orchestratorName
 output WORKFLOWHOST_APP_NAME string = apps.outputs.workflowHostName
 output WORKFLOW_URL string = apps.outputs.workflowHostUrl
 output APIPROXY_APP_NAME string = apps.outputs.apiProxyName

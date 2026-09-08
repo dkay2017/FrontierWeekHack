@@ -4,11 +4,18 @@
 current at every checkpoint and **commit + push** — uncommitted work is lost on a
 Codespace rebuild.
 
-_Last updated: 2026-09-07 (session 10 — MAF **Phase 4 DONE & merged to `main`**:
-durable host live on `zynara-spike-rg`, verified with real GPT-5.4 (both submit
-paths, Challenge 2 traces). **Next: Phase 5** (retire v1 orchestrator, docs,
-`v2.0-maf` tag). `v1.0-durable` = rollback).
-Deadline: **2026-09-23 midnight US**. Submission: 3-min video + repo + arch doc
+_Last updated: 2026-09-08 (session 11 — planning the **V3.1 re-eval follow-ups**:
+external re-eval scored **9.2/10, finalist territory** — architecture judged
+strong enough, remaining gap is *proof + framing*. Plan in §C below: credible
+generalist baseline (the only score mover), demo rehearsal, dashboard Pipeline
+Simulator, small wording/rename points. **MAF Phase 5 code/infra cleanup done**
+(D36 — v1 `Zynara.Orchestrator` deleted; build/tests to re-verify in Codespace;
+deep TDD §12 + SVG stay with S-6). `v1.0-durable` = rollback)._
+_Prev (session 10): MAF Phase 4 DONE & merged to `main` — durable host live on
+`zynara-spike-rg`, verified with real GPT-5.4 (both submit paths, Challenge 2
+traces)._
+
+_Deadline: **2026-09-23 midnight US**. Submission: 3-min video + repo + arch doc
 + TDD + dashboard UI._
 
 ## ⚑ Active work — MAF migration (`maf-migration` branch)
@@ -26,18 +33,19 @@ D32 (why), D33 (Phase 0–3 checkpoint).
 | 1 · Full graph | ✅ `CareApprovalWorkflow.Build` → `PipelineResult`; `CareApprovalRunner` drop-in for `AuthPipeline` |
 | 2 · Agents via MAF | ✅ `AsAIAgent` over the existing Foundry agents; **verified against real GPT-5.4** (routes match v1) |
 | 3 · HITL review port | ✅ explicit `RequestPort` pause/resume + `ApprovalAuthority` + submission edge |
-| 4 · Durable hosting + deploy | ✅ **DONE — verified live & merged to `main`** (`fbdf5af`). `zynara-spike-rg`, real GPT-5.4: auto-submit + HITL both submit; Challenge 2 tree from `zynara-workflowhost`; no CustomStatus error. `func-zynara-workflowhost` runs alongside the v1 orchestrator (v1 still at `POST /api/requests`). |
-| 5 · Cleanup + docs | ⏳ delete v1 orchestrator, `FakeOrchestrationContext`; TDD §12 / ARCH / SVG; `v2.0-maf` tag |
+| 4 · Durable hosting + deploy | ✅ **DONE — verified live & merged to `main`** (`fbdf5af`). `zynara-spike-rg`, real GPT-5.4: auto-submit + HITL both submit; Challenge 2 tree from `zynara-workflowhost`; no CustomStatus error. |
+| 5 · Cleanup + docs | 🔸 **code/infra done (2026-09-08, D36)** — `src/Zynara.Orchestrator` + `tests/Zynara.Orchestrator.Tests` (`FakeOrchestrationContext`) deleted; out of `Zynara.sln` / `azure.yaml` / `infra`. **Left:** re-verify `dotnet build`/`test` in Codespace · delete the live `func-zynara-orchestrator` app · retarget dashboard approve/reject to `/respond/{runId}` + drop the api-proxy two-phase `SendCase` (was deferred here from Phase 3) · deep TDD §12 + new SVG (S-6) · `v2.0-maf` tag |
 
 **Phase 4 detail** (`docs/design/MAF-MIGRATION.md` §"Phase 4"):
 `Zynara.WorkflowHost` = `FunctionsApplication` + `ConfigureDurableWorkflows`.
 `CareApprovalWorkflow.BuildDurable` is a **coarse** graph (one `assemble` executor
 runs the whole pipeline + persists to Cosmos; the message downstream is the slim
 `Flow` record) — required to stay under Durable Task's 16 KB CustomStatus cap.
-Wired into `infra/` as the 4th Function app (`func-zynara-workflowhost-<suffix>`,
-own task hub `ZynaraMafPipeline`), runs **alongside** the v1 orchestrator until
-Phase 5. `WorkflowClient` in the api-proxy forwards `/run` + `/decision` to it
-(`runId` = request id); dashboard contract unchanged.
+Wired into `infra/` as a Function app (`func-zynara-workflowhost-<suffix>`,
+own task hub `ZynaraMafPipeline`). `WorkflowClient` in the api-proxy forwards
+`/run` + `/decision` to it (`runId` = request id); dashboard contract unchanged.
+(The v1 `func-zynara-orchestrator` app is retired — bicep removed in D36; delete
+the live app out-of-band.)
 
 **Unchanged by the migration:** `Zynara.Core` domain + Gate + `ApprovalAuthority`
 + the pipeline logic + `eval/` + `Zynara.Data` + `Zynara.Submission` + the
@@ -381,8 +389,9 @@ Challenge 2 traces confirmed in App Insights: `AuthOrchestrator` → `spoke.*` �
 the approve/reject/send buttons to the live endpoints.
 
 **Live URLs:** dashboard `https://proud-water-0e35b1603.6.azurestaticapps.net` ·
-api-proxy behind the SWA proxy · orchestrator
-`func-zynara-orchestrator-itbahognjguwy.azurewebsites.net/api/requests`.
+api-proxy behind the SWA proxy · workflow host
+`func-zynara-workflowhost-itbahognjguwy.azurewebsites.net/api/workflows/CareApprovalPipeline/run`
+(the v1 `func-zynara-orchestrator` app is retired — D36).
 
 ### B · Submission artifacts (the remaining work)
 8. **S-7 — pitch + 5-point doc.** The four review questions (§20), the challenge
@@ -392,6 +401,64 @@ api-proxy behind the SWA proxy · orchestrator
    built" band.
 10. **S-9 (optional)** — 2–3 real public payer policy docs into the corpus.
 11. **S-8 — the 3-min video.** Last. Script is `docs/runbooks/demo-script.md`.
+
+### C · V3.1 re-evaluation follow-ups — plan (2026-09-08, session 11)
+
+External re-eval `docs/design/Care_Approval_IQ_V3.1_Re_Evaluation.docx` — **9.2/10,
+finalist territory**. Reviewer: the architecture is strong enough; the remaining
+gap is **proof and framing, not more architecture / agents / docs**. Only the
+baseline experiment moves the score (→ ~9.4–9.5). Work order:
+
+1. **Credible generalist baseline** — *the score mover.* Race the 5-agent pipeline
+   vs **one** credible generalist LLM agent (same case + policy corpus + evidence +
+   precedent, single pass) over ~5–6 deliberately hard cases (missing mandatory
+   criterion, contradiction, thin evidence). Show the lone agent auto-submits /
+   hallucinates where the pipeline abstains or routes to a human. Output: a
+   comparison table + one slide.
+   - Today's `eval/Zynara.Eval/GeneralistBaseline.cs` is a naive keyword matcher —
+     a straw man a judge dismisses (§10, §20). Only live LLM path today is
+     `src/Zynara.Agents/Foundry/FoundryAgentClient.cs`.
+   - Keep CI deterministic: run the generalist once, **snapshot transcripts as
+     committed fixtures**, replay. Graders/metrics in `eval/Zynara.Eval/EvalRunner.cs`
+     + `EvalReport.cs` compare `GateRoute` enums today — needs a path to grade the
+     generalist's free-form output.
+   - Risk: a well-prompted modern generalist may do fine on easy cases → weakens
+     the story; hence the hard-case curation.
+2. **Rehearse the exact 3-min demo** (§18): denied case → mandatory criteria /
+   evidence / contradiction → precedent + outcome → Critic challenge →
+   deterministic Gate picks route → reviewer opens provenance → reviewer approves →
+   Submission Adapter executes → single trace / audit record. **No Azure-service
+   tour.** Material: `docs/runbooks/demo-script.md`, `local-demo.md`.
+3. **Pipeline Simulator for the Zynara dashboard** (user's idea, not a re-eval
+   point — serves the "shift effort to demo / presentation" advice). TireForge has
+   one (`../../../tireforge/src/TireForge.Dashboard/index.html` — ~160 lines:
+   `simEmit()` + `PIPE` stage array + `STEP_TIMELINE` + a `/* SIMULATOR */` CSS
+   block; explicitly *illustrative* / canned). Zynara has only the "run scenario ▾"
+   control (re-runs the real server-side pipeline) — no visual stepper. Build a
+   **real** (not illustrative) stepper: Intake → Needs-Auth → Evidence Gap →
+   Contradiction → Precedent → Critic → Gate → Human approval → Submit, replaying
+   the actual run stage by stage. Stage data already exists in `PipelineResult` /
+   `CaseView` (per-criterion evidence + source, Critic verdict + flags, Gate
+   decision model) — only backend work is shaping it as an ordered timeline in the
+   scenario-run / case response. Reuse TireForge's simulator CSS + stage-card
+   markup. Front-end ~0.5–1 day; **timebox to 1 day.**
+4. **Scrub "will win" / outcome-guarantee phrasing** (§13) → "the payer's own
+   history shows which arguments have succeeded in comparable cases." Grep docs +
+   TDD-V3 + pitch / slide copy (a grep over `docs/` on 2026-09-07 found nothing —
+   re-check the Word docs + any pitch text).
+5. **Prep the "why five agents" talking point** (§12) — five materially different
+   reasoning responsibilities; deliberately no agents for deterministic work
+   (expiry calc, policy diff, routing, thresholds). **Do not add a 6th agent.**
+6. **`AutoSubmit` → `READY_TO_SUBMIT`** (§11). Enum `GateRoute.AutoSubmit` at
+   `src/Zynara.Core/Model/Results.cs:81`; ~31 code / JSON / test refs + the arch
+   diagram + TDD / ARCHITECTURE / DECISIONS text. Low risk, wide touch (~1–2h);
+   keep code + JSON ground-truth + diagram + docs consistent, build green.
+7. **Keep** — Estimated Recoverable Value framing (§14) and the TDD §7.1
+   production-hardening boundary list (§15). Already done; don't dilute.
+
+**Priority if the day runs short:** 1 (baseline) > 2 (rehearsal) > 3 (simulator —
+only if 1 finishes with time to spare, timeboxed) > 4, 5 (wording / talking point)
+> 6 (rename — only if everything else is done).
 
 ## Deploy state — LIVE (2026-09-06, end of session 8)
 

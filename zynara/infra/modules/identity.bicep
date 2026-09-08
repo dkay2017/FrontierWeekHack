@@ -25,7 +25,7 @@ resource dashboard 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31'
   tags: tags
 }
 
-// reasoning = orchestrator + api-proxy. submission = the Submission Adapter.
+// reasoning = workflow host + api-proxy. submission = the Submission Adapter.
 output reasoningIdentityId string = reasoning.id
 output reasoningPrincipalId string = reasoning.properties.principalId
 output reasoningClientId string = reasoning.properties.clientId

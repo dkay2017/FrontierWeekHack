@@ -1,7 +1,7 @@
 // The compute apps — same shape as TireForge's apps.bicep (only the data store
 // differs: Cosmos here, Azure SQL there).
 //
-//   orchestrator ┐ id-reasoning  — Foundry inference + Cosmos + Blob read
+//   workflowhost ┐ id-reasoning  — Foundry inference + Cosmos + Blob read
 //   api-proxy    ┘
 //   submission     id-submission — the payer-integration secret + Cosmos write,
 //                                  NO Foundry (deliberately no PROJECT_ENDPOINT)
@@ -85,38 +85,14 @@ var reasoningExtra = [
   { name: 'CORPUS_BLOB_ENDPOINT', value: corpusStorageBlobEndpoint }
 ]
 
-var orchestratorName = 'func-zynara-orchestrator-${suffix}'
 var workflowHostName = 'func-zynara-workflowhost-${suffix}'
 var apiProxyName = 'func-zynara-apiproxy-${suffix}'
 var submissionName = 'func-zynara-submission-${suffix}'
 
-resource orchestrator 'Microsoft.Web/sites@2024-04-01' = {
-  name: orchestratorName
-  location: location
-  tags: union(tags, { 'azd-service-name': 'orchestrator' })
-  kind: 'functionapp,linux'
-  identity: { type: 'UserAssigned', userAssignedIdentities: { '${reasoningIdentityId}': {} } }
-  properties: {
-    serverFarmId: plan.id
-    httpsOnly: true
-    keyVaultReferenceIdentity: reasoningIdentityId
-    siteConfig: {
-      linuxFxVersion: 'DOTNET-ISOLATED|8.0'
-      ftpsState: 'Disabled'
-      minTlsVersion: '1.2'
-      appSettings: concat(commonSettings, [
-        { name: 'AzureWebJobsStorage__clientId', value: reasoningClientId }
-        { name: 'AZURE_CLIENT_ID', value: reasoningClientId }
-        { name: 'WEBSITE_CONTENTSHARE', value: orchestratorName }
-      ], reasoningExtra)
-    }
-  }
-}
-
-// The MAF Workflow host (v2 orchestrator). Same identity + data plane as the v1
-// orchestrator — Foundry inference, Cosmos, and the host storage as the Durable
-// Task backend. Its own task hub (host.json: ZynaraMafPipeline) so it does not
-// collide with the v1 orchestrator's hub on the shared storage account.
+// The MAF Workflow host — the orchestration layer (replaced the v1 Durable
+// Functions orchestrator, retired in the MAF migration Phase 5). id-reasoning:
+// Foundry inference, Cosmos, and the host storage as the Durable Task backend,
+// with its own task hub (host.json: ZynaraMafPipeline).
 resource workflowHost 'Microsoft.Web/sites@2024-04-01' = {
   name: workflowHostName
   location: location
@@ -273,7 +249,6 @@ resource dashboardBackend 'Microsoft.Web/staticSites/linkedBackends@2024-04-01' 
   }
 }
 
-output orchestratorName string = orchestrator.name
 output workflowHostName string = workflowHost.name
 output workflowHostUrl string = 'https://${workflowHost.properties.defaultHostName}'
 output apiProxyName string = apiProxy.name

@@ -55,8 +55,8 @@ critic JSON schema"*. That is correct behaviour, not a failure — the portal ch
 pipes each agent's raw text to the next, but the Critic's prompt expects the
 structured bundle (recommendation + precedent shortlist + evidence assessment)
 that `CriticCheck.cs` assembles in code. The Critic refusing on incomplete context
-*is* the argument for the deterministic orchestrator: the portal shows the
-hand-off, `Zynara.Orchestrator` makes it correct.
+*is* the argument for the deterministic workflow graph: the portal shows the
+hand-off, the MAF workflow (`Zynara.WorkflowHost`) makes it correct.
 
 ## Success criteria (Challenge 4)
 
@@ -65,7 +65,7 @@ hand-off, `Zynara.Orchestrator` makes it correct.
 - [x] One successful run through all three nodes to **End**
 - [x] Understood: the portal workflow is the agent hand-off; the Gate, the
       contradiction check, the approval-authority check and the audit trail are in
-      the Durable orchestrator (`Zynara.Orchestrator`) because they are
+      the MAF workflow host (`Zynara.WorkflowHost`) because they are
       deterministic — the portal chain captures roughly the reasoning third of the
       design.
 
@@ -90,6 +90,7 @@ satisfies Challenge 4 (persistent agents + a working multi-node workflow), and t
 
 ## The code side of Challenge 4
 
-`Zynara.Orchestrator` — the Durable Functions hub — is the real workflow: it
-sequences the five spokes as activities, runs the Gate inline, and branches on
-appeal vs. fresh submission. `AuthOrchestrator.cs`.
+`Zynara.WorkflowHost` — the MAF Workflow graph on Durable Task — is the real
+workflow: it runs the five spokes as executors, evaluates the Gate as a
+deterministic executor, and branches (auto-ready vs. review port) before any
+outbound send. `src/Zynara.Workflow/CareApprovalWorkflow.cs`.

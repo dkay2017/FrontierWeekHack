@@ -158,13 +158,20 @@ labelled set (agreement, false-negative rate, safe-abstention rate) — is what
 
 ## 4. Technical Architecture
 
-![Care Approval IQ — technical architecture](Care-Approval-IQ-Architecture_Design.png)
+![Care Approval IQ — technical architecture](Care-Approval-IQ-Architecture_Design.svg)
 
-*(`Care-Approval-IQ-Architecture_Design.svg` is the authoritative source; the
-`.png` beside it is the same diagram rasterised at 2× for Word / PDF export.)*
+*(`Care-Approval-IQ-Architecture_Design.svg` is the authoritative source.)*
+
+> **Note — orchestration layer migrated to the Microsoft Agent Framework.**
+> The orchestration described below as *Azure Durable Functions
+> (`Zynara.Orchestrator`)* has been rebuilt as a MAF Workflow graph hosted in
+> `Zynara.WorkflowHost` (`Microsoft.Agents.AI.Workflows` + Durable Task). The
+> hybrid principle is unchanged — the Gate is a deterministic executor, agents
+> still only produce prose. See `MAF-MIGRATION.md` and `DECISIONS.md` D32–D36;
+> §12 (TD-1/TD-2) is rewritten for MAF in the S-6 doc pass.
 
 Five layers along the request path — Intake is the request contract plus the
-orchestrator app's HTTP starter (no separate Function App, no queue) — plus three
+workflow host's HTTP starter (no separate Function App, no queue) — plus three
 cross-cutting concerns.
 
 | # | Layer | Components |

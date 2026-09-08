@@ -8,7 +8,7 @@ provision it.
 
 | Component | Identity | Gets | Deliberately does NOT get |
 |---|---|---|---|
-| orchestrator, api-proxy | `id-zynara-reasoning` | Foundry inference (Cognitive Services User) · Cosmos data-plane · Blob read · App Insights | the payer-integration secret |
+| workflow host, api-proxy | `id-zynara-reasoning` | Foundry inference (Cognitive Services User) · Cosmos data-plane · Blob read · App Insights | the payer-integration secret |
 | **Submission Adapter** | `id-zynara-submission` | the payer-integration secret (Key Vault Secrets User) · Cosmos write | **any model / Foundry access** — no `PROJECT_ENDPOINT` |
 | dashboard | `id-zynara-dashboard` | — (static content) | everything |
 
