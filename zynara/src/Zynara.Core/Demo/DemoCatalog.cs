@@ -17,7 +17,7 @@ public static class DemoCatalog
         new DemoScenario(
             "demo-ready",
             "Complete record — ready to submit",
-            "All criteria documented, high-quality evidence → auto-submit on approval.",
+            "All criteria documented, high-quality evidence → ready to submit; a reviewer approves the send.",
             new Request
             {
                 Id = "demo-ready",

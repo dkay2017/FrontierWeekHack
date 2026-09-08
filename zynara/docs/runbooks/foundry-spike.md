@@ -34,7 +34,7 @@ dotnet run --project tools/Zynara.FoundrySpike
 ```
 ▶ Complete record — ready to submit
   status     : ReadyToSubmit
-  gate       : AutoSubmit — gap-checked, Critic-cleared and ready
+  gate       : ReadyToSubmit — gap-checked, Critic-cleared and ready
   evidence   :
      [c1] Documented   “Physiotherapy completed over eight weeks…”
      ...
@@ -57,7 +57,7 @@ says which).
 
 With `VECTOR_STORE_ID` unset the hosted Critic can't see the policy clause text or
 the precedent narratives, so it flags *"no policy clause text is quoted"* and the
-clean case routes to **Strengthen** instead of AutoSubmit. Load the corpus once
+clean case routes to **Strengthen** instead of ReadyToSubmit. Load the corpus once
 (see `data/corpus/README.md`), then:
 
 ```

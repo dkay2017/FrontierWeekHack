@@ -12,7 +12,7 @@ Seven short documents the hosted agents read via **Foundry File Search**:
 
 Without this, the Critic correctly refuses to verify claims about the policy
 clause or the precedents — it flags *"no policy clause text is quoted"*. With it,
-the clean case can auto-submit.
+the clean case is ready to submit.
 
 ## Load it (manual — 2 minutes)
 

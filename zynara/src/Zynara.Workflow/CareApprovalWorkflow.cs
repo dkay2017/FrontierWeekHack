@@ -60,7 +60,7 @@ public static class CareApprovalWorkflow
     ///
     /// <b>No payer submission happens without an explicit human <c>/respond</c>.</b>
     /// Every case that needs a submission pauses at the port — the Gate route only
-    /// changes the headline the reviewer sees (an AutoSubmit case is "ready — one
+    /// changes the headline the reviewer sees (a ReadyToSubmit case is "ready — one
     /// click to send"; a HumanReview case "needs your judgement"). Cases where
     /// prior authorisation is not required end without a reviewer.
     ///
@@ -86,7 +86,7 @@ public static class CareApprovalWorkflow
             return new Flow(r.Id, r.Procedure, r.PayerPlan)
             {
                 AuthRequired = !result.StoppedEarly,
-                Route = result.Gate?.Route ?? GateRoute.AutoSubmit,
+                Route = result.Gate?.Route ?? GateRoute.ReadyToSubmit,
             };
         });
 
@@ -125,7 +125,7 @@ public static class CareApprovalWorkflow
     /// sets the urgency and the default action, never whether a human is asked.</summary>
     private static string Headline(GateRoute route) => route switch
     {
-        GateRoute.AutoSubmit  => "ready — every criterion met; one click to send",
+        GateRoute.ReadyToSubmit => "ready — every criterion met; one click to send",
         GateRoute.Strengthen  => "nearly ready — a supporting criterion needs evidence first",
         GateRoute.HumanReview => "needs your judgement — see the Gate reason",
         GateRoute.Abstain     => "not enough reliable evidence to advise — your call",

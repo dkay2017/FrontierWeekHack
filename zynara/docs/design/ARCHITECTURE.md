@@ -67,7 +67,7 @@ flowchart LR
       G --> P[Appeal Match + Builder]
       P --> C[Critic<br/>tries to disprove it]
       C --> GATE{Deterministic Gate<br/>4 routes}
-      GATE -->|clean, Critic-cleared| AUTO[auto-submit draft]
+      GATE -->|clean, Critic-cleared| AUTO[ready to submit]
       GATE -->|gap · over-limit · Critic block| REV[human review queue]
       GATE -->|too little to advise| ABS[abstain]
       REV --> H[[Reviewer approves / edits]]
@@ -213,7 +213,7 @@ only in the prose. Tests and CI run against the stubs, offline.
   regardless of the numbers; Low-quality evidence + Weak/None precedent support,
   or a Critic `Abstain` → **`Abstain`** (the system declines to advise); value
   over the auto-limit → `HumanReview`; an undocumented supporting criterion,
-  Medium evidence or a Critic `Concerns` → `Strengthen`; otherwise → `AutoSubmit`.
+  Medium evidence or a Critic `Concerns` → `Strengthen`; otherwise → `ReadyToSubmit`.
   Every route is shown with its working.
 - **Sole outbound path:** one adapter submits to payers and files appeals.
   Nothing else in the system performs an outbound action.

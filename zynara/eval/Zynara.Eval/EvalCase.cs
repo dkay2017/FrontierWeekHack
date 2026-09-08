@@ -132,7 +132,7 @@ public sealed record EvalGroundTruth
     /// <summary>Expected status per criterion id: Documented / Partial / Missing / Contradicted.</summary>
     public Dictionary<string, string> CriterionStatus { get; init; } = new();
 
-    /// <summary>Expected Gate route: AutoSubmit / Strengthen / HumanReview / Abstain.</summary>
+    /// <summary>Expected Gate route: ReadyToSubmit / Strengthen / HumanReview / Abstain.</summary>
     public required string ExpectedRoute { get; init; }
 
     /// <summary>Precedent ids the appeal should cite (empty for a non-appeal case).</summary>

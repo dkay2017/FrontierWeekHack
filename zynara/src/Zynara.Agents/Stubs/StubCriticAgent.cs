@@ -68,7 +68,7 @@ public sealed class StubCriticAgent : ICriticAgent
         var summary = verdict switch
         {
             CriticVerdict.Clear => "No material concern — the recommendation holds up.",
-            CriticVerdict.Concerns => $"{flags.Count} concern(s) — proceed with a human, do not auto-submit.",
+            CriticVerdict.Concerns => $"{flags.Count} concern(s) — proceed with a human, not straight to submission.",
             CriticVerdict.Block => $"{flags.Count} material problem(s) — the case must go to a reviewer.",
             _ => "The recommendation is not supportable — the system should abstain.",
         };

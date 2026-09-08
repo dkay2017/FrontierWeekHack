@@ -104,7 +104,7 @@ public class CriticTests
     }
 
     [Fact]
-    public void Gate_downgrades_an_auto_submit_to_strengthen_on_critic_concerns()
+    public void Gate_downgrades_a_ready_to_submit_to_strengthen_on_critic_concerns()
     {
         var critic = new CriticReview(CriticVerdict.Concerns,
             new[] { new CriticFlag("claim-support", "draft cites no precedent") }, "concerns");

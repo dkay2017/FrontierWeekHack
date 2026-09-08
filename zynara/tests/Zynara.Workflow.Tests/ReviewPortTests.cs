@@ -98,10 +98,10 @@ public class ReviewPortTests
         var kit = Build();
         await using var run = await InProcessExecution.RunAsync(kit.Wf, Scenario("demo-ready"));
 
-        // even a clean AutoSubmit case pauses — no payer submission without a person
+        // even a clean ReadyToSubmit case pauses — no payer submission without a person
         var ask = run.NewEvents.OfType<RequestInfoEvent>().Single();
         Assert.True(ask.Request.TryGetDataAs<ReviewCard>(out var card));
-        Assert.Equal("AutoSubmit", card!.Route);
+        Assert.Equal("ReadyToSubmit", card!.Route);
         Assert.Contains("ready", card.Headline);
 
         var response = ask.Request.CreateResponse(

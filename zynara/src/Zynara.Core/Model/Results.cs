@@ -30,7 +30,7 @@ public sealed record EvidenceGapResult(
 {
     public EvidenceQuality Quality => Assessment.Quality;
 
-    /// <summary>Ids of every mandatory criterion that is not Documented — the reason a case cannot auto-submit.</summary>
+    /// <summary>Ids of every mandatory criterion that is not Documented — the reason a case is not ready to submit.</summary>
     public IReadOnlyList<string> UnmetMandatory { get; init; } = Array.Empty<string>();
 }
 
@@ -80,8 +80,8 @@ public sealed record DriftResult(
 [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
 public enum GateRoute
 {
-    /// <summary>Ready — auto-submit the draft.</summary>
-    AutoSubmit,
+    /// <summary>Ready — the draft is gap-checked and Critic-cleared; a reviewer approves the send.</summary>
+    ReadyToSubmit,
 
     /// <summary>Fixable gaps — return to the clinician before submitting.</summary>
     Strengthen,
@@ -111,7 +111,7 @@ public sealed record GateDecision(
     DecisionModel Model,
     string Reason)
 {
-    public bool AutoSubmit => Route == GateRoute.AutoSubmit;
+    public bool ReadyToSubmit => Route == GateRoute.ReadyToSubmit;
 }
 
 /// <summary>The assembled prior-authorisation submission a reviewer sees.</summary>

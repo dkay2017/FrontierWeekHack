@@ -121,16 +121,16 @@ public static class EvalRunner
                 if (actualRoute == GateRoute.Abstain) absTaken++;
             }
 
-            if (c.GroundTruth.Route != GateRoute.AutoSubmit)
+            if (c.GroundTruth.Route != GateRoute.ReadyToSubmit)
             {
                 notAutoExpected++;
-                if (actualRoute == GateRoute.AutoSubmit) unsafeAuto++;
+                if (actualRoute == GateRoute.ReadyToSubmit) unsafeAuto++;
             }
 
             // baseline
             var baseRoute = GeneralistBaseline.Route(c);
             if (baseRoute == c.GroundTruth.Route) baseAgree++;
-            if (c.GroundTruth.Route != GateRoute.AutoSubmit && baseRoute == GateRoute.AutoSubmit) baseUnsafe++;
+            if (c.GroundTruth.Route != GateRoute.ReadyToSubmit && baseRoute == GateRoute.ReadyToSubmit) baseUnsafe++;
 
             var mark = actualRoute == c.GroundTruth.Route ? "ok  " : "MISS";
             caseLines.Add($"{mark} {c.Id,-26} expected {c.GroundTruth.Route,-11} got {actualRoute,-11} (baseline {baseRoute})");

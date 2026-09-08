@@ -40,7 +40,7 @@
       "c2": "Documented",
       "c3": "Documented"
     },
-    "expectedRoute": "AutoSubmit",
+    "expectedRoute": "ReadyToSubmit",
     "expectedCitedPrecedents": [],
     "expertAbstains": false,
     "expectedPolicyRef": "bupa-mri-ls-v3",

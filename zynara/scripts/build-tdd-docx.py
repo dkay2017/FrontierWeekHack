@@ -285,11 +285,11 @@ for x in [
     [("Gate — ", True), ("deterministic. Any unmet mandatory criterion or a contradiction → "
      "HumanReview; a Critic block → HumanReview; thin evidence + weak precedent → Abstain; over the "
      "value limit → HumanReview; an undocumented supporting criterion → Strengthen; otherwise → "
-     "AutoSubmit. Every route carries its working.", False)],
+     "ReadyToSubmit. Every route carries its working.", False)],
     [("Assemble & persist — ", True), ("one executor runs the whole pipeline, writes the result to "
      "Cosmos, then emits a slim routing message.", False)],
     [("Pause for a reviewer — ", True), ("every route raises a review card on the RequestPort and "
-     "suspends. The route only changes the headline — “ready — one click to send” for AutoSubmit, "
+     "suspends. The route only changes the headline — “ready — one click to send” for ReadyToSubmit, "
      "“needs your judgement” for HumanReview.", False)],
     [("Send — ", True), ("the reviewer's /respond resumes the workflow; the apply-decision executor "
      "enforces ApprovalAuthority; on an authorised approve-send the Submission Adapter submits.", False)],
@@ -404,7 +404,7 @@ bullet([("Inputs: mandatory-criterion status, supporting-criterion counts, evide
 bullet([("Rules: any unmet mandatory criterion or a contradiction → HumanReview; a Critic block "
          "→ HumanReview regardless of the numbers; a Critic abstain, or low-quality evidence with "
          "weak / none precedent support → Abstain; value over the auto-limit → HumanReview; an "
-         "undocumented supporting criterion or Critic concerns → Strengthen; otherwise → AutoSubmit.",
+         "undocumented supporting criterion or Critic concerns → Strengthen; otherwise → ReadyToSubmit.",
          False)])
 bullet([("A missing mandatory criterion is never averaged away. Every route is shown with its working.",
          False)])
@@ -456,12 +456,12 @@ for r in t.rows:
     r.cells[0].width = Inches(3.5); r.cells[1].width = Inches(1.6); r.cells[2].width = Inches(1.6)
 doc.add_paragraph().paragraph_format.space_after = Pt(4)
 sub("Multi-agent vs. one generalist — same 20 cases")
-bullet([("A deterministic single-prompt baseline scores its cases naively and auto-submits when "
+bullet([("A deterministic single-prompt baseline scores its cases naively and marks them ready to submit when "
          "every keyword hits — no notion of a mandatory criterion, no contradiction check, never "
          "abstains.", False)])
 bullet([("Route agreement: the pipeline 100%, the baseline 55%.", True)])
 bullet([("Unsafe automations: the pipeline 0, the baseline 5 ", True),
-        ("— it would have auto-submitted five cases with a contradiction in the note, an over-limit "
+        ("— it would have sent five cases with a contradiction in the note, an over-limit "
          "value, or only partial evidence.", False)])
 bullet([("The CI gate fails the build if the pipeline is not measurably safer than the baseline.", False)])
 

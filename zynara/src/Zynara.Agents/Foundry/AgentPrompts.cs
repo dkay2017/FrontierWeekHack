@@ -104,7 +104,7 @@ public static class AgentPrompts
           "summary": "<one or two sentences>"
         }
         "clear"    = no material concern.
-        "concerns" = minor issues; a human should look, do not auto-submit.
+        "concerns" = minor issues; a human should look, not straight to submission.
         "block"    = a material problem; the case must go to a reviewer.
         "abstain"  = the recommendation is not supportable at all.
         Be sceptical. Ground every flag in what you were actually given.

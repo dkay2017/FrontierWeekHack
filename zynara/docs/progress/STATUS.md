@@ -447,20 +447,28 @@ baseline experiment moves the score (→ ~9.4–9.5). Work order:
    agent"), plus a **Judging Q&A** block in `docs/progress/JUDGING-SELF-ASSESSMENT.md`
    (§12 five-agents, §12 no-sixth, §3 no-auto-submit, §13 outcome framing, the §20
    four questions). Do not add a 6th agent.
-6. **`AutoSubmit` → `READY_TO_SUBMIT`** (§11) — **not started.** Enum
-   `GateRoute.AutoSubmit` at `src/Zynara.Core/Model/Results.cs:81`; ~31 code / JSON
-   / test refs + arch diagram + docs. Mechanical but wide, and **can't be
-   build-verified on the authoring machine** — do it in a session with `dotnet`, or
-   accept CI as the check. Keep code + JSON ground-truth + diagram + docs consistent.
+6. **`AutoSubmit` → `ReadyToSubmit`** (§11) — ✅ **done & verified 2026-09-08
+   (D37).** `.NET SDK 8.0.424` installed locally, so this was build + 119-test
+   verified. `GateRoute.AutoSubmit` → `ReadyToSubmit` (+ `GateDecision` bool,
+   `ApprovalAuthority.AutoSubmitLimit` → `ReadyToSubmitLimit`), across `Zynara.Core`
+   / `Zynara.Workflow` / `Zynara.Agents` / `eval` / all tests / dashboard (route→
+   style map + inlined snapshot + regenerated `demo-cases.json`) / arch SVG /
+   current-state docs. Historical decision-log prose left as-is; D37 records the
+   reversal of D35's "keep the name". Also fixed two latent snapshot-determinism
+   bugs (`ReplaceLineEndings`, `InvariantCulture` on the win-rate `P0`).
 7. **Keep** — Estimated Recoverable Value framing (§14) and the TDD §7.1
    production-hardening boundary list (§15). Already done; don't dilute.
 
 **State (2026-09-08):** 2 ✅ (script) · 3 ✅ (simulator built) · 4 ✅ · 5 ✅ ·
-7 ✅ (already). **1 designed, needs a `dotnet`+Foundry machine to implement +
-run.** **6 not started** (needs `dotnet` to verify, or lean on CI).
-So the remaining real work is **item 1's implementation** and **item 6's rename** —
-both blocked on a build toolchain the authoring machine lacks — plus the user
-actually rehearsing/recording the demo.
+6 ✅ (rename done + verified, D37) · 7 ✅ (already). `.NET SDK` now installed
+locally — the whole stack builds + **119 tests green**, incl. the Phase 5 cleanup
+and every commit since.
+**Remaining:** item **1's implementation** — designed in `eval/Zynara.Eval/BASELINE.md`
+(prompt + fixture-replay + grader mapping) with 6 draft hard cases; still to write
+`GeneralistBaselineLlm.cs` + `EvalReport.Baseline`, promote the hard cases, then
+`az login` + one `ZYNARA_BASELINE=refresh` run against Foundry to capture fixtures.
+Plus the user rehearsing / recording the demo, and pushing the stack (`git push`
+needs the interactive GitHub sign-in).
 
 ## Deploy state — LIVE (2026-09-06, end of session 8)
 

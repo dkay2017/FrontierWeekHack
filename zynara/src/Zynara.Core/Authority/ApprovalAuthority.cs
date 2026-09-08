@@ -21,16 +21,16 @@ public sealed record AuthorityCheck(bool Allowed, string Reason, ReviewerRole Re
 /// <summary>
 /// Approval authority tiered by <b>route</b> and by <b>financial risk</b>
 /// (evaluator §13 / review note #4). The required authority is the higher of the
-/// two; the Gate's auto-submit limit is simply the bottom tier — above it, a case
+/// two; the Gate.s ready-to-submit limit is simply the bottom tier — above it, a case
 /// escalates to a more senior reviewer rather than to a bigger number.
 /// </summary>
 public static class ApprovalAuthority
 {
-    public static decimal AutoSubmitLimit => 500m;
+    public static decimal ReadyToSubmitLimit => 500m;
 
     private static ReviewerRole ByRoute(GateRoute route) => route switch
     {
-        GateRoute.AutoSubmit => ReviewerRole.Coordinator,
+        GateRoute.ReadyToSubmit => ReviewerRole.Coordinator,
         GateRoute.Strengthen => ReviewerRole.Coordinator,
         GateRoute.HumanReview => ReviewerRole.Reviewer,
         GateRoute.Abstain => ReviewerRole.SeniorReviewer,

@@ -116,7 +116,7 @@
     <rect x="11" y="7" width="20" height="20" rx="5" fill="#2563EB"/><g transform="translate(15,11)" class="gl"><circle cx="2.4" cy="3.4" r="1.7"/><circle cx="9.6" cy="2.2" r="1.7"/><circle cx="8.4" cy="9" r="1.7"/><path d="M4 2.9 L7.8 2.4 M3.7 4.7 L7.2 8"/></g>
     <rect x="40" y="9" width="64" height="14" rx="7" fill="#1D4ED8"/><text x="72" y="18.6" text-anchor="middle" style="fill:#FFFFFF" font-size="7.1" font-weight="800" letter-spacing=".05em">WORKFLOW</text>
     <text x="113" y="15" class="cn" font-size="10.5" fill="#1D4ED8">orchestrator<tspan class="mut" font-size="8.3" fill="#33427A" font-weight="600">  ·  a Microsoft Agent Framework workflow graph</tspan></text>
-    <text x="113" y="27" class="sm" font-size="8.2">sequences the five checks · owns the <tspan font-weight="800">Gate</tspan> — auto-submit / strengthen / human review / abstain · <tspan font-weight="800">every send pauses at a MAF RequestPort</tspan> until a human answers · Durable Task checkpoint + replay · writes Cosmos</text>
+    <text x="113" y="27" class="sm" font-size="8.2">sequences the five checks · owns the <tspan font-weight="800">Gate</tspan> — ready to submit / strengthen / human review / abstain · <tspan font-weight="800">every send pauses at a MAF RequestPort</tspan> until a human answers · Durable Task checkpoint + replay · writes Cosmos</text>
   </g>
 
   <!-- arrows: orchestrator → executors (blue) -->

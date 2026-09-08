@@ -30,7 +30,7 @@ public class WorkflowPipelineTests
     private static Request Scenario(string id) => DemoCatalog.All.Single(x => x.Id == id).Request;
 
     [Theory]
-    [InlineData("demo-ready", GateRoute.AutoSubmit)]
+    [InlineData("demo-ready", GateRoute.ReadyToSubmit)]
     [InlineData("demo-strengthen", GateRoute.Strengthen)]
     [InlineData("demo-review-mandatory", GateRoute.HumanReview)]
     [InlineData("demo-contradiction", GateRoute.HumanReview)]
@@ -62,12 +62,12 @@ public class WorkflowPipelineTests
     }
 
     [Fact]
-    public async Task A_complete_note_auto_submits_and_produces_a_cited_draft()
+    public async Task A_complete_note_is_ready_to_submit_and_produces_a_cited_draft()
     {
         var result = await Runner(Demo()).RunAsync(Scenario("demo-ready"));
 
         Assert.False(result.StoppedEarly);
-        Assert.Equal(GateRoute.AutoSubmit, result.Gate!.Route);
+        Assert.Equal(GateRoute.ReadyToSubmit, result.Gate!.Route);
         Assert.NotNull(result.Draft);
         Assert.NotEmpty(result.Draft!.CitedCriteria);
         Assert.Equal("CCSD-72148", result.Draft.RequiredCode);

@@ -3,7 +3,7 @@
     {
       "id": "demo-ready",
       "label": "Complete record \u2014 ready to submit",
-      "expectation": "All criteria documented, high-quality evidence \u2192 auto-submit on approval."
+      "expectation": "All criteria documented, high-quality evidence \u2192 ready to submit; a reviewer approves the send."
     },
     {
       "id": "demo-strengthen",
@@ -162,8 +162,8 @@
       "conflicts": [],
       "confidence": "High",
       "gate": {
-        "route": "AutoSubmit",
-        "reason": "gap-checked, Critic-cleared and ready \u2014 auto-submit the draft. [mandatory all met; supporting 2 documented / 0 partial / 0 missing; evidence High; contradiction none; note conflicts 0; precedent support Strong]",
+        "route": "ReadyToSubmit",
+        "reason": "gap-checked, Critic-cleared and ready to submit \u2014 a reviewer approves the send. [mandatory all met; supporting 2 documented / 0 partial / 0 missing; evidence High; contradiction none; note conflicts 0; precedent support Strong]",
         "mandatoryPass": true,
         "unmetMandatory": [],
         "supportingDocumented": 2,
@@ -202,7 +202,7 @@
           "kind": "assembled",
           "actor": "system",
           "at": "2026-09-06 00:00:00Z",
-          "detail": "pipeline ran \u2192 AutoSubmit"
+          "detail": "pipeline ran \u2192 ReadyToSubmit"
         },
         {
           "kind": "agent",
@@ -1119,7 +1119,7 @@
             "concern": "the recommendation is firmer than Low-quality evidence supports"
           }
         ],
-        "summary": "1 concern(s) \u2014 proceed with a human, do not auto-submit."
+        "summary": "1 concern(s) \u2014 proceed with a human, not straight to submission."
       },
       "conflicts": [],
       "confidence": "Low",

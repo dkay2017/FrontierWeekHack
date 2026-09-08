@@ -37,7 +37,7 @@ public sealed record Request
     /// <summary>The denial letter text — present only once a denial has occurred (drives the appeal path).</summary>
     public string? DenialLetter { get; init; }
 
-    /// <summary>Estimated claim value; the Gate compares this against the auto-submit limit.</summary>
+    /// <summary>Estimated claim value; the Gate compares this against the ready-to-submit limit.</summary>
     public decimal? EstimatedValue { get; init; }
 }
 

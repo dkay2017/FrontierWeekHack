@@ -8,7 +8,7 @@ namespace Zynara.Agents.Foundry;
 /// <c>precedent-strategist</c> backed by the hosted agent — the differentiator. Reasons
 /// over the ranked precedent shortlist, recommends submit / strengthen / appeal,
 /// and drafts the appeal when a denial has occurred. The recommendation is
-/// advisory: the deterministic Gate still decides auto-submit vs. review.
+/// advisory: the deterministic Gate still decides ready-to-submit vs. review.
 /// Citations and the verdict are sanitised against the shortlist.
 /// </summary>
 public sealed class FoundryPrecedentStrategistAgent(

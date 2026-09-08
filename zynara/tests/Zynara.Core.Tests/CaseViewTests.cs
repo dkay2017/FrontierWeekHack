@@ -148,7 +148,7 @@ public class CaseViewTests
         var ready = await service.RunAsync(DemoCatalog.All.Single(s => s.Id == "demo-ready").Request);
         var appeal = await service.RunAsync(DemoCatalog.All.Single(s => s.Id == "demo-appeal").Request);
 
-        Assert.Equal("Coordinator", ready.View.ApproveAuthority);      // AutoSubmit, low value
+        Assert.Equal("Coordinator", ready.View.ApproveAuthority);      // ReadyToSubmit, low value
         Assert.Equal("SeniorReviewer", appeal.View.ApproveAuthority);  // appeal → at least Senior
         Assert.NotEmpty(ready.View.Audit);
     }

@@ -32,7 +32,7 @@ public sealed class AuthPipeline(
         var na = await needsAuth.RunAsync(request, ct);
         if (!na.AuthRequired)
         {
-            ZynaraTelemetry.RecordRoute(run, GateRoute.AutoSubmit, reasoningSteps: 1);
+            ZynaraTelemetry.RecordRoute(run, GateRoute.ReadyToSubmit, reasoningSteps: 1);
             run?.SetTag("zynara.stopped_early", true);
             return new PipelineResult(request.Id, na, null, null, null, null, null)
             {
@@ -117,7 +117,7 @@ public static class DraftBuilder
             PayerPlan: request.PayerPlan,
             Procedure: request.Procedure,
             RequiredCode: na.RequiredCode,
-            Body: body.TrimEnd(),
+            Body: body.ReplaceLineEndings("\n").TrimEnd(),
             CitedCriteria: documented,
             CitedPrecedents: appeal.Recommendation.CitedPrecedentIds);
     }

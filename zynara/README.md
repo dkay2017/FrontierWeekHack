@@ -47,7 +47,7 @@ Five specialised agents, one human-approved pipeline:
 | **Expiry Watch** | Catches an approved authorisation expiring before the procedure is scheduled |
 | **Policy Drift** | Catches a payer quietly changing criteria and flags stale request templates |
 
-A deterministic **Gate** decides auto-submit vs. human review; nothing is
+A deterministic **Gate** decides ready-to-submit vs. human review; nothing is
 submitted or appealed without a person approving it.
 
 **Region switch (UK ⇄ US)** — flips the payer rule set, terminology, and

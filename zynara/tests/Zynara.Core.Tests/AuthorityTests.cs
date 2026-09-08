@@ -7,7 +7,7 @@ namespace Zynara.Core.Tests;
 public class AuthorityTests
 {
     [Theory]
-    [InlineData(GateRoute.AutoSubmit, 400, ReviewerRole.Coordinator)]
+    [InlineData(GateRoute.ReadyToSubmit, 400, ReviewerRole.Coordinator)]
     [InlineData(GateRoute.HumanReview, 400, ReviewerRole.Reviewer)]
     [InlineData(GateRoute.HumanReview, 9000, ReviewerRole.SeniorReviewer)]
     [InlineData(GateRoute.Abstain, 400, ReviewerRole.SeniorReviewer)]

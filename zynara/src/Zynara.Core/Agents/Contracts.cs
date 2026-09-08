@@ -169,7 +169,7 @@ public enum CriticVerdict
     /// <summary>No material concern — proceed to the Gate.</summary>
     Clear,
 
-    /// <summary>Minor concerns — proceed, but the case can no longer auto-submit.</summary>
+    /// <summary>Minor concerns — proceed, but the case is no longer ready to submit.</summary>
     Concerns,
 
     /// <summary>A material problem — the case must go to a human.</summary>

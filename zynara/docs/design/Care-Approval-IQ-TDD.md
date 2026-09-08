@@ -120,7 +120,7 @@ code that decides, and a human reviewer who authorises.
   number** (D4). Mandatory criteria are a hard gate — never averaged away; a
   contradiction is never silently resolved; and the system can explicitly
   **abstain** when the evidence is too thin. The four routes:
-  `AutoSubmit / Strengthen / HumanReview / Abstain`, each shown with its working.
+  `ReadyToSubmit / Strengthen / HumanReview / Abstain`, each shown with its working.
 - **Hybrid principle (carried from the prior project's D12):** deterministic code
   owns every value that drives a decision or an action; agents produce the prose
   and the judgement over unstructured text.
@@ -239,7 +239,7 @@ cross-cutting concerns.
    `Block` → `HumanReview` regardless of the numbers; a Critic `Abstain` or
    Low-quality evidence with Weak/None precedent support → `Abstain`; value over
    the auto-limit → `HumanReview`; an undocumented supporting criterion, Medium
-   evidence, or Critic `Concerns` → `Strengthen`; otherwise → `AutoSubmit`. Every
+   evidence, or Critic `Concerns` → `Strengthen`; otherwise → `ReadyToSubmit`. Every
    route carries its working.
 8. **Send** — the Submission Adapter submits to the payer in their format
    (portal / X12 278 / FHIR / fax) — the only outbound path.
@@ -365,7 +365,7 @@ In scope — built and demonstrated:
 - **Reviewer roles + approval authority** (`ApprovalAuthority`, built). Four roles
   (Coordinator → Reviewer → Senior Reviewer → Medical Director). The authority
   needed to **approve &amp; send** is the higher of the route tier
-  (AutoSubmit/Strengthen → Coordinator, HumanReview → Reviewer, Abstain → Senior)
+  (ReadyToSubmit/Strengthen → Coordinator, HumanReview → Reviewer, Abstain → Senior)
   and the **financial-risk tier** (≤ £500 → Coordinator, ≤ £5k → Reviewer,
   ≤ £25k → Senior, above → Medical Director); an appeal is always at least a
   Senior sign-off. The Gate's auto-limit is just the bottom tier — above it a
@@ -446,7 +446,7 @@ citations) and measures:
 | **Hallucination rate** | criterion ids not in the set, precedent ids not on record, or a policy clause in the appeal draft that no shortlisted precedent cited — CI hard-gate: **must be 0** |
 | **Appeal-recommendation agreement** vs. labels | the `precedent-strategist` verdict (Submit / Strengthen / Appeal) matches the expert label (CI floor 80%) |
 | **Safe-abstention rate** | of the cases an expert marks "not enough to advise", how many did the system route to `Abstain` (CI floor 80%) |
-| **Unsafe-automation rate** | cases the system auto-submitted that an expert would not have — CI hard-gate: **must be 0** |
+| **Unsafe-automation rate** | cases the system marked ready to submit that an expert would not have — CI hard-gate: **must be 0** |
 
 CI hard-gates the safety metrics (unsafe automation = 0, mandatory false-negative
 = 0, hallucinated references = 0) and holds a floor on route agreement,

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Zynara.Core.Agents;
 using Zynara.Core.Model;
@@ -36,7 +37,7 @@ public sealed class StubPrecedentStrategistAgent : IPrecedentStrategistAgent
         {
             verdict = winRate >= 0.5 && won.Count > 0 ? StrategyVerdict.Appeal : StrategyVerdict.Strengthen;
             text = won.Count > 0
-                ? $"{won.Count} comparable case(s) won on appeal (win rate {winRate:P0}). " +
+                ? $"{won.Count} comparable case(s) won on appeal (win rate {winRate.ToString("P0", CultureInfo.InvariantCulture)}). " +
                   (verdict == StrategyVerdict.Appeal
                       ? "Recommend appeal, citing the precedents below."
                       : "Recommend strengthening the record before re-appealing.")
@@ -81,6 +82,6 @@ public sealed class StubPrecedentStrategistAgent : IPrecedentStrategistAgent
         }
         sb.AppendLine();
         sb.AppendLine("We ask that the authorisation be granted. [Reviewer to add case-specific detail.]");
-        return sb.ToString().TrimEnd();
+        return sb.ToString().ReplaceLineEndings("\n").TrimEnd();
     }
 }

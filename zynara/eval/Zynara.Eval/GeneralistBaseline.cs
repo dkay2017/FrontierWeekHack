@@ -33,6 +33,6 @@ public static class GeneralistBaseline
         // Naive: complete-looking → auto-submit; otherwise → a human. No abstain.
         if (denied)
             return GateRoute.HumanReview;
-        return allHit ? GateRoute.AutoSubmit : GateRoute.HumanReview;
+        return allHit ? GateRoute.ReadyToSubmit : GateRoute.HumanReview;
     }
 }

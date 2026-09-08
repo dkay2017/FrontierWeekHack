@@ -76,19 +76,19 @@ Respond with a single JSON object and nothing else:
   "contradictionFound": true | false,
   "citedPrecedents": [ "<precedent id>", ... ],
   "policyRef": "<the governing policy reference, copied exactly from the input, or null>",
-  "route": "READY_TO_SUBMIT" | "STRENGTHEN" | "HUMAN_REVIEW" | "ABSTAIN",
+  "route": "ReadyToSubmit" | "Strengthen" | "HumanReview" | "Abstain",
   "abstain": true | false,
   "reasoning": "<3-4 sentences>"
 }
 
 Route meanings:
-- READY_TO_SUBMIT: every mandatory criterion documented, evidence solid, no
+- ReadyToSubmit: every mandatory criterion documented, evidence solid, no
   contradiction; a human still approves before anything is sent.
-- STRENGTHEN: mandatory criteria met but a supporting criterion is undocumented,
+- Strengthen: mandatory criteria met but a supporting criterion is undocumented,
   or the case is over-stated relative to the evidence.
-- HUMAN_REVIEW: a mandatory criterion is not met, a contradiction is present, the
+- HumanReview: a mandatory criterion is not met, a contradiction is present, the
   value is over the auto-limit, or precedent conflicts.
-- ABSTAIN: not enough reliable evidence and no comparable precedent to advise.
+- Abstain: not enough reliable evidence and no comparable precedent to advise.
 
 Use only the criterion ids and precedent ids you were given. Judge only what the
 note actually says. Do not invent policy references or clauses.
@@ -128,15 +128,15 @@ parallel pass that computes the same from the generalist's parsed JSON:
 
 | Metric | From the generalist JSON |
 |---|---|
-| route agreement | `route` vs `GroundTruth.Route` (map `READY_TO_SUBMIT`↔`AutoSubmit`) |
+| route agreement | `route` vs `GroundTruth.Route` (`ReadyToSubmit`) |
 | **mandatory false negative** | `criteria[i].status == documented` while `GroundTruth` says not, for a mandatory id — **the headline number** |
 | evidence precision / recall | `status == documented` vs ground-truth `Documented` |
 | contradiction detection | `contradictionFound` vs cases whose ground truth has a `Contradicted` status or a known note conflict |
 | precedent citation accuracy | `citedPrecedents` set-equals `GroundTruth.ExpectedCitedPrecedents` |
 | hallucinated references | `citedPrecedents` / `policyRef` not present in the case inputs |
 | policy citation accuracy | `policyRef == expected` |
-| safe abstention | `route == ABSTAIN` over `GroundTruth.ExpertAbstains` cases |
-| unsafe automation | `route == READY_TO_SUBMIT` where `GroundTruth.Route != AutoSubmit` |
+| safe abstention | `route == Abstain` over `GroundTruth.ExpertAbstains` cases |
+| unsafe automation | `route == ReadyToSubmit` where `GroundTruth.Route != ReadyToSubmit` |
 
 Extend `EvalReport` with a `Baseline` sub-record carrying all of these (not just
 the two fields it has now), and print an agents-vs-generalist table in `ToText()`.

@@ -7,14 +7,14 @@ namespace Zynara.Core.Tests;
 public class GateTests
 {
     [Fact]
-    public void Auto_submits_when_mandatory_met_no_contradiction_high_evidence_and_within_value()
+    public void Ready_to_submit_when_mandatory_met_no_contradiction_high_evidence_and_within_value()
     {
         var d = new Gate().Evaluate(
             Build.Gap(documented: 3, missing: 0, quality: EvidenceQuality.High),
             Build.Appeal(PrecedentSupport.Strong),
             estimatedValue: 400m);
 
-        Assert.Equal(GateRoute.AutoSubmit, d.Route);
+        Assert.Equal(GateRoute.ReadyToSubmit, d.Route);
     }
 
     [Fact]

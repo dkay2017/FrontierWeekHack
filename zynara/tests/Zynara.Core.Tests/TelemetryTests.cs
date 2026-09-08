@@ -82,7 +82,7 @@ public class TelemetryTests
 
         var spans = ForRequest(all, id);
         var run = spans.Single(s => s.Name == "pipeline.run");
-        Assert.Equal("AutoSubmit", run.Activity.GetTagItem("zynara.route"));
+        Assert.Equal("ReadyToSubmit", run.Activity.GetTagItem("zynara.route"));
 
         foreach (var spoke in new[] { "spoke.evidence-gap", "spoke.claims-extraction",
                                       "spoke.precedent-match", "spoke.critic" })

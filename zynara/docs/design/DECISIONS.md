@@ -5,6 +5,33 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D37 · Rename the Gate route `AutoSubmit` → `ReadyToSubmit`
+
+**2026-09-08.** The V3.1 re-evaluation (§11) flagged the label `AutoSubmit` as a
+scan-time hazard: it *visually* reads as autonomous payer submission even though
+D35 already made every send pause for a human. D35 chose to keep the name ("it is
+still the Gate's *assessment*"); this reverses that — the small ambiguity is not
+worth leaving in front of a judge.
+
+`GateRoute.AutoSubmit` → `GateRoute.ReadyToSubmit` (PascalCase, so the
+`[JsonStringEnumConverter]` wire value is `"ReadyToSubmit"`). Also
+`GateDecision.AutoSubmit` bool → `ReadyToSubmit`; `ApprovalAuthority.AutoSubmitLimit`
+→ `ReadyToSubmitLimit`. The Gate's own reason string and the reviewer headline now
+say "ready to submit — a reviewer approves the send". The display status was
+already `CaseStatus.ReadyToSubmit` — the route name now matches it.
+
+Touched: `Zynara.Core` (Results, Gate, CaseViewBuilder, ApprovalAuthority,
+AuthPipeline, DemoCatalog), `Zynara.Workflow`, `Zynara.Agents` stubs + prompts,
+`eval/` (3 case JSONs + runner + baseline), all affected tests, the dashboard
+(`index.html` route→style map + inlined snapshot, regenerated `demo-cases.json`),
+the architecture SVG, and the current-state docs. **Build + 119 tests green.**
+
+Swept in alongside — two latent snapshot-determinism bugs that only surfaced
+running `DemoDump` on Windows: `AuthPipeline` / `StubPrecedentStrategistAgent`
+draft builders now `.ReplaceLineEndings("\n")`, and the strategist's win-rate `P0`
+format is pinned to `InvariantCulture` — so the committed `demo-cases.json` is
+byte-identical regardless of the OS that regenerates it.
+
 ## D36 · MAF migration Phase 5 — retire the v1 Durable orchestrator
 
 **2026-09-08.** With the MAF Workflow host (`Zynara.WorkflowHost`) verified live

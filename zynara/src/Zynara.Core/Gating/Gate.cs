@@ -6,7 +6,7 @@ namespace Zynara.Core.Gating;
 /// <summary>Gate thresholds (Architecture §8 / TDD §3). Bound at startup; overridable per profile later.</summary>
 public sealed record GateOptions
 {
-    /// <summary>Estimated claim value at or below which an auto-submit is allowed. Default £500.</summary>
+    /// <summary>Estimated claim value at or below which a case can be marked ready to submit. Default £500.</summary>
     public decimal AutoLimit { get; init; } = 500m;
 }
 
@@ -22,7 +22,7 @@ public sealed record GateOptions
 ///   • all mandatory met, no contradiction, but some
 ///     supporting criterion undocumented or evidence
 ///     only Medium                                     → Strengthen   (fixable — back to the clinician)
-///   • otherwise                                       → AutoSubmit
+///   • otherwise                                       → ReadyToSubmit (a reviewer still approves the send)
 ///
 /// The verdict always carries the model it weighed.
 /// </summary>
@@ -67,7 +67,7 @@ public sealed class Gate(GateOptions options)
             return Route(GateRoute.HumanReview, model,
                 $"the clinical note contradicts itself ({noteConflicts[0].Describe()}) — a reviewer must resolve it", facts);
 
-        // Every appeal is human-approved — an appeal draft never auto-submits.
+        // Every appeal is human-approved — an appeal is never marked ready to submit.
         if (isAppeal)
             return Route(GateRoute.HumanReview, model,
                 "an appeal always goes to a reviewer before it is filed", facts);
@@ -88,7 +88,7 @@ public sealed class Gate(GateOptions options)
             return Route(GateRoute.HumanReview, model,
                 $"estimated value {v:C0} over the auto-limit {options.AutoLimit:C0}", facts);
 
-        // The Critic's minor concerns stop an auto-submit but do not by themselves force a human.
+        // The Critic's minor concerns stop a ready-to-submit but do not by themselves force a human.
         var criticConcerns = critic?.Verdict == CriticVerdict.Concerns;
 
         if (gap.SupportingMissing > 0 || gap.Quality == EvidenceQuality.Medium || criticConcerns)
@@ -98,7 +98,7 @@ public sealed class Gate(GateOptions options)
                     : $"{gap.SupportingMissing} supporting criterion(a) undocumented / evidence {gap.Quality} — strengthen with the clinician",
                 facts);
 
-        return Route(GateRoute.AutoSubmit, model, "gap-checked, Critic-cleared and ready — auto-submit the draft", facts);
+        return Route(GateRoute.ReadyToSubmit, model, "gap-checked, Critic-cleared and ready to submit — a reviewer approves the send", facts);
     }
 
     private static GateDecision Route(GateRoute route, DecisionModel model, string reason, string facts) =>

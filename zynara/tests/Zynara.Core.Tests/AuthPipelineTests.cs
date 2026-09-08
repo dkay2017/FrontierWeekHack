@@ -40,7 +40,7 @@ public class AuthPipelineTests
     }
 
     [Fact]
-    public async Task A_complete_note_auto_submits_and_produces_a_cited_draft()
+    public async Task A_complete_note_is_ready_to_submit_and_produces_a_cited_draft()
     {
         var note = "Conservative physiotherapy for eight weeks. Radiculopathy documented. " +
                    "MRI result would change management.";
@@ -48,7 +48,7 @@ public class AuthPipelineTests
         var result = await BuildPipeline(Seeded()).RunAsync(Sample.Request(note, value: 350m));
 
         Assert.False(result.StoppedEarly);
-        Assert.Equal(GateRoute.AutoSubmit, result.Gate!.Route);
+        Assert.Equal(GateRoute.ReadyToSubmit, result.Gate!.Route);
         Assert.NotNull(result.Draft);
         Assert.NotEmpty(result.Draft!.CitedCriteria);
         Assert.Equal("CCSD-72148", result.Draft.RequiredCode);

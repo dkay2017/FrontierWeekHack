@@ -67,7 +67,7 @@ public static class CaseViewBuilder
         if (r.StoppedEarly) return CaseStatus.NotRequired;
         return r.Gate?.Route switch
         {
-            GateRoute.AutoSubmit => CaseStatus.ReadyToSubmit,
+            GateRoute.ReadyToSubmit => CaseStatus.ReadyToSubmit,
             GateRoute.Strengthen => CaseStatus.NeedsStrengthening,
             GateRoute.Abstain => CaseStatus.SystemAbstained,
             _ => CaseStatus.NeedsHumanReview,
