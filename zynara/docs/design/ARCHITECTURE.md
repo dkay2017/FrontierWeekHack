@@ -172,6 +172,18 @@ decides; a human authorises (DECISIONS.md D5, D6).
    criterion, which precedent, which clause, what the Critic challenged. A
    regulator (or the Financial Ombudsman Service) can follow the whole trail.
 
+**Why exactly five — and what is deliberately *not* an agent.** The five are five
+*materially different reasoning responsibilities* over unstructured text:
+resolve an ambiguous plan rule (`needs-auth`), map a free-text note to written
+criteria (`evidence-gap`), pull and reconcile clinical claims (`claims-extraction`),
+find and reason about comparable precedent (`precedent-strategist`), and
+adversarially challenge the assembled case (`critic`). There is no sixth because
+the remaining work is deterministic and does not need a model: expiry-date math,
+policy diffing, precedent similarity ranking, threshold and value checks, and the
+Gate routing itself are plain code (D6, the hybrid principle below). Adding an
+agent for any of those would trade an auditable, testable calculation for a
+non-deterministic one — strictly worse.
+
 The measurable claim — the agents together beat a single-prompt baseline on the
 labelled set (agreement, mandatory false-negative rate, safe-abstention rate) —
 is what the evaluation is built to prove (TDD §7.3).

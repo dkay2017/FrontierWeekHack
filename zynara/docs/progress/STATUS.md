@@ -409,21 +409,18 @@ finalist territory**. Reviewer: the architecture is strong enough; the remaining
 gap is **proof and framing, not more architecture / agents / docs**. Only the
 baseline experiment moves the score (→ ~9.4–9.5). Work order:
 
-1. **Credible generalist baseline** — *the score mover.* Race the 5-agent pipeline
-   vs **one** credible generalist LLM agent (same case + policy corpus + evidence +
-   precedent, single pass) over ~5–6 deliberately hard cases (missing mandatory
-   criterion, contradiction, thin evidence). Show the lone agent auto-submits /
-   hallucinates where the pipeline abstains or routes to a human. Output: a
-   comparison table + one slide.
-   - Today's `eval/Zynara.Eval/GeneralistBaseline.cs` is a naive keyword matcher —
-     a straw man a judge dismisses (§10, §20). Only live LLM path today is
-     `src/Zynara.Agents/Foundry/FoundryAgentClient.cs`.
-   - Keep CI deterministic: run the generalist once, **snapshot transcripts as
-     committed fixtures**, replay. Graders/metrics in `eval/Zynara.Eval/EvalRunner.cs`
-     + `EvalReport.cs` compare `GateRoute` enums today — needs a path to grade the
-     generalist's free-form output.
-   - Risk: a well-prompted modern generalist may do fine on easy cases → weakens
-     the story; hence the hard-case curation.
+1. **Credible generalist baseline** — *the score mover.* 🔸 **designed
+   2026-09-08, not implemented** (needs the .NET SDK + a Foundry endpoint — absent
+   on the authoring machine). `eval/Zynara.Eval/BASELINE.md`: the generalist
+   system/user prompt, the JSON contract, a **fixture-replay** design
+   (`baseline-fixtures/` captured once via `ZYNARA_BASELINE=refresh`, replayed in
+   CI so it stays deterministic), the grader→metric mapping, and 6 drafted hard
+   cases in `eval/Zynara.Eval/baseline-hard-cases/` (buried mandatory, soft
+   contradiction, non-comparable precedent, thin-but-confident, value-over-limit,
+   over-reach appeal). **Left:** implement `GeneralistBaselineLlm.cs` +
+   `EvalReport.Baseline` sub-record, promote the hard cases into `cases/` and
+   validate against the stub pipeline, capture fixtures, pull numbers into a slide
+   + TDD §7.3/§3.1. Drafts are inert (not globbed by the csproj) — no CI risk.
 2. **Rehearse the exact 3-min demo** (§18) — 🔸 **script updated 2026-09-08**
    (`docs/runbooks/demo-script.md`): §18 opener via the new simulator tab, and a
    coda that carries `demo-appeal` through Approve & send → drawer audit entry +
@@ -438,23 +435,32 @@ baseline experiment moves the score (→ ~9.4–9.5). Work order:
    `CaseView`-driven replay would need the API to return an ordered stage timeline,
    deferred). CSS adapted from TireForge. Not browser-tested here (no runtime) —
    eyeball it after deploy.
-4. **Scrub "will win" / outcome-guarantee phrasing** (§13) → "the payer's own
-   history shows which arguments have succeeded in comparable cases." Grep docs +
-   TDD-V3 + pitch / slide copy (a grep over `docs/` on 2026-09-07 found nothing —
-   re-check the Word docs + any pitch text).
-5. **Prep the "why five agents" talking point** (§12) — five materially different
-   reasoning responsibilities; deliberately no agents for deterministic work
-   (expiry calc, policy diff, routing, thresholds). **Do not add a 6th agent.**
-6. **`AutoSubmit` → `READY_TO_SUBMIT`** (§11). Enum `GateRoute.AutoSubmit` at
-   `src/Zynara.Core/Model/Results.cs:81`; ~31 code / JSON / test refs + the arch
-   diagram + TDD / ARCHITECTURE / DECISIONS text. Low risk, wide touch (~1–2h);
-   keep code + JSON ground-truth + diagram + docs consistent, build green.
+4. **Scrub "will win" / outcome-guarantee phrasing** (§13) — ✅ **done 2026-09-08.**
+   Only real offender was `scripts/build-tdd-docx.py:144` ("the appeal the payer's
+   history says will win") → "an appeal from the arguments the payer's own history
+   shows have succeeded in comparable cases". Everything else ("won on appeal",
+   "80% of appeals win", "comparable win rate", the recovery formula's
+   "appeal-win probability") is *factual/historical* framing — exactly what §13
+   endorses — left as-is.
+5. **"Why five agents" talking point** (§12) — ✅ **done 2026-09-08.** New para in
+   `ARCHITECTURE.md §6` ("why exactly five — and what is deliberately *not* an
+   agent"), plus a **Judging Q&A** block in `docs/progress/JUDGING-SELF-ASSESSMENT.md`
+   (§12 five-agents, §12 no-sixth, §3 no-auto-submit, §13 outcome framing, the §20
+   four questions). Do not add a 6th agent.
+6. **`AutoSubmit` → `READY_TO_SUBMIT`** (§11) — **not started.** Enum
+   `GateRoute.AutoSubmit` at `src/Zynara.Core/Model/Results.cs:81`; ~31 code / JSON
+   / test refs + arch diagram + docs. Mechanical but wide, and **can't be
+   build-verified on the authoring machine** — do it in a session with `dotnet`, or
+   accept CI as the check. Keep code + JSON ground-truth + diagram + docs consistent.
 7. **Keep** — Estimated Recoverable Value framing (§14) and the TDD §7.1
    production-hardening boundary list (§15). Already done; don't dilute.
 
-**Priority if the day runs short:** 1 (baseline) > 2 (rehearsal) > 3 (simulator —
-only if 1 finishes with time to spare, timeboxed) > 4, 5 (wording / talking point)
-> 6 (rename — only if everything else is done).
+**State (2026-09-08):** 2 ✅ (script) · 3 ✅ (simulator built) · 4 ✅ · 5 ✅ ·
+7 ✅ (already). **1 designed, needs a `dotnet`+Foundry machine to implement +
+run.** **6 not started** (needs `dotnet` to verify, or lean on CI).
+So the remaining real work is **item 1's implementation** and **item 6's rename** —
+both blocked on a build toolchain the authoring machine lacks — plus the user
+actually rehearsing/recording the demo.
 
 ## Deploy state — LIVE (2026-09-06, end of session 8)
 

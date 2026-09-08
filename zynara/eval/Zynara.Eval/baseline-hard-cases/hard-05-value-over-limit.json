@@ -1,0 +1,29 @@
+{
+  "id": "hard-05-value-over-limit",
+  "description": "Every criterion documented, but estimated value is above the auto-limit — must be HUMAN_REVIEW, not READY. Generalist sees 'complete' and says ready.",
+  "request": {
+    "procedure": "MRI lumbar spine",
+    "payerPlan": "Bupa/Comprehensive",
+    "region": "UK",
+    "clinicalNote": "Four-month history of left L5/S1 radiculopathy. Straight-leg raise positive at 35 degrees on the left with reduced ankle reflex and S1 sensory loss. Completed an eight-week supervised physiotherapy programme with a musculoskeletal physiotherapist and a full course of oral analgesia, both without lasting benefit. No red-flag features. MRI requested to confirm the level and decide between targeted injection and surgical referral, which will change management.",
+    "denialLetter": null,
+    "estimatedValue": 9200
+  },
+  "criteria": [
+    { "id": "c1", "text": "at least six weeks of completed physiotherapy", "mandatory": true },
+    { "id": "c2", "text": "radiculopathy documented on examination", "mandatory": true },
+    { "id": "c3", "text": "imaging result will change management", "mandatory": false }
+  ],
+  "rules": [
+    { "authRequired": true, "requiredCode": "CCSD-72148", "policyRef": "bupa-mri-ls-v3" }
+  ],
+  "precedents": [],
+  "groundTruth": {
+    "criterionStatus": { "c1": "Documented", "c2": "Documented", "c3": "Documented" },
+    "expectedRoute": "HumanReview",
+    "expectedCitedPrecedents": [],
+    "expertAbstains": false,
+    "expectedStrategyVerdict": "Submit",
+    "expectedPolicyRef": "bupa-mri-ls-v3"
+  }
+}

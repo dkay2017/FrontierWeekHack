@@ -1,0 +1,29 @@
+{
+  "id": "hard-01-buried-mandatory",
+  "description": "Fluent, thorough-sounding note that never actually evidences the one mandatory criterion. A generalist reads 'complete' and calls it met.",
+  "request": {
+    "procedure": "MRI lumbar spine",
+    "payerPlan": "Bupa/Comprehensive",
+    "region": "UK",
+    "clinicalNote": "45-year-old with a 5-month history of axial low back pain radiating to the left buttock and posterior thigh. Pain is worse on sitting and improved on walking. Examination shows a positive straight-leg raise at 40 degrees on the left, reduced left ankle reflex, and dermatomal sensory blunting over S1. No saddle anaesthesia, no bladder or bowel disturbance, no fever, no weight loss. The patient has tried oral NSAIDs and paracetamol with partial relief, has attended a pain-management education session, and has been referred to physiotherapy. Imaging is now requested to characterise the disc level and guide whether to proceed to targeted injection or surgical referral, as this will change the management plan.",
+    "denialLetter": null,
+    "estimatedValue": 360
+  },
+  "criteria": [
+    { "id": "c1", "text": "at least six weeks of completed physiotherapy", "mandatory": true },
+    { "id": "c2", "text": "radiculopathy documented on examination", "mandatory": false },
+    { "id": "c3", "text": "imaging result will change management", "mandatory": false }
+  ],
+  "rules": [
+    { "authRequired": true, "requiredCode": "CCSD-72148", "policyRef": "bupa-mri-ls-v3" }
+  ],
+  "precedents": [],
+  "groundTruth": {
+    "criterionStatus": { "c1": "Missing", "c2": "Documented", "c3": "Documented" },
+    "expectedRoute": "HumanReview",
+    "expectedCitedPrecedents": [],
+    "expertAbstains": false,
+    "expectedStrategyVerdict": "Strengthen",
+    "expectedPolicyRef": "bupa-mri-ls-v3"
+  }
+}

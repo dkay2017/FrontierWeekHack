@@ -141,8 +141,8 @@ bullet([("Nobody checks whether the fact pattern has won on appeal before.", Fal
 bullet([("So the clinician gives up — and the winnable, un-appealed cases stay as money the insurer "
          "keeps by default.", False)])
 para("Care Approval IQ closes that gap: it assembles a gap-checked submission, and when a denial "
-     "lands it drafts the appeal the payer's history says will win — with a person signing off "
-     "every outbound action.", before=6)
+     "lands it drafts an appeal from the arguments the payer's own history shows have succeeded in "
+     "comparable cases — with a person signing off every outbound action.", before=6)
 
 # =========================================================== 2 · MISSION & SCOPE
 h1heading("2 · Mission & scope")

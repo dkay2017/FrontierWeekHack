@@ -55,3 +55,46 @@ human-control bar, and an offline demo dataset. Provisional deltas:
 
 New floor: **Microsoft Foundry usage (8.0)** — still no hosted-agent run shown
 end-to-end. Then Production credibility (8.2, RBAC/audit/isolation).
+
+---
+
+## Judging Q&A — anticipated questions (V3.1 re-eval §12, §13, §20)
+
+Prep for the demo/judging conversation. Keep the answers this tight.
+
+**Q · Why five agents? Why not one?**
+Five *materially different reasoning responsibilities* over unstructured text:
+resolve an ambiguous plan rule; map a free-text note to written criteria; extract
+and reconcile clinical claims; find and reason about comparable precedent;
+adversarially challenge the assembled case. One prompt doing all five is worse at
+each, and gives the Critic nothing independent to push against. The measured
+comparison (eval suite) is the evidence, not the assertion.
+
+**Q · Why not a sixth agent?**
+The remaining work is deterministic — expiry-date math, policy diffing, precedent
+similarity ranking, threshold/value checks, and the Gate routing. That is plain
+code (D6). An agent there would swap an auditable, testable calculation for a
+non-deterministic one. A sixth agent would weaken the architecture, not strengthen it.
+
+**Q · Does the AI submit claims automatically?**
+No. The Gate determines *readiness*; a human authorises every outbound action; only
+then does the Submission Adapter execute. Every send pauses at the review port
+(D34/D35). `READY_TO_SUBMIT` is the Gate's assessment, not an action.
+
+**Q · Will the appeal win?**
+The system does not predict outcomes. It surfaces the arguments the payer's *own
+history* shows have succeeded in comparable denied cases, with the precedents and
+clauses cited, for a human to decide.
+
+**Q · The four review questions (§20):**
+1. *Do the agents decide better together than one generalist?* — §3.1 argument +
+   the eval suite's measured comparison (route agreement, mandatory FN rate, safe
+   abstention vs. a single-prompt baseline).
+2. *Does the system know when it is uncertain?* — the explicit `Abstain` route (D4);
+   safe-abstention rate is a hard CI gate.
+3. *Why should a human trust it?* — every criterion shows evidence, source, clause
+   and version; every precedent shows why it is comparable; the Critic's challenge
+   is visible; the Gate decision model is shown, not a black-box score.
+4. *Is the value real?* — Estimated Recoverable Value: `not-appealed ×
+   comparable-win-rate × mean-claim-value`, every input on the surface, confidence
+   set by sample size. A number the payer can check, not a marketing figure.

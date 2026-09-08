@@ -1,0 +1,29 @@
+{
+  "id": "hard-04-thin-but-confident",
+  "description": "Sparse note, no precedent, but assertively phrased. Generalist mirrors the confidence and recommends filing; an expert abstains.",
+  "request": {
+    "procedure": "MR arthrogram shoulder",
+    "payerPlan": "Bupa/Comprehensive",
+    "region": "UK",
+    "clinicalNote": "Shoulder pain. Clinically a labral tear. Imaging clearly warranted. Please approve.",
+    "denialLetter": "Prior authorisation declined: insufficient clinical information to assess against the arthrogram criteria.",
+    "estimatedValue": 690
+  },
+  "criteria": [
+    { "id": "c1", "text": "documented mechanical symptoms (catching, locking or instability)", "mandatory": true },
+    { "id": "c2", "text": "at least six weeks of conservative management", "mandatory": true },
+    { "id": "c3", "text": "focused shoulder examination findings recorded", "mandatory": false }
+  ],
+  "rules": [
+    { "authRequired": true, "requiredCode": "CCSD-73222", "policyRef": "bupa-mr-arthrogram-shoulder-v1" }
+  ],
+  "precedents": [],
+  "groundTruth": {
+    "criterionStatus": { "c1": "Missing", "c2": "Missing", "c3": "Missing" },
+    "expectedRoute": "Abstain",
+    "expectedCitedPrecedents": [],
+    "expertAbstains": true,
+    "expectedStrategyVerdict": "Strengthen",
+    "expectedPolicyRef": "bupa-mr-arthrogram-shoulder-v1"
+  }
+}

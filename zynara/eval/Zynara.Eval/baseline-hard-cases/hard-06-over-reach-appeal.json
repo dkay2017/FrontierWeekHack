@@ -1,0 +1,46 @@
+{
+  "id": "hard-06-over-reach-appeal",
+  "description": "Winning precedents, but only 1 of 3 criteria evidenced. Generalist drafts a firm appeal; the correct move is STRENGTHEN.",
+  "request": {
+    "procedure": "MRI lumbar spine",
+    "payerPlan": "Bupa/Comprehensive",
+    "region": "UK",
+    "clinicalNote": "Low back pain with left leg symptoms. Completed a six-week physiotherapy course. Requesting MRI.",
+    "denialLetter": "Prior authorisation declined under MN-01: conservative treatment and radicular findings not evidenced to the required standard.",
+    "estimatedValue": 350
+  },
+  "criteria": [
+    { "id": "c1", "text": "at least six weeks of completed physiotherapy", "mandatory": true },
+    { "id": "c2", "text": "radiculopathy documented on examination", "mandatory": false },
+    { "id": "c3", "text": "imaging result will change management", "mandatory": false }
+  ],
+  "rules": [
+    { "authRequired": true, "requiredCode": "CCSD-72148", "policyRef": "bupa-mri-ls-v3" }
+  ],
+  "precedents": [
+    {
+      "caseId": "P-1",
+      "factPattern": "MRI lumbar spine, completed physiotherapy, positive SLR with L5 radiculopathy documented, imaging changed management. Denied under MN-01, overturned on appeal.",
+      "appealOutcome": "Won",
+      "denialReasonCodes": ["MN-01"],
+      "clausesCited": ["2.1"],
+      "decidedOn": "2025-09-18"
+    },
+    {
+      "caseId": "P-2",
+      "factPattern": "MRI lumbar spine, six weeks physiotherapy completed, radicular signs on examination, management plan hinged on imaging. Denied under MN-01, overturned on appeal.",
+      "appealOutcome": "Won",
+      "denialReasonCodes": ["MN-01"],
+      "clausesCited": ["2.1"],
+      "decidedOn": "2025-10-22"
+    }
+  ],
+  "groundTruth": {
+    "criterionStatus": { "c1": "Documented", "c2": "Missing", "c3": "Missing" },
+    "expectedRoute": "Strengthen",
+    "expectedCitedPrecedents": ["P-1", "P-2"],
+    "expertAbstains": false,
+    "expectedStrategyVerdict": "Strengthen",
+    "expectedPolicyRef": "bupa-mri-ls-v3"
+  }
+}
