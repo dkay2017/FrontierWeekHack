@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Zynara.BaselineRefresh</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11" />
+    <ProjectReference Include="..\..\src\Zynara.Core\Zynara.Core.csproj" />
+    <ProjectReference Include="..\..\src\Zynara.Agents\Zynara.Agents.csproj" />
+    <ProjectReference Include="..\..\eval\Zynara.Eval\Zynara.Eval.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -409,18 +409,22 @@ finalist territory**. Reviewer: the architecture is strong enough; the remaining
 gap is **proof and framing, not more architecture / agents / docs**. Only the
 baseline experiment moves the score (→ ~9.4–9.5). Work order:
 
-1. **Credible generalist baseline** — *the score mover.* 🔸 **designed
-   2026-09-08, not implemented** (needs the .NET SDK + a Foundry endpoint — absent
-   on the authoring machine). `eval/Zynara.Eval/BASELINE.md`: the generalist
-   system/user prompt, the JSON contract, a **fixture-replay** design
-   (`baseline-fixtures/` captured once via `ZYNARA_BASELINE=refresh`, replayed in
-   CI so it stays deterministic), the grader→metric mapping, and 6 drafted hard
-   cases in `eval/Zynara.Eval/baseline-hard-cases/` (buried mandatory, soft
-   contradiction, non-comparable precedent, thin-but-confident, value-over-limit,
-   over-reach appeal). **Left:** implement `GeneralistBaselineLlm.cs` +
-   `EvalReport.Baseline` sub-record, promote the hard cases into `cases/` and
-   validate against the stub pipeline, capture fixtures, pull numbers into a slide
-   + TDD §7.3/§3.1. Drafts are inert (not globbed by the csproj) — no CI risk.
+1. **Credible generalist baseline** — *the score mover.* 🔸 **harness built +
+   verified 2026-09-08**, one capture run left.
+   - `eval/Zynara.Eval/GeneralistBaselineLlm.cs` — the one-pass prompt, the JSON
+     verdict contract, `Replay()` (fixture read + prompt-hash drift check), `Parse()`.
+   - `EvalReport.Baseline` (`BaselineReport`) — the full agents-vs-generalist
+     comparison; `EvalRunner.ScoreBaseline` scores it from the fixtures, or falls
+     back to the deterministic keyword baseline (route + unsafe only) and says so.
+   - `tools/Zynara.BaselineRefresh` — the one-time capture (`az login` +
+     `dotnet run --project tools/Zynara.BaselineRefresh` → `baseline-fixtures/`).
+   - 4 hard cases promoted into `cases/` (`hard-01` buried mandatory, `hard-02`
+     soft contradiction, `hard-04` thin-but-confident, `hard-05` value-over-limit)
+     — 24 cases, all 8 gates green. `hard-03`/`hard-06` stay in
+     `baseline-hard-cases/` (need the Foundry agents, not the stubs).
+   - **Left:** the capture run (needs `az login` + Foundry endpoint), commit
+     `baseline-fixtures/`, pull numbers into a slide + TDD §7.3/§3.1. See
+     `eval/Zynara.Eval/BASELINE.md`.
 2. **Rehearse the exact 3-min demo** (§18) — 🔸 **script updated 2026-09-08**
    (`docs/runbooks/demo-script.md`): §18 opener via the new simulator tab, and a
    coda that carries `demo-appeal` through Approve & send → drawer audit entry +
@@ -463,12 +467,10 @@ baseline experiment moves the score (→ ~9.4–9.5). Work order:
 6 ✅ (rename done + verified, D37) · 7 ✅ (already). `.NET SDK` now installed
 locally — the whole stack builds + **119 tests green**, incl. the Phase 5 cleanup
 and every commit since.
-**Remaining:** item **1's implementation** — designed in `eval/Zynara.Eval/BASELINE.md`
-(prompt + fixture-replay + grader mapping) with 6 draft hard cases; still to write
-`GeneralistBaselineLlm.cs` + `EvalReport.Baseline`, promote the hard cases, then
-`az login` + one `ZYNARA_BASELINE=refresh` run against Foundry to capture fixtures.
-Plus the user rehearsing / recording the demo, and pushing the stack (`git push`
-needs the interactive GitHub sign-in).
+**Remaining:** item **1's capture run** only — the harness is built + tested
+(24 cases green); needs `az login` + `dotnet run --project tools/Zynara.BaselineRefresh`
+to record the model's answers, then commit `eval/Zynara.Eval/baseline-fixtures/`.
+Plus the user rehearsing / recording the demo.
 
 ## Deploy state — LIVE (2026-09-06, end of session 8)
 

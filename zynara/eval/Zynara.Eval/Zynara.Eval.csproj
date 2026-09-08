@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <None Include="cases/**/*.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="baseline-fixtures/**/*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

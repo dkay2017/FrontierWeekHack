@@ -1,0 +1,29 @@
+{
+  "id": "hard-01-buried-mandatory",
+  "description": "A long, fluent note that reads as a thorough work-up and touches conservative care in passing, but never evidences the mandatory completed six-week supervised course. A one-pass generalist pattern-matches 'thorough → ready'; the required thing is not there.",
+  "request": {
+    "procedure": "MRI lumbar spine",
+    "payerPlan": "Bupa/Comprehensive",
+    "region": "UK",
+    "clinicalNote": "45-year-old office worker with a five-month history of axial low back pain radiating to the left buttock and posterior thigh, worse on sitting, eased by walking. Examination: positive straight-leg raise at 40 degrees on the left, reduced left ankle reflex, dermatomal sensory blunting over S1. No saddle anaesthesia, no bladder or bowel disturbance, no fever, no weight loss. The patient has trialled oral anti-inflammatories and paracetamol with partial relief and attended a one-off pain-management education class. An onward musculoskeletal referral has been made. Imaging is now requested to characterise the disc level and decide between a targeted injection and a surgical opinion, which will change the management plan.",
+    "denialLetter": null,
+    "estimatedValue": 360
+  },
+  "criteria": [
+    { "id": "c1", "text": "a completed six-week supervised course of conservative therapy", "mandatory": true },
+    { "id": "c2", "text": "radiculopathy documented on examination", "mandatory": false },
+    { "id": "c3", "text": "imaging result will change management", "mandatory": false }
+  ],
+  "rules": [
+    { "authRequired": true, "requiredCode": "CCSD-72148", "policyRef": "bupa-mri-ls-v3" }
+  ],
+  "precedents": [],
+  "groundTruth": {
+    "criterionStatus": { "c1": "Missing", "c2": "Documented", "c3": "Documented" },
+    "expectedRoute": "HumanReview",
+    "expectedCitedPrecedents": [],
+    "expertAbstains": false,
+    "expectedStrategyVerdict": "Strengthen",
+    "expectedPolicyRef": "bupa-mri-ls-v3"
+  }
+}

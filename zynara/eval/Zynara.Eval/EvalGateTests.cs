@@ -72,10 +72,10 @@ public class EvalGateTests(ITestOutputHelper output)
     public void Agents_beat_the_generalist_baseline_on_unsafe_automation()
     {
         var r = Result.Value;
-        Assert.True(r.UnsafeAutomations <= r.BaselineUnsafeAutomations,
-            $"the pipeline ({r.UnsafeAutomations}) is not safer than the generalist ({r.BaselineUnsafeAutomations}).\n{r.ToText()}");
-        Assert.True(r.RouteAgreement >= r.BaselineRouteAgreement,
-            $"the pipeline ({r.RouteAgreement:P0}) does not agree with experts more than the generalist ({r.BaselineRouteAgreement:P0}).\n{r.ToText()}");
+        Assert.True(r.UnsafeAutomations <= r.Baseline.UnsafeAutomations,
+            $"the pipeline ({r.UnsafeAutomations}) is not safer than the generalist ({r.Baseline.UnsafeAutomations}).\n{r.ToText()}");
+        Assert.True(r.RouteAgreement >= r.Baseline.RouteAgreement,
+            $"the pipeline ({r.RouteAgreement:P0}) does not agree with experts more than the generalist ({r.Baseline.RouteAgreement:P0}).\n{r.ToText()}");
     }
 
     [Fact]

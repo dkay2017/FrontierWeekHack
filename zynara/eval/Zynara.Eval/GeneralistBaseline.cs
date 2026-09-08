@@ -3,12 +3,13 @@ using Zynara.Core.Model;
 namespace Zynara.Eval;
 
 /// <summary>
-/// The "one generalist prompt" straw man for the comparison in TDD §3.1. It does
-/// everything in a single naive pass: score every criterion by keyword hit, and
-/// auto-submit when they all hit. It has no notion of a *mandatory* criterion, no
-/// contradiction check, and never abstains — exactly the failure modes the
-/// multi-agent design (Critic + structured decision model) is built to avoid.
-/// Deterministic, so the comparison is repeatable in CI.
+/// The deterministic keyword straw man — the <b>fallback</b> baseline, used only
+/// until <see cref="GeneralistBaselineLlm"/> fixtures are captured for every case.
+/// It scores each criterion by keyword hit and marks the case ready when they all
+/// hit, with no notion of a mandatory criterion, no contradiction check, and no
+/// abstention. Deterministic, so CI is repeatable. Once
+/// <c>baseline-fixtures/</c> exists the report uses the credible single-generalist
+/// LLM instead (see <c>BASELINE.md</c>).
 /// </summary>
 public static class GeneralistBaseline
 {

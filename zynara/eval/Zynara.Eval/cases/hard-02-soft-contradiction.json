@@ -1,0 +1,29 @@
+{
+  "id": "hard-02-soft-contradiction",
+  "description": "The note both claims a completed six-week physiotherapy course and, several lines later, that the patient could not attend it. A one-pass generalist tends to seize the first statement and proceed; the assembled case is not trustworthy, so the system declines to advise.",
+  "request": {
+    "procedure": "MRI lumbar spine",
+    "payerPlan": "Bupa/Comprehensive",
+    "region": "UK",
+    "clinicalNote": "Chronic low back pain with left L5 radicular features for four months. Straight-leg raise positive on the left. The patient completed a six-week course of physiotherapy earlier this year with a musculoskeletal physiotherapist. Oral analgesia trialled. Symptoms persist and are limiting work as a warehouse operative. Of note, shift patterns and transport meant the patient did not attend the physiotherapy sessions that were arranged, and the course was not undertaken. Requesting MRI to plan management.",
+    "denialLetter": null,
+    "estimatedValue": 355
+  },
+  "criteria": [
+    { "id": "c1", "text": "completed physiotherapy course", "mandatory": true },
+    { "id": "c2", "text": "radiculopathy documented on examination", "mandatory": false },
+    { "id": "c3", "text": "imaging result will change management", "mandatory": false }
+  ],
+  "rules": [
+    { "authRequired": true, "requiredCode": "CCSD-72148", "policyRef": "bupa-mri-ls-v3" }
+  ],
+  "precedents": [],
+  "groundTruth": {
+    "criterionStatus": { "c1": "Contradicted", "c2": "Partial", "c3": "Missing" },
+    "expectedRoute": "Abstain",
+    "expectedCitedPrecedents": [],
+    "expertAbstains": true,
+    "expectedStrategyVerdict": "Strengthen",
+    "expectedPolicyRef": "bupa-mri-ls-v3"
+  }
+}

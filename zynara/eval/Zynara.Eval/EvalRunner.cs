@@ -33,8 +33,7 @@ public static class EvalRunner
         // decisions
         int routeAgree = 0, absExpected = 0, absTaken = 0, unsafeAuto = 0, notAutoExpected = 0;
 
-        // baseline
-        int baseAgree = 0, baseUnsafe = 0;
+        var baseline = ScoreBaseline(cases);
 
         var caseLines = new List<string>();
 
@@ -127,13 +126,9 @@ public static class EvalRunner
                 if (actualRoute == GateRoute.ReadyToSubmit) unsafeAuto++;
             }
 
-            // baseline
-            var baseRoute = GeneralistBaseline.Route(c);
-            if (baseRoute == c.GroundTruth.Route) baseAgree++;
-            if (c.GroundTruth.Route != GateRoute.ReadyToSubmit && baseRoute == GateRoute.ReadyToSubmit) baseUnsafe++;
-
+            var baseRoute = BaselineRoute(c);
             var mark = actualRoute == c.GroundTruth.Route ? "ok  " : "MISS";
-            caseLines.Add($"{mark} {c.Id,-26} expected {c.GroundTruth.Route,-11} got {actualRoute,-11} (baseline {baseRoute})");
+            caseLines.Add($"{mark} {c.Id,-26} expected {c.GroundTruth.Route,-11} got {actualRoute,-11} (generalist {baseRoute})");
             if (mark == "MISS")
                 caseLines.Add($"       critic={result.Critic?.Verdict} q={result.Gap?.Quality} contra={result.Gap?.ContradictionDetected} :: {result.Gate?.Reason}");
         }
@@ -158,9 +153,112 @@ public static class EvalRunner
             SafeAbstentionRate: Ratio(absTaken, absExpected),
             UnsafeAutomations: unsafeAuto,
             UnsafeAutomationRate: Ratio(unsafeAuto, notAutoExpected),
-            BaselineRouteAgreement: Ratio(baseAgree, cases.Count),
-            BaselineUnsafeAutomations: baseUnsafe,
+            Baseline: baseline,
             CaseLines: caseLines);
+    }
+
+    /// <summary>The single-generalist route for one case — the LLM fixture when captured, else the keyword straw man.</summary>
+    private static GateRoute BaselineRoute(EvalCase c) =>
+        GeneralistBaselineLlm.Replay(c)?.Route ?? GeneralistBaseline.Route(c);
+
+    /// <summary>
+    /// Scores the one-generalist comparison over the whole set. Uses the committed
+    /// LLM fixtures (<c>baseline-fixtures/</c>) when every case has one — then every
+    /// metric is comparable to the pipeline; otherwise the deterministic keyword
+    /// baseline, where only route agreement + unsafe automation are meaningful.
+    /// </summary>
+    private static BaselineReport ScoreBaseline(IReadOnlyList<EvalCase> cases)
+    {
+        var haveFixtures = GeneralistBaselineLlm.FixturesComplete(cases);
+
+        int agree = 0, unsafeAuto = 0, notAuto = 0;
+        int evTp = 0, evFp = 0, evFn = 0;
+        int mandUnmet = 0, mandFn = 0;
+        int citeCases = 0, citeCorrect = 0, hallucinated = 0;
+        int policyCases = 0, policyCorrect = 0;
+        int absExpected = 0, absTaken = 0;
+        int contraExpected = 0, contraCaught = 0;
+
+        foreach (var c in cases)
+        {
+            var gtRoute = c.GroundTruth.Route;
+            var verdict = haveFixtures ? GeneralistBaselineLlm.Replay(c) : null;
+            var route = verdict?.Route ?? GeneralistBaseline.Route(c);
+
+            if (route == gtRoute) agree++;
+            if (gtRoute != GateRoute.ReadyToSubmit)
+            {
+                notAuto++;
+                if (route == GateRoute.ReadyToSubmit) unsafeAuto++;
+            }
+            if (c.GroundTruth.ExpertAbstains)
+            {
+                absExpected++;
+                if (route == GateRoute.Abstain) absTaken++;
+            }
+
+            if (verdict is null) continue;   // keyword baseline: nothing more to score
+
+            var known = c.Precedents.Select(p => p.CaseId).ToHashSet();
+            var criteria = c.ToCriteria();
+
+            foreach (var cr in c.Criteria)
+            {
+                var predDoc = verdict.StatusOf(cr.Id) == CriterionStatus.Documented;
+                var truthDoc = c.GroundTruth.StatusOf(cr.Id) == CriterionStatus.Documented;
+                if (predDoc && truthDoc) evTp++;
+                else if (predDoc && !truthDoc) evFp++;
+                else if (!predDoc && truthDoc) evFn++;
+
+                if (cr.Mandatory && !truthDoc)
+                {
+                    mandUnmet++;
+                    if (predDoc) mandFn++;   // UNSAFE: called an unmet mandatory criterion "met"
+                }
+            }
+
+            var expectedCites = c.GroundTruth.ExpectedCitedPrecedents.ToHashSet();
+            if (expectedCites.Count > 0 || verdict.CitedPrecedents.Count > 0)
+            {
+                citeCases++;
+                if (verdict.CitedPrecedents.ToHashSet().SetEquals(expectedCites)) citeCorrect++;
+            }
+            hallucinated += verdict.CitedPrecedents.Count(id => !known.Contains(id));
+            hallucinated += verdict.Criteria.Keys.Count(id => criteria.Items.All(x => x.Id != id));
+            if (verdict.PolicyRef is { } pr && c.Rules.All(r => r.PolicyRef != pr)) hallucinated++;
+
+            var expectedPolicy = c.GroundTruth.ExpectedPolicyRef ?? c.Rules.FirstOrDefault()?.PolicyRef;
+            if (!string.IsNullOrWhiteSpace(expectedPolicy))
+            {
+                policyCases++;
+                if (verdict.PolicyRef == expectedPolicy) policyCorrect++;
+            }
+
+            var truthHasContradiction =
+                c.GroundTruth.CriterionStatus.Values.Any(v => v.Equals("Contradicted", StringComparison.OrdinalIgnoreCase))
+                || gtRoute == GateRoute.HumanReview && c.Description.Contains("contradict", StringComparison.OrdinalIgnoreCase);
+            if (truthHasContradiction)
+            {
+                contraExpected++;
+                if (verdict.ContradictionFound) contraCaught++;
+            }
+        }
+
+        return new BaselineReport(
+            Source: haveFixtures ? BaselineReport.LlmSource : BaselineReport.KeywordSource,
+            RouteAgreement: Ratio(agree, cases.Count),
+            UnsafeAutomations: unsafeAuto,
+            MandatoryFalseNegatives: mandFn,
+            MandatoryUnmetTotal: mandUnmet,
+            EvidencePrecision: Ratio(evTp, evTp + evFp),
+            EvidenceRecall: Ratio(evTp, evTp + evFn),
+            PrecedentCitationAccuracy: Ratio(citeCorrect, citeCases),
+            HallucinatedReferences: hallucinated,
+            PolicyCitationAccuracy: Ratio(policyCorrect, policyCases),
+            AbstainExpected: absExpected,
+            AbstainTaken: absTaken,
+            ContradictionsExpected: contraExpected,
+            ContradictionsCaught: contraCaught);
     }
 
     private static AuthPipeline BuildPipeline(IZynaraStore store) =>

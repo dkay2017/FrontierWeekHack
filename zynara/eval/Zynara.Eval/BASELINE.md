@@ -1,9 +1,15 @@
-# The credible generalist baseline — design
+# The credible generalist baseline
 
-**Status:** designed 2026-09-08, **not yet implemented** (needs a machine with the
-.NET SDK + a Foundry endpoint to capture the fixtures). This is re-evaluation
-follow-up **item 1** — the only change the V3.1 review says moves the score
-(9.2 → ~9.4–9.5).
+**Status (2026-09-08):** the harness is **built** — `GeneralistBaselineLlm`
+(prompt · JSON contract · fixture replay), `EvalReport.Baseline` (the full
+comparison), `tools/Zynara.BaselineRefresh` (the one-time capture), and 4 hard
+cases promoted into `cases/`. What's left is the **one capture run** against the
+model — `az login` + `dotnet run --project tools/Zynara.BaselineRefresh` — then
+commit `baseline-fixtures/`. Until then the report falls back to the deterministic
+keyword baseline (route agreement + unsafe automation only) and says so.
+
+This is re-evaluation follow-up **item 1** — the only change the V3.1 review says
+moves the score (9.2 → ~9.4–9.5).
 
 ## Why
 
@@ -149,27 +155,28 @@ fine on easy cases — that is why the hard cases below exist).
 
 ## The hard cases
 
-Drafts live in `eval/Zynara.Eval/baseline-hard-cases/` — **not** loaded by
-`EvalCase.LoadAll()` yet. To use them: move into `cases/`, run `dotnet test`,
-confirm the **stub pipeline** still routes them correctly and the gates stay
-green, then capture the baseline fixture for each. Each is built so the pipeline's
-structure (mandatory gate, contradiction spoke, Critic, Abstain route) handles it
-and a one-pass generalist plausibly does not:
+**Promoted into `cases/`** (validated against the stub pipeline, all gates green):
 
-| Draft case | The trap for a generalist |
+| Case | The trap for a one-pass generalist |
 |---|---|
-| `hard-01-buried-mandatory` | Long, fluent note that reads as thorough but never actually evidences the one mandatory criterion — a generalist pattern-matches "complete" and calls it met. |
-| `hard-02-soft-contradiction` | Two sentences 8 lines apart: "completed 6 weeks physiotherapy" and "was unable to attend physiotherapy". No lexical overlap flag; needs claim reconciliation. |
-| `hard-03-plausible-precedent` | A precedent with a similar procedure but a *different denial code* — superficially comparable, actually not. Generalist cites it; Critic rejects it. |
-| `hard-04-thin-but-confident` | Sparse note, no precedent, but phrased assertively. Generalist mirrors the confidence and recommends filing; expert abstains. |
-| `hard-05-value-over-limit` | Every criterion documented, but value is above the auto-limit — must be HUMAN_REVIEW, not READY. Generalist sees "complete" and says ready. |
-| `hard-06-over-reach-appeal` | Winning precedents, but only 1 of 3 criteria evidenced. Generalist drafts a firm appeal; the correct move is STRENGTHEN. |
+| `hard-01-buried-mandatory` | A fluent, thorough-looking work-up that touches conservative care in passing but never evidences the mandatory *completed six-week supervised course*. Generalist reads "thorough → ready". |
+| `hard-02-soft-contradiction` | The note claims a completed physiotherapy course and, lines later, that the patient never attended it. Generalist seizes the first statement; the case is not trustworthy → abstain. |
+| `hard-04-thin-but-confident` | Sparse, assertively-phrased fresh submission — no evidence, no precedent. Generalist mirrors the confidence and recommends submitting; an expert abstains. |
+| `hard-05-value-over-limit` | Every criterion documented, but the value is over the auto-limit — must be HumanReview, not ReadyToSubmit. Generalist sees "complete" and says ready. |
 
-## Run order (on a machine with the SDK + Foundry)
+**Still in `baseline-hard-cases/`** (too subtle for the *stub* agents — promote
+when `ZYNARA_AGENTS=foundry` is the eval default): `hard-03-plausible-precedent`
+(non-comparable precedent), `hard-06-over-reach-appeal` (winning precedents, gappy
+evidence). See that folder's README.
 
-1. Implement `GeneralistBaselineLlm.cs` + the `EvalReport.Baseline` sub-record.
-2. Promote the 6 hard cases into `cases/`; `dotnet test`; fix any stub-pipeline
-   routing surprises (adjust the case, not the pipeline).
-3. `ZYNARA_BASELINE=refresh dotnet test` once to capture `baseline-fixtures/`.
-4. Commit the fixtures. CI now replays them — deterministic.
-5. Pull the numbers into one slide + TDD §7.3 / §3.1.
+## What's left — the capture run
+
+1. `az login`
+2. `export PROJECT_ENDPOINT=...` (and optionally `MODEL_DEPLOYMENT_NAME`)
+3. `cd zynara && dotnet run --project tools/Zynara.BaselineRefresh`
+   → writes `eval/Zynara.Eval/baseline-fixtures/<case>.json` (verbatim model
+   response + a prompt hash) for all 24 cases.
+4. `dotnet test eval/Zynara.Eval` — the report now scores the full comparison
+   (`baseline: llm-fixture`).
+5. `git add eval/Zynara.Eval/baseline-fixtures` — CI replays them, deterministic.
+6. Pull the numbers into one slide + TDD §7.3 / §3.1.

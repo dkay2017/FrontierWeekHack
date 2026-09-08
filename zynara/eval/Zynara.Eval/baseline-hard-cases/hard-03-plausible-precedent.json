@@ -21,7 +21,7 @@
     {
       "caseId": "P-31",
       "factPattern": "MRI lumbar spine, completed physiotherapy, positive SLR with L5 radiculopathy, denied then overturned on appeal.",
-      "appealOutcome": "Won",
+      "appealOutcome": "AppealWon",
       "denialReasonCodes": ["MN-01"],
       "clausesCited": ["2.1"],
       "decidedOn": "2025-11-04"
