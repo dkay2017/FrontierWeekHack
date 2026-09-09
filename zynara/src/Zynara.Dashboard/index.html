@@ -149,10 +149,17 @@ h1,h2,h3{font-weight:700;}
   background:linear-gradient(90deg,#5EEAD4,#7BE8A6);-webkit-background-clip:text;background-clip:text;color:transparent;}
 .wordmark span{font-size:11px;color:var(--mast-muted);font-style:italic;margin-top:2px;}
 .mast-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
-.rolepick{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mast-muted);}
-.rolepick select{font:inherit;font-size:11.5px;font-weight:600;color:var(--mast-ink);background:rgba(255,255,255,.06);
-  border:1px solid var(--mast-line);border-radius:8px;padding:5px 8px;}
+.rolepick{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:600;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--mast-muted);}
+.rolepick select{font:inherit;font-size:11.5px;font-weight:600;letter-spacing:0;text-transform:none;
+  color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;
+  padding:6px 26px 6px 10px;cursor:pointer;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%235B7B82' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;}
+.rolepick select:hover{border-color:var(--accent-line);}
 .rolepick select:focus-visible{outline:2px solid var(--focus);}
+.rolepick option{color:var(--ink);background:var(--surface);}
 @media (max-width:720px){.rolepick span{display:none;}}
 .audit{list-style:none;display:flex;flex-direction:column;gap:0;}
 .audit li{display:grid;grid-template-columns:64px 1fr;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line-soft);font-size:11px;}
@@ -172,28 +179,47 @@ button.region{cursor:pointer;}
 button.region:hover{color:var(--mast-ink);border-color:var(--mast-ink);}
 
 /* ============ PROFILE MODAL ============ */
-.pmodal{position:fixed;left:50%;top:50%;transform:translate(-50%,-46%) scale(.98);z-index:42;
-  width:min(520px,94vw);max-height:88vh;overflow-y:auto;background:var(--surface);
-  border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:14px;box-shadow:var(--shadow-lg);
-  opacity:0;pointer-events:none;transition:opacity .2s var(--ease),transform .2s var(--ease);}
+.pmodal{position:fixed;left:50%;top:50%;transform:translate(-50%,-46%) scale(.97);z-index:42;
+  width:min(600px,94vw);max-height:90vh;overflow-y:auto;border-radius:16px;box-shadow:var(--shadow-lg);
+  background:linear-gradient(180deg,var(--surface),var(--surface-2) 220%);
+  border:1px solid var(--line);
+  opacity:0;pointer-events:none;transition:opacity .22s var(--ease),transform .22s var(--ease);}
 .pmodal.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);}
-.pm-head{padding:15px 18px 13px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
-.pm-head h2{font-size:14px;line-height:1.3;}
-.pm-head .s{font-size:11px;color:var(--faint);margin-top:4px;}
-.pm-body{padding:14px 18px 18px;}
-.pm-lead{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px;}
-.pm-row{padding:10px 0;border-bottom:1px solid var(--line-soft);}
-.pm-row:last-child{border-bottom:none;}
-.pm-k{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:600;}
-.pm-v{font-size:12.5px;color:var(--ink);margin-top:4px;line-height:1.55;}
-.pm-v ul{margin:3px 0 0;padding-left:16px;}
-.pm-v li{margin-top:2px;}
-.pm-terms{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;}
-.pm-term{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:5px;background:var(--surface-2);color:var(--muted);border:1px solid var(--line-soft);}
-.pm-switch{display:flex;gap:4px;margin-top:2px;}
-.pm-switch button{font-size:11px;font-weight:600;color:var(--faint);border:1px solid var(--line);border-radius:7px;padding:4px 10px;background:var(--surface-2);}
-.pm-switch button[aria-pressed="true"]{color:var(--accent-ink);background:var(--accent-soft);border-color:var(--accent-line);}
-.pm-foot{font-size:10.5px;color:var(--faint);font-style:italic;padding:0 18px 16px;line-height:1.5;}
+.pm-head{padding:17px 20px 15px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
+  background:linear-gradient(118deg,var(--accent-soft),var(--evid-soft) 120%);border-bottom:1px solid var(--line);border-radius:16px 16px 0 0;}
+.pm-head .pm-mark{width:34px;height:34px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--accent),var(--evid));box-shadow:0 6px 16px -8px var(--accent);}
+.pm-head .pm-mark svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+.pm-head h2{font-size:14.5px;line-height:1.3;letter-spacing:-.005em;}
+.pm-head .s{font-size:10.5px;color:var(--accent-ink);margin-top:3px;line-height:1.45;}
+.pm-body{padding:16px 20px 20px;display:flex;flex-direction:column;gap:11px;}
+
+.pm-switch{display:flex;gap:6px;padding:4px;background:var(--sunk);border-radius:12px;}
+.pm-switch button{flex:1;font-size:11.5px;font-weight:700;color:var(--faint);border:1px solid transparent;border-radius:9px;
+  padding:8px 10px;background:transparent;letter-spacing:.01em;transition:all .16s var(--ease);}
+.pm-switch button:hover{color:var(--ink);}
+.pm-switch button[aria-pressed="true"]{color:#fff;background:linear-gradient(135deg,var(--accent),var(--evid));
+  box-shadow:0 6px 16px -8px var(--accent);border-color:transparent;}
+
+.pm-lead{font-size:12px;color:var(--muted);line-height:1.55;padding:2px 2px 4px;}
+.pm-card{border:1px solid var(--line-soft);border-radius:12px;padding:11px 13px 12px;background:var(--surface);
+  border-left:3px solid var(--pmc,var(--accent));}
+.pm-card-h{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.pm-card-h .pmi{width:22px;height:22px;border-radius:7px;flex:none;display:flex;align-items:center;justify-content:center;
+  background:var(--pmc-soft,var(--accent-soft));color:var(--pmc,var(--accent));}
+.pm-card-h .pmi svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.pm-card-h span{font-family:var(--mono);font-size:9px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);font-weight:600;}
+.pm-v{font-size:12.5px;color:var(--ink);line-height:1.55;}
+.pm-list{list-style:none;display:flex;flex-direction:column;gap:5px;}
+.pm-list li{font-size:12px;color:var(--ink);line-height:1.4;display:flex;gap:8px;align-items:flex-start;}
+.pm-list li::before{content:"";width:5px;height:5px;border-radius:2px;background:var(--pmc,var(--accent));flex:none;margin-top:6px;}
+.pm-terms{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.pm-term{display:flex;align-items:center;gap:7px;font-size:11px;padding:6px 9px;border-radius:8px;
+  background:var(--surface-2);border:1px solid var(--line-soft);}
+.pm-term .ta{color:var(--faint);font-family:var(--mono);font-size:10px;}
+.pm-term .tar{color:var(--pmc,var(--accent));font-weight:700;flex:none;}
+.pm-term .tb{color:var(--ink);font-weight:600;}
+.pm-foot{font-size:10px;color:var(--faint);font-style:italic;padding:2px 20px 18px;line-height:1.5;}
 .theme{width:32px;height:32px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;
   color:var(--mast-muted);border:1px solid var(--mast-line);}
 .theme svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;}
@@ -326,8 +352,9 @@ table.t tbody tr.click:hover td{background:var(--accent-soft);}
   border-left:3px solid var(--st-hue,var(--accent));transform:translateX(101%);transition:transform .32s var(--ease);
   display:flex;flex-direction:column;box-shadow:var(--shadow-lg);}
 .drawer.on{transform:translateX(0);}
-.dr-head{padding:15px 20px 13px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
-.dr-head h2{font-size:15px;line-height:1.25;letter-spacing:-.005em;}
+.dr-head{padding:16px 20px 14px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  background:linear-gradient(118deg,var(--st-soft,var(--accent-soft)),var(--glass) 130%);}
+.dr-head h2{font-size:15.5px;line-height:1.25;letter-spacing:-.005em;}
 .dr-head .s{font-size:10px;color:var(--faint);margin-top:5px;font-family:var(--mono);display:flex;gap:9px;flex-wrap:wrap;align-items:center;}
 .dr-tags{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap;align-items:center;}
 .dr-x{width:29px;height:29px;border-radius:8px;flex:none;background:var(--surface-2);display:flex;align-items:center;justify-content:center;
@@ -346,10 +373,11 @@ table.t tbody tr.click:hover td{background:var(--accent-soft);}
 .dr-gate-banner b{font-weight:700;}
 .dr-gate-banner .rt{font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;font-size:11px;}
 
-.dr-sec{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);font-weight:600;
-  margin:22px 0 11px;display:flex;align-items:center;gap:7px;}
-.dr-sec::after{content:"";flex:1;height:1px;background:var(--line-soft);}
-.dr-sec .dot{width:7px;height:7px;border-radius:2px;flex:none;background:var(--sec-hue,var(--accent));}
+.dr-sec{font-family:var(--mono);font-size:9px;letter-spacing:.11em;text-transform:uppercase;color:var(--sec-hue,var(--accent));font-weight:700;
+  margin:24px 0 11px;display:flex;align-items:center;gap:8px;}
+.dr-sec::before{content:"";width:3px;align-self:stretch;border-radius:2px;background:var(--sec-hue,var(--accent));}
+.dr-sec::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--sec-hue,var(--accent)),transparent 65%);opacity:.4;}
+.dr-sec .dot{display:none;}
 
 /* evidence list */
 .ev{display:flex;flex-direction:column;gap:9px;}
@@ -431,8 +459,14 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
 .toast svg{width:14px;height:14px;stroke:#5EEAD4;fill:none;stroke-width:2.6;}
 
 /* ===== pipeline simulator ===== */
-.sim-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line-soft);}
-.sim-sel{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:12px;color:var(--ink);font-family:var(--sans);max-width:100%;}
+.sim-controls{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;padding:15px 16px;border-bottom:1px solid var(--line-soft);}
+.sim-field{display:flex;flex-direction:column;gap:5px;}
+.sim-field > span{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);}
+.sim-sel{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px 30px 8px 11px;font-size:12px;color:var(--ink);
+  font-family:var(--sans);max-width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%235B7B82' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;}
+.sim-sel:hover{border-color:var(--pane-hue);}
 .sim-run{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:10px;font-size:12px;font-weight:700;color:#fff;
   background:linear-gradient(135deg,var(--pane-hue),var(--pane-hue2));box-shadow:0 8px 20px -8px var(--pane-hue);transition:transform .12s var(--ease),opacity .15s;}
 .sim-run:hover{transform:translateY(-1px);}
@@ -499,15 +533,8 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
       <span>Proof beats paperwork.</span>
     </div>
     <div class="mast-right">
-      <label class="rolepick" id="scenarioPick" hidden
-             title="Run a demo request through the live pipeline">
-        <span>run</span>
-        <select id="scenarioRunner" aria-label="Run a scenario">
-          <option value="">scenario…</option>
-        </select>
-      </label>
-      <label class="rolepick" title="You are reviewing as (demo — real deployments use Entra ID roles)">
-        <span>as</span>
+      <label class="rolepick" title="The reviewer role you are acting as — it sets the approval authority (a Coordinator cannot approve an appeal or a high-value case). Real deployments map this to Entra ID app roles.">
+        <span>reviewing as</span>
         <select id="rolePicker" aria-label="Reviewer role">
           <option value="Coordinator">Coordinator</option>
           <option value="Reviewer" selected>Reviewer</option>
@@ -666,12 +693,15 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
     </div>
     <div class="card">
       <div class="sim-controls">
-        <select class="sim-sel" id="simScenario" aria-label="Case scenario">
-          <option value="ready">Denied MRI — all 3 criteria evidenced, 2 winning precedents</option>
-          <option value="strengthen" selected>Denied MRI — only 1 of 3 criteria evidenced</option>
-          <option value="review">Denied MRI — the clinical note contradicts itself</option>
-          <option value="abstain">Denied MRI — thin note, no comparable history</option>
-        </select>
+        <label class="sim-field">
+          <span>Case</span>
+          <select class="sim-sel" id="simScenario" aria-label="Case scenario">
+            <option value="ready">Denied MRI — all 3 criteria evidenced, 2 winning precedents</option>
+            <option value="strengthen" selected>Denied MRI — only 1 of 3 criteria evidenced</option>
+            <option value="review">Denied MRI — the clinical note contradicts itself</option>
+            <option value="abstain">Denied MRI — thin note, no comparable history</option>
+          </select>
+        </label>
         <button class="sim-run" id="simRun">
           <svg viewBox="0 0 14 14"><path d="M3 2.5l8 4.5-8 4.5V2.5z"/></svg>Run pipeline
         </button>
@@ -697,7 +727,8 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
 
 <div class="pmodal" id="profileModal" role="dialog" aria-modal="true" aria-label="Policy and Regulatory Profile">
   <div class="pm-head">
-    <div><h2>Policy + Regulatory Profile</h2><div class="s">The "UK ⇄ US switch" is not a document swap — it carries all of this.</div></div>
+    <span class="pm-mark"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"/><path d="M2 10h16M10 2c2.5 2.2 2.5 13.8 0 16M10 2c-2.5 2.2-2.5 13.8 0 16"/></svg></span>
+    <div style="flex:1"><h2>Policy + Regulatory Profile</h2><div class="s">The UK ⇄ US switch is not a document swap — it carries every dimension below.</div></div>
     <button class="dr-x" id="pmClose" aria-label="Close"><svg viewBox="0 0 14 14"><path d="M3 3l8 8M11 3l-8 8"/></svg></button>
   </div>
   <div class="pm-body" id="pmBody"></div>
@@ -734,11 +765,11 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
   var RANK = { Coordinator: 0, Reviewer: 1, SeniorReviewer: 2, MedicalDirector: 3 };
 
   var ST = {
-    ReadyToSubmit:      { label: "Ready to submit",   cls: "ok",    hue: "var(--ok)" },
-    NeedsStrengthening: { label: "Needs strengthening", cls: "warn", hue: "var(--warn)" },
-    NeedsHumanReview:   { label: "Human review",      cls: "info",  hue: "var(--accent)" },
-    SystemAbstained:    { label: "System abstained",  cls: "slate", hue: "var(--slate)" },
-    NotRequired:        { label: "Not required",      cls: "mute",  hue: "var(--faint)" }
+    ReadyToSubmit:      { label: "Ready to submit",   cls: "ok",    hue: "var(--ok)",     soft: "var(--ok-soft)" },
+    NeedsStrengthening: { label: "Needs strengthening", cls: "warn", hue: "var(--warn)",  soft: "var(--warn-soft)" },
+    NeedsHumanReview:   { label: "Human review",      cls: "info",  hue: "var(--accent)", soft: "var(--accent-soft)" },
+    SystemAbstained:    { label: "System abstained",  cls: "slate", hue: "var(--slate)",  soft: "var(--slate-soft)" },
+    NotRequired:        { label: "Not required",      cls: "mute",  hue: "var(--faint)",  soft: "var(--surface-2)" }
   };
   var GB = {
     ReadyToSubmit: { ink: "var(--ok)",     soft: "var(--ok-soft)",     line: "var(--ok-line)" },
@@ -870,7 +901,7 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
 
   /* ---- drawer --------------------------------------------------- */
   function sec(label, hue) {
-    return '<div class="dr-sec"><span class="dot" style="background:' + hue + '"></span>' + label + "</div>";
+    return '<div class="dr-sec" style="--sec-hue:' + hue + '">' + esc(label) + "</div>";
   }
 
   function precedentCard(p) {
@@ -908,6 +939,7 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
 
     var dr = document.getElementById("drawer");
     dr.style.setProperty("--st-hue", s.hue);
+    dr.style.setProperty("--st-soft", s.soft);
     document.getElementById("drTitle").textContent = c.procedure;
     document.getElementById("drSub").innerHTML =
       '<span class="rid">' + esc(c.requestId) + "</span>" +
@@ -1102,26 +1134,43 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
         }).join("") + "</div>"
       : "";
 
-    var terms = Object.keys(p.terminology || {}).map(function (k) {
-      return '<span class="pm-term">' + esc(k) + " → " + esc(p.terminology[k]) + "</span>";
-    }).join("");
+    var terms = '<div class="pm-terms">' + Object.keys(p.terminology || {}).map(function (k) {
+      return '<span class="pm-term"><span class="ta">' + esc(k) + '</span><span class="tar">→</span><span class="tb">' + esc(p.terminology[k]) + "</span></span>";
+    }).join("") + "</div>";
+
+    var listOf = function (arr) {
+      return '<ul class="pm-list">' + (arr || []).map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") + "</ul>";
+    };
 
     document.getElementById("pmBody").innerHTML =
       '<p class="pm-lead">' + esc(p.name) + "</p>" +
       switcher +
-      row("Policy pack", esc(p.policyPack)) +
-      row("Terminology", '<div class="pm-terms">' + terms + "</div>") +
-      row("Coding conventions", esc(p.codingConventions)) +
-      row("Regulators", "<ul>" + (p.regulators || []).map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") + "</ul>") +
-      row("Appeal / escalation path", "<ul>" + (p.appealPath || []).map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") + "</ul>") +
-      row("Integration profile", esc(p.integrationProfile)) +
-      row("Currency", esc(p.currency) + " (" + esc(p.currencySymbol) + ")");
+      pmCard("Policy pack", "--auth", PMI.pack, '<div class="pm-v">' + esc(p.policyPack) + "</div>") +
+      pmCard("Terminology", "--evid", PMI.terms, terms) +
+      pmCard("Coding conventions", "--prec", PMI.code, '<div class="pm-v">' + esc(p.codingConventions) + "</div>") +
+      pmCard("Regulators", "--slate", PMI.reg, listOf(p.regulators)) +
+      pmCard("Appeal / escalation path", "--crc", PMI.appeal, listOf(p.appealPath)) +
+      pmCard("Integration profile", "--ok", PMI.plug, '<div class="pm-v">' + esc(p.integrationProfile) + "</div>") +
+      pmCard("Currency", "--accent", PMI.coin, '<div class="pm-v">' + esc(p.currency) + " (" + esc(p.currencySymbol) + ")</div>");
 
     Array.prototype.forEach.call(document.querySelectorAll(".pm-switch button"), function (b) {
       b.addEventListener("click", function () { activeRegion = b.dataset.r; renderProfile(); });
     });
   }
-  function row(k, v) { return '<div class="pm-row"><div class="pm-k">' + esc(k) + '</div><div class="pm-v">' + v + "</div></div>"; }
+  var PMI = {
+    pack:   '<path d="M4 3h7l3 3v8H4z"/><path d="M2 6h7l3 3v8H2z" opacity=".55"/>',
+    terms:  '<path d="M2 5h7M5.5 3v9M11 12l3-8 3 8M12 9.5h4"/>',
+    code:   '<path d="M6 2 4 16M12 2l-2 14M3 6h13M2 12h13"/>',
+    reg:    '<path d="M9 1.5l6 2.2v5c0 4-2.7 6.5-6 7.8-3.3-1.3-6-3.8-6-7.8v-5z"/><path d="M6 9l2 2 4-4.5"/>',
+    appeal: '<path d="M2 15h3v-4H2zM7 15h3V7H7zM12 15h3V3h-3z"/>',
+    plug:   '<path d="M7 2v4M11 2v4M5 6h8v3a4 4 0 0 1-8 0zM9 13v4"/>',
+    coin:   '<circle cx="9" cy="9" r="7"/><path d="M9 5v8M6.5 6.8h3.2a1.6 1.6 0 0 1 0 3.2H7.3a1.6 1.6 0 0 0 0 3.2h3.2"/>',
+  };
+  function pmCard(label, colorVar, iconPath, body) {
+    return '<div class="pm-card" style="--pmc:var(' + colorVar + ');--pmc-soft:var(' + colorVar + '-soft)">' +
+      '<div class="pm-card-h"><span class="pmi"><svg viewBox="0 0 18 18">' + iconPath + '</svg></span><span>' + esc(label) + "</span></div>" +
+      body + "</div>";
+  }
 
   var toastTimer;
   function toast(msg) {
@@ -1306,28 +1355,9 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
         DATA = { cases: views, recovery: parts[1], benchmark: parts[2],
                  profiles: parts[3], scenarios: parts[4] };
         boot();
-        renderScenarioRunner();
         if (cap) cap.textContent = DATA.cases.length + " case(s) · live" + (a ? " · " + a : " · same-origin");
       });
     });
-  }
-
-  function renderScenarioRunner() {
-    var pick = document.getElementById("scenarioPick");
-    var sel = document.getElementById("scenarioRunner");
-    if (!DATA.scenarios || !DATA.scenarios.length) { pick.hidden = true; return; }
-    sel.innerHTML = '<option value="">scenario…</option>' + DATA.scenarios.map(function (s) {
-      return '<option value="' + esc(s.id) + '">' + esc(s.label) + "</option>";
-    }).join("");
-    pick.hidden = false;
-    sel.onchange = function () {
-      var id = sel.value; if (!id) return;
-      sel.disabled = true;
-      fetch(apiBase + "/api/demo/scenarios/" + id + "/run", { method: "POST" })
-        .then(function () { return loadLive(); })
-        .then(function () { sel.disabled = false; sel.value = ""; openCase(id); })
-        .catch(function () { sel.disabled = false; sel.value = ""; });
-    };
   }
 
   (function connect() {
