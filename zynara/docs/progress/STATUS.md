@@ -34,7 +34,7 @@ D32 (why), D33 (Phase 0–3 checkpoint).
 | 2 · Agents via MAF | ✅ `AsAIAgent` over the existing Foundry agents; **verified against real GPT-5.4** (routes match v1) |
 | 3 · HITL review port | ✅ explicit `RequestPort` pause/resume + `ApprovalAuthority` + submission edge |
 | 4 · Durable hosting + deploy | ✅ **DONE — verified live & merged to `main`** (`fbdf5af`). `zynara-spike-rg`, real GPT-5.4: auto-submit + HITL both submit; Challenge 2 tree from `zynara-workflowhost`; no CustomStatus error. |
-| 5 · Cleanup + docs | ✅ **DONE 2026-09-09.** D36: v1 orchestrator deleted (code/sln/azure.yaml/infra). D37: `AutoSubmit`→`ReadyToSubmit`. D38: credible generalist baseline captured. S-6: architecture SVG V4 + deep TDD V4. D39: dashboard one-call approve-send + `SendCase` removed + the workflow host calls the identity-isolated submission app. `v2.0-maf` tag. **Left (out-of-band, not code):** delete the live `func-zynara-orchestrator` Azure app; `azd deploy` to pick up the SUBMISSION_URL move. |
+| 5 · Cleanup + docs | ✅ **DONE 2026-09-09.** D36: v1 orchestrator deleted (code/sln/azure.yaml/infra). D37: `AutoSubmit`→`ReadyToSubmit`. D38: credible generalist baseline captured. S-6: architecture SVG V4 + deep TDD V4. D39: dashboard one-call approve-send + `SendCase` removed + the workflow host calls the identity-isolated submission app. `v2.0-maf` tag. **Deployed & verified live 2026-09-09 (18:16–19:14):** `azd deploy` of apiproxy/workflowhost/submission on the D37/D39 code; `SUBMISSION_URL` moved apiproxy→workflowhost; live `func-zynara-orchestrator` deleted; **approve→send→Key Vault payer credential→"Submitted" verified end-to-end** on `demo-review-mandatory`. |
 
 **Phase 4 detail** (`docs/design/MAF-MIGRATION.md` §"Phase 4"):
 `Zynara.WorkflowHost` = `FunctionsApplication` + `ConfigureDurableWorkflows`.
@@ -462,6 +462,41 @@ and every commit since.
 the user **rehearsing / recording the demo** and the **S-6 doc/SVG pass** (fold
 the baseline numbers + the MAF orchestration into TDD §3.1/§7.3/§12 and the new
 architecture SVG).
+
+### D · Live demo queue — reseeded on the D37/D39 code (2026-09-09, 19:02–19:14)
+
+All 3 function apps redeployed, `SUBMISSION_URL` moved to the workflow host, the
+Durable hub (`ZynaraMafPipeline*`) purged of stale instances, and the 7 demo
+scenarios re-run one at a time against **hosted GPT-5.4** (rate-limited seeding —
+see the quota note below). **approve→send→Key Vault payer credential→"Submitted"
+verified end-to-end** on `demo-review-mandatory` (then reset to pending; one test
+row remains in the `submissions` container — invisible to the dashboard, which has
+no submissions view).
+
+**Queue routing vs the DemoCatalog intent — 5 / 7 exact:**
+
+| scenario | live route | intended | |
+|---|---|---|---|
+| demo-strengthen | NeedsStrengthening | Strengthen | ✅ |
+| demo-review-mandatory | NeedsHumanReview | HumanReview | ✅ |
+| demo-contradiction | NeedsHumanReview | HumanReview | ✅ |
+| demo-appeal | NeedsHumanReview | HumanReview | ✅ |
+| demo-appeal-critic | NeedsHumanReview | HumanReview | ✅ |
+| demo-ready | NeedsStrengthening | **ReadyToSubmit** | ⚠ softer — hosted Critic challenges the precedent-strategist ("precedent outcomes are appeal status + similarity, not first-submission approvals") |
+| demo-abstain | NeedsStrengthening | **Abstain** | ⚠ softer — hosted evidence-gap/precedent agents don't abstain on the thin rare-procedure record |
+
+Both misses fail **safe** (more caution, not less). `DemoCatalog.cs` already flags
+"the hosted agents *should* reach the same routes [as the stubs]" — closing the
+gap is **hosted-agent prompt tuning** (the five Foundry agent prompts), a distinct
+task, not infra.
+
+**gpt-5.4 quota:** the `gpt-5.4` GlobalStandard deployment on `zynara-foundry-28985`
+was **capacity 10** (10K TPM / 100 RPM) — one pipeline run (5 agents + critic ≈
+25–30K tokens in ~30s) blows that → `HTTP 429 rate_limit_exceeded` at the first
+agent. Bumped to **capacity 100** (100K TPM) 2026-09-09 — no cost change
+(GlobalStandard bills per token used; capacity is only the rate cap). Subscription
+quota headroom: 1000 units. Concurrent seeding still needs pacing; ~40s between
+scenarios is safe at capacity 100.
 
 ## Deploy state — LIVE (2026-09-06, end of session 8)
 
