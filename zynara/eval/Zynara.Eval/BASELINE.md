@@ -1,15 +1,33 @@
 # The credible generalist baseline
 
-**Status (2026-09-08):** the harness is **built** — `GeneralistBaselineLlm`
-(prompt · JSON contract · fixture replay), `EvalReport.Baseline` (the full
-comparison), `tools/Zynara.BaselineRefresh` (the one-time capture), and 4 hard
-cases promoted into `cases/`. What's left is the **one capture run** against the
-model — `az login` + `dotnet run --project tools/Zynara.BaselineRefresh` — then
-commit `baseline-fixtures/`. Until then the report falls back to the deterministic
-keyword baseline (route agreement + unsafe automation only) and says so.
+Re-evaluation follow-up **item 1** — the change the V3.1 review says moves the
+score (§10, §20). **Done 2026-09-09**: fixtures captured against GPT-5.4, the eval
+scores the full comparison (`baseline: llm-fixture`).
 
-This is re-evaluation follow-up **item 1** — the only change the V3.1 review says
-moves the score (9.2 → ~9.4–9.5).
+## Result — the slide
+
+Same 24 labelled cases. Same inputs. The generalist gets one prompt that asks it
+to do the whole task safely; the pipeline runs its five agents + deterministic Gate.
+
+| | 5-agent pipeline | Credible GPT-5.4 generalist (one pass) |
+|---|---|---|
+| Route agreement with expert labels | **100%** | 62.5% |
+| **Unsafe automations** (sent / marked ready when an expert would not) | **0** | **4** |
+| Mandatory-criterion false negatives (called an unmet *must* "met") | **0** | 1 |
+| Safe abstention (declined when the evidence was too thin) | **4 / 4** | **1 / 4** |
+| Contradiction detection | Gate hard-routes it | 1 / 3 |
+| Evidence recall | 100% | 98% |
+| Hallucinated references | 0 | 0 |
+
+The generalist is **not a straw man** — modern model, a prompt that explicitly
+tells it to never auto-submit, never call an unmet mandatory criterion met, and
+abstain on thin evidence. It still wanted to submit four cases an expert would
+send to a human (including one where the note contradicts itself), and abstained
+on only one of the four cases that call for it. That gap is the argument for the
+architecture.
+
+`EvalGateTests.Agents_beat_the_generalist_baseline_on_unsafe_automation` now
+enforces it in CI.
 
 ## Why
 
@@ -169,14 +187,14 @@ when `ZYNARA_AGENTS=foundry` is the eval default): `hard-03-plausible-precedent`
 (non-comparable precedent), `hard-06-over-reach-appeal` (winning precedents, gappy
 evidence). See that folder's README.
 
-## What's left — the capture run
+## Re-capturing (only if the prompt changes)
+
+The committed `baseline-fixtures/` carry a SHA-256 of the exact prompt; `Replay()`
+throws if it drifts. To re-capture:
 
 1. `az login`
-2. `export PROJECT_ENDPOINT=...` (and optionally `MODEL_DEPLOYMENT_NAME`)
+2. `$env:PROJECT_ENDPOINT = "https://zynara-foundry-28985.services.ai.azure.com/api/projects/care-approval"`
 3. `cd zynara && dotnet run --project tools/Zynara.BaselineRefresh`
-   → writes `eval/Zynara.Eval/baseline-fixtures/<case>.json` (verbatim model
-   response + a prompt hash) for all 24 cases.
-4. `dotnet test eval/Zynara.Eval` — the report now scores the full comparison
-   (`baseline: llm-fixture`).
-5. `git add eval/Zynara.Eval/baseline-fixtures` — CI replays them, deterministic.
-6. Pull the numbers into one slide + TDD §7.3 / §3.1.
+4. `dotnet test eval/Zynara.Eval` then `git add eval/Zynara.Eval/baseline-fixtures`
+
+The capture on 2026-09-09 was against `gpt-5.4` in `care-approval`.

@@ -5,6 +5,27 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D38 · Credible generalist baseline — captured, and it holds up
+
+**2026-09-09.** The V3.1 re-eval (§10, §20) said the one thing that moves the
+score is proving the multi-agent pipeline beats *a credible* single generalist,
+not the keyword straw man. Built the harness (`GeneralistBaselineLlm` — one-pass
+prompt + JSON verdict + fixture replay; `EvalReport.Baseline`;
+`tools/Zynara.BaselineRefresh`) and captured GPT-5.4's answers for all 24 labelled
+cases against a safety-focused prompt.
+
+Result: pipeline **100%** route agreement vs **62.5%**, **0** unsafe automations
+vs **4**, safe abstention **4/4 vs 1/4**. The generalist — modern model, told
+explicitly to never auto-submit and to abstain on thin evidence — still wanted to
+submit four cases an expert would send to a human (one with a self-contradicting
+note) and abstained on only one of four. `EvalGateTests` enforces
+`pipeline.unsafe ≤ baseline.unsafe` and `pipeline.routeAgreement ≥ baseline` in CI.
+CI stays offline: the verbatim responses are committed under `baseline-fixtures/`
+with a prompt hash and replayed. Slide + detail: `eval/Zynara.Eval/BASELINE.md`.
+
+Also promoted 4 new hard cases into the eval set (buried mandatory, soft
+contradiction, thin-but-confident, value-over-limit) — 24 cases, all 8 gates green.
+
 ## D37 · Rename the Gate route `AutoSubmit` → `ReadyToSubmit`
 
 **2026-09-08.** The V3.1 re-evaluation (§11) flagged the label `AutoSubmit` as a

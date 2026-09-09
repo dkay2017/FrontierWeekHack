@@ -67,8 +67,12 @@ Five *materially different reasoning responsibilities* over unstructured text:
 resolve an ambiguous plan rule; map a free-text note to written criteria; extract
 and reconcile clinical claims; find and reason about comparable precedent;
 adversarially challenge the assembled case. One prompt doing all five is worse at
-each, and gives the Critic nothing independent to push against. The measured
-comparison (eval suite) is the evidence, not the assertion.
+each, and gives the Critic nothing independent to push against. **Measured** (24
+labelled cases, `eval/Zynara.Eval/BASELINE.md`): the pipeline agrees with the
+expert labels 100% vs **62.5%** for a credible one-pass GPT-5.4 generalist given
+the same inputs and a safety-focused prompt; **0 unsafe automations vs 4**; safe
+abstention **4/4 vs 1/4**. Not a straw man — the generalist was told to never
+auto-submit and to abstain on thin evidence, and still did neither reliably.
 
 **Q · Why not a sixth agent?**
 The remaining work is deterministic — expiry-date math, policy diffing, precedent

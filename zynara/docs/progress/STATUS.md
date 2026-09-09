@@ -409,22 +409,13 @@ finalist territory**. Reviewer: the architecture is strong enough; the remaining
 gap is **proof and framing, not more architecture / agents / docs**. Only the
 baseline experiment moves the score (→ ~9.4–9.5). Work order:
 
-1. **Credible generalist baseline** — *the score mover.* 🔸 **harness built +
-   verified 2026-09-08**, one capture run left.
-   - `eval/Zynara.Eval/GeneralistBaselineLlm.cs` — the one-pass prompt, the JSON
-     verdict contract, `Replay()` (fixture read + prompt-hash drift check), `Parse()`.
-   - `EvalReport.Baseline` (`BaselineReport`) — the full agents-vs-generalist
-     comparison; `EvalRunner.ScoreBaseline` scores it from the fixtures, or falls
-     back to the deterministic keyword baseline (route + unsafe only) and says so.
-   - `tools/Zynara.BaselineRefresh` — the one-time capture (`az login` +
-     `dotnet run --project tools/Zynara.BaselineRefresh` → `baseline-fixtures/`).
-   - 4 hard cases promoted into `cases/` (`hard-01` buried mandatory, `hard-02`
-     soft contradiction, `hard-04` thin-but-confident, `hard-05` value-over-limit)
-     — 24 cases, all 8 gates green. `hard-03`/`hard-06` stay in
-     `baseline-hard-cases/` (need the Foundry agents, not the stubs).
-   - **Left:** the capture run (needs `az login` + Foundry endpoint), commit
-     `baseline-fixtures/`, pull numbers into a slide + TDD §7.3/§3.1. See
-     `eval/Zynara.Eval/BASELINE.md`.
+1. **Credible generalist baseline** — *the score mover.* ✅ **DONE 2026-09-09 (D38).**
+   Harness (`GeneralistBaselineLlm`, `EvalReport.Baseline`, `tools/Zynara.BaselineRefresh`)
+   + 4 promoted hard cases + **24 GPT-5.4 fixtures captured** (`baseline-fixtures/`,
+   replayed in CI). **Result:** pipeline 100% route agreement vs **62.5%**, 0 unsafe
+   automations vs **4**, safe abstention 4/4 vs **1/4**. Slide + detail in
+   `eval/Zynara.Eval/BASELINE.md`; Judging Q&A + DECISIONS D38 carry the numbers.
+   Deep TDD §3.1/§7.3 rewrite with the numbers stays with the S-6 doc pass.
 2. **Rehearse the exact 3-min demo** (§18) — 🔸 **script updated 2026-09-08**
    (`docs/runbooks/demo-script.md`): §18 opener via the new simulator tab, and a
    coda that carries `demo-appeal` through Approve & send → drawer audit entry +
@@ -467,10 +458,10 @@ baseline experiment moves the score (→ ~9.4–9.5). Work order:
 6 ✅ (rename done + verified, D37) · 7 ✅ (already). `.NET SDK` now installed
 locally — the whole stack builds + **119 tests green**, incl. the Phase 5 cleanup
 and every commit since.
-**Remaining:** item **1's capture run** only — the harness is built + tested
-(24 cases green); needs `az login` + `dotnet run --project tools/Zynara.BaselineRefresh`
-to record the model's answers, then commit `eval/Zynara.Eval/baseline-fixtures/`.
-Plus the user rehearsing / recording the demo.
+**Remaining from the re-eval:** nothing in code — all 7 items done. Open work is
+the user **rehearsing / recording the demo** and the **S-6 doc/SVG pass** (fold
+the baseline numbers + the MAF orchestration into TDD §3.1/§7.3/§12 and the new
+architecture SVG).
 
 ## Deploy state — LIVE (2026-09-06, end of session 8)
 
