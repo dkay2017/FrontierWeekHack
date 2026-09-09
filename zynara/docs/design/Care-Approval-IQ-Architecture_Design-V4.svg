@@ -220,9 +220,8 @@
   <g transform="translate(44,690)">
     <rect width="1212" height="34" rx="9" fill="#F5F2EA" stroke="#8A8256" stroke-opacity=".7" stroke-width="1.1" stroke-dasharray="5 3"/>
     <g transform="translate(14,8.5)" class="ico" stroke="#6F6636" stroke-width="1.6"><path d="M2 0 h7 l3 3 v11 h-12 z M9 0 v3 h3 M3.5 7 h5 M3.5 10 h5"/></g>
-    <text x="36" y="14" class="sect" font-size="9.5" fill="#4C4622">UPSTREAM — NOT BUILT</text>
-    <text x="176" y="14" class="mut" font-size="8" fill="#5A5330">assumed done before Intake — this design does not own it (TDD §2.1)</text>
-    <text x="36" y="27" class="sm" font-size="8.2" fill="#4C4622">policy PDF → structured <tspan font-weight="700">Criteria</tspan> · clinical-note &amp; denial-letter OCR / text extraction · precedent-record ETL · denial-cohort roll-up for the Recoverable-Value estimate</text>
+    <text x="36" y="13" class="sect" font-size="9.5" fill="#4C4622">UPSTREAM — NOT BUILT<tspan dx="16" class="mut" font-size="8" font-weight="600" fill="#5A5330">assumed done before Intake — this design does not own it (TDD §2.1)</tspan></text>
+    <text x="36" y="26" class="sm" font-size="8.2" fill="#4C4622">policy PDF → structured <tspan font-weight="700">Criteria</tspan> · clinical-note &amp; denial-letter OCR / text extraction · precedent-record ETL · denial-cohort roll-up for the Recoverable-Value estimate</text>
   </g>
 
   <!-- ===== FOOTER ===== -->
