@@ -85,10 +85,17 @@ flowchart LR
 
 ## 5. The agents and the monitors
 
-**Four reasoning agents** — each a distinct kind of reasoning, not a distinct
+> **Detail current as of the Durable-Functions design; see `Care-Approval-IQ-TDD-V4.md`
+> for the MAF version.** Since this section was written the orchestration moved to
+> a Microsoft Agent Framework Workflow (D32–D38) and a fifth agent —
+> **`claims-extraction`**, feeding the deterministic contradiction check (D17) —
+> was added between Evidence Gap and Appeal Match. §5.3 below is now
+> `precedent-strategist`.
+
+**Five reasoning agents** — each a distinct kind of reasoning, not a distinct
 topic — and **two deterministic monitors**. All serve every procedure type and
 both regions. The agents build *and challenge* a case; deterministic code
-decides; a human authorises (DECISIONS.md D5, D6).
+decides; a human authorises (DECISIONS.md D5, D6, D17).
 
 ### 5.1 Needs-Auth check
 - **Responsibility:** does *this payer + plan* require prior authorisation for
@@ -315,10 +322,12 @@ live pipeline is shown separately on one fresh case.
   the dashboard's Cost tab. A few lines, carried from the prior project.
 - **Service Health workbook:** an Azure Monitor workbook showing live component
   status (Functions, Cosmos, Foundry, Blob) — a workbook definition, no code.
-- **Evaluation:** `eval/Zynara.Eval` replays 20 labelled cases through the
-  pipeline and hard-gates CI on the safety metrics; the Foundry portal runs
-  Coherence/Fluency over `eval/portal/eval_portal.jsonl` against the Evidence Gap
-  agent (Challenge 3 — see `docs/runbooks/challenge-3-portal-evaluation.md`).
+- **Evaluation:** `eval/Zynara.Eval` replays 24 labelled cases through the
+  pipeline and hard-gates CI on the safety metrics, and compares the pipeline to a
+  credible one-pass GPT-5.4 generalist (100% vs 62.5% route agreement, 0 vs 4
+  unsafe automations — D38); the Foundry portal runs Coherence/Fluency over
+  `eval/portal/eval_portal.jsonl` against the Evidence Gap agent (Challenge 3 —
+  see `docs/runbooks/challenge-3-portal-evaluation.md`).
 
 Broader AI governance (model/prompt version pinning, continuous production drift
 monitoring, retention policy) is a consideration, not in the demo scope — see
@@ -370,7 +379,7 @@ carries the implementation-level detail.
 
 | # | Decision | Why (short) | Rejected |
 |---|---|---|---|
-| **TD-1** | Deterministic **Durable Functions orchestrator** sequences the pipeline and owns every decision value | The Gate, the readiness threshold, the pipeline order and the audit trail must be repeatable; an LLM must never own them. Durable also earns its keep on its own: durable timers for expiry-watch, durable wait/replay for the slow payer round-trip. | A single generalist agent orchestrating via connected agents — non-deterministic order, no auditable Gate |
+| **TD-1** | Deterministic **Microsoft Agent Framework Workflow** (typed graph of executors + a Gate `switch` + a human `RequestPort`, on a Durable Task backend) sequences the pipeline and owns every decision value — *rebuilt from a Durable Functions orchestrator, D32–D38; TDD-V4 §12 has the full rationale* | The Gate, the decision model, the pipeline order and the audit trail must be repeatable; an LLM must never own them. A MAF Workflow is a deterministic graph, not "agents orchestrating agents". The Durable Task backend gives checkpoint/replay for the slow payer round-trip and a first-class human pause. | A single generalist agent orchestrating via connected agents — non-deterministic order, no auditable Gate (the §7.3 measurement shows the safety cost) |
 | **TD-2** | The 5 deterministic checks are **separate Durable Activity Functions**, not orchestrator helper methods | (1) per-step retry isolation — a failed agent/File-Search call is retried at that step, the other four are not re-run or re-billed; (2) the prose→typed-value conversion lives in one named unit, out of the decision rule; (3) a stub twin per step → the whole pipeline runs in CI with zero live inference (Challenge 1); (4) replay-safe resume — a crash mid-pipeline resumes at the next step, no duplicate submissions | Five helper methods inside the orchestrator — simpler, but loses all four properties above |
 | **TD-3** | **No explicit Requests Queue** — the Durable HTTP starter is the async boundary (`202` + status URL) | Request/response at low volume (tens–low-hundreds/day); no burst to absorb. The only real need is *don't block the caller for a multi-minute pipeline*, which Durable already provides via its own control queues. | A Storage Queue copied from the prior streaming-ingest project — an extra component and failure mode with no load to justify it |
 | **TD-4** | **Azure Cosmos DB** serverless (Core/NoSQL) for operational state | A request/submission/outcome is a nested JSON aggregate, not a set of normalised rows; partition by `/requestId` makes "everything for one case" a single-partition read; serverless suits spiky low volume; team has prior Cosmos experience. Session consistency suffices — one orchestration owns a request id. | Azure SQL — a relational schema and migrations for data that is document-shaped |

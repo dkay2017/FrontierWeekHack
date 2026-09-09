@@ -17,7 +17,7 @@ GREY   = RGBColor(0x44, 0x55, 0x5C)
 HDR    = "EDE6FB"
 
 D = os.path.join(os.path.dirname(__file__), "..", "docs", "design")
-DEST = f"{D}/Care-Approval-IQ-TDD.docx"
+DEST = f"{D}/Care-Approval-IQ-TDD-V4.docx"
 FIG  = f"{D}/tdd-figures"
 
 doc = Document()
@@ -113,7 +113,7 @@ t = doc.add_paragraph(); t.alignment = WD_ALIGN_PARAGRAPH.CENTER; t.paragraph_fo
 r = t.add_run("TECHNICAL DESIGN DOCUMENT"); r.bold = True; r.font.size = Pt(26); r.font.color.rgb = BLUE
 r.font.name = "Calibri"; r.font.color.rgb = BLUE
 
-para("Version 3", size=13, color=GREY, bold=True, after=18, align=WD_ALIGN_PARAGRAPH.CENTER)
+para("Version 4", size=13, color=GREY, bold=True, after=18, align=WD_ALIGN_PARAGRAPH.CENTER)
 para("Microsoft Agent-a-thon 2026 · Architect Track Submission · Healthcare Prior Authorisation",
      size=12, color=INK, after=3, align=WD_ALIGN_PARAGRAPH.CENTER)
 para("Deepak Kumar · Original Work", size=12, color=INK, after=24, align=WD_ALIGN_PARAGRAPH.CENTER)
@@ -216,9 +216,9 @@ bullet([("Orchestrate (Challenge 4) — ", True), ("a Microsoft Agent Framework 
 
 # =========================================================== 4 · ARCHITECTURE
 h1heading("4 · Technical architecture")
-# python-docx needs a raster image. Render Care-Approval-IQ-Architecture_Design.svg
+# python-docx needs a raster image. Render Care-Approval-IQ-Architecture_Design-V4.svg
 # (the authoritative diagram) to this PNG at ~2x before running the build.
-fig(f"{D}/Care-Approval-IQ-Architecture_Design.png", w=6.95)
+fig(f"{D}/Care-Approval-IQ-Architecture_Design-V4.png", w=6.95)
 para("Five layers along the request path, plus three cross-cutting concerns.", after=4)
 
 sub("1 · Intake")
@@ -430,22 +430,21 @@ sub("Quality — the Foundry portal evaluation")
 bullet([("evidence-gap-agent scored in the Foundry portal: 100% Coherence / Fluency over a 15-turn "
          "dataset (runbook: docs/runbooks/challenge-3-portal-evaluation.md).", False)])
 sub("Correctness — the Zynara.Eval CI gate")
-para("20 labelled synthetic cases (ground truth per criterion, expected route, expected citations), "
+para("24 labelled synthetic cases (ground truth per criterion, expected route, expected citations), "
      "replayed through the pipeline with deterministic reasoning stubs so CI is repeatable. Reports "
-     "route agreement and safety-shaped metrics — not a headline accuracy figure, which 20 cases "
-     "could not support. Current run:", after=4)
+     "route agreement and safety-shaped metrics — not a headline accuracy figure. Current run:", after=4)
 t = doc.add_table(rows=1, cols=3); t.style = "Table Grid"; t.alignment = WD_TABLE_ALIGNMENT.CENTER
 for i, hh in enumerate(["Metric", "Result", "CI gate"]):
     c = t.rows[0].cells[i]; c.text = ""
     r = c.paragraphs[0].add_run(hh); r.bold = True; r.font.size = Pt(10); shade(c, HDR)
 for row in [
     ("Evidence extraction — precision / recall", "100% / 100%", "—"),
-    ("Mandatory-criterion false-negatives", "0 / 3", "must be 0"),
+    ("Mandatory-criterion false-negatives", "0 / 7", "must be 0"),
     ("Policy-citation accuracy", "100%", "≥ 95%"),
     ("Precedent-citation accuracy", "100%", "≥ 80%"),
     ("Hallucinated references", "0", "must be 0"),
-    ("Appeal-recommendation agreement (19 cases)", "100%", "≥ 80%"),
-    ("Safe-abstention rate", "2 / 2 (100%)", "≥ 80%"),
+    ("Appeal-recommendation agreement (23 cases)", "100%", "≥ 80%"),
+    ("Safe-abstention rate", "4 / 4 (100%)", "≥ 80%"),
     ("Unsafe automations", "0", "must be 0"),
 ]:
     cs = t.add_row().cells
@@ -455,15 +454,16 @@ for row in [
 for r in t.rows:
     r.cells[0].width = Inches(3.5); r.cells[1].width = Inches(1.6); r.cells[2].width = Inches(1.6)
 doc.add_paragraph().paragraph_format.space_after = Pt(4)
-sub("Multi-agent vs. one generalist — same 20 cases")
-bullet([("A deterministic single-prompt baseline scores its cases naively and marks them ready to submit when "
-         "every keyword hits — no notion of a mandatory criterion, no contradiction check, never "
-         "abstains.", False)])
-bullet([("Route agreement: the pipeline 100%, the baseline 55%.", True)])
-bullet([("Unsafe automations: the pipeline 0, the baseline 5 ", True),
-        ("— it would have sent five cases with a contradiction in the note, an over-limit "
-         "value, or only partial evidence.", False)])
-bullet([("The CI gate fails the build if the pipeline is not measurably safer than the baseline.", False)])
+sub("Multi-agent vs. one credible generalist — same 24 cases")
+bullet([("The baseline is one GPT-5.4 generalist given the same inputs and a prompt that explicitly "
+         "tells it to never auto-submit, never call an unmet mandatory criterion met, and abstain on "
+         "thin evidence. Its verbatim answers are committed as replay fixtures so CI stays offline.", False)])
+bullet([("Route agreement with the expert labels: the pipeline 100%, the generalist 62.5%.", True)])
+bullet([("Unsafe automations: the pipeline 0, the generalist 4 ", True),
+        ("— it wanted to submit four cases an expert would send to a human, one with a "
+         "self-contradicting note.", False)])
+bullet([("Safe abstention: the pipeline 4 / 4, the generalist 1 / 4.", True)])
+bullet([("The CI gate fails the build if the pipeline is not measurably safer than the generalist.", False)])
 
 # =========================================================== 10 · DEPLOYMENT, SCOPE & ROADMAP
 h1heading("10 · Deployment, scope & roadmap")
