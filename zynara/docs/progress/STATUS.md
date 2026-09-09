@@ -34,7 +34,7 @@ D32 (why), D33 (Phase 0–3 checkpoint).
 | 2 · Agents via MAF | ✅ `AsAIAgent` over the existing Foundry agents; **verified against real GPT-5.4** (routes match v1) |
 | 3 · HITL review port | ✅ explicit `RequestPort` pause/resume + `ApprovalAuthority` + submission edge |
 | 4 · Durable hosting + deploy | ✅ **DONE — verified live & merged to `main`** (`fbdf5af`). `zynara-spike-rg`, real GPT-5.4: auto-submit + HITL both submit; Challenge 2 tree from `zynara-workflowhost`; no CustomStatus error. |
-| 5 · Cleanup + docs | 🔸 **code/infra done (2026-09-08, D36)** — `src/Zynara.Orchestrator` + `tests/Zynara.Orchestrator.Tests` (`FakeOrchestrationContext`) deleted; out of `Zynara.sln` / `azure.yaml` / `infra`. **Left:** re-verify `dotnet build`/`test` in Codespace · delete the live `func-zynara-orchestrator` app · retarget dashboard approve/reject to `/respond/{runId}` + drop the api-proxy two-phase `SendCase` (was deferred here from Phase 3) · deep TDD §12 + new SVG (S-6) · `v2.0-maf` tag |
+| 5 · Cleanup + docs | ✅ **DONE 2026-09-09.** D36: v1 orchestrator deleted (code/sln/azure.yaml/infra). D37: `AutoSubmit`→`ReadyToSubmit`. D38: credible generalist baseline captured. S-6: architecture SVG V4 + deep TDD V4. D39: dashboard one-call approve-send + `SendCase` removed + the workflow host calls the identity-isolated submission app. `v2.0-maf` tag. **Left (out-of-band, not code):** delete the live `func-zynara-orchestrator` Azure app; `azd deploy` to pick up the SUBMISSION_URL move. |
 
 **Phase 4 detail** (`docs/design/MAF-MIGRATION.md` §"Phase 4"):
 `Zynara.WorkflowHost` = `FunctionsApplication` + `ConfigureDurableWorkflows`.

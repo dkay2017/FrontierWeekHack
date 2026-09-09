@@ -326,7 +326,24 @@ gets a `WORKFLOW_URL` setting.
 `func-zynara-orchestrator` (v1 still reachable at `POST /api/requests`). Phase 5
 retires v1.
 
-**Remaining:** merge `maf-migration` → `main`; Phase 5 cleanup.
+### Phase 5 — DONE (2026-09-08 → 09)
+
+- **D36** — `src/Zynara.Orchestrator` + `tests/Zynara.Orchestrator.Tests`
+  (`FakeOrchestrationContext`) deleted; out of `Zynara.sln`, `azure.yaml`,
+  `infra/` (the `orchestrator` Function app, var, output).
+- **D37** — `GateRoute.AutoSubmit` → `ReadyToSubmit` (the re-eval §11 flag).
+- **D38** — the credible-generalist baseline captured (§3.1 measurement).
+- **S-6** — `Care-Approval-IQ-Architecture_Design-V4.svg` +
+  `Care-Approval-IQ-TDD-V4.md` / `.docx`: MAF orchestration, TD-1a, 5 agents, the
+  baseline numbers, the "upstream / not built" band.
+- **D39** — the dashboard is one call (`/decision`); `SendCase` / the `/submit`
+  two-phase removed; the workflow host calls the identity-isolated
+  `Zynara.Submission` app on an authorised `approve-send` (`SUBMISSION_URL` moved
+  there). `ZynaraTelemetry` kept — it still gives the Challenge-2 span tree.
+- `v2.0-maf` tag. **Build + 119 tests green; `az bicep build` clean.**
+
+**Left (out-of-band):** delete the live `func-zynara-orchestrator` app; `azd
+deploy` to apply the `SUBMISSION_URL` move.
 
 ## 6 · Open questions (resolve in later phases)
 

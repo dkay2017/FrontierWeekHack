@@ -72,8 +72,16 @@ public static class CareApprovalWorkflow
     /// in-process runs and the tests — that is where the per-step retry / stub /
     /// route-agreement coverage lives.
     /// </summary>
+    /// <param name="externalSubmit">
+    /// How an authorised <c>approve-send</c> reaches the payer. In production this
+    /// is an HTTP call to the identity-isolated <c>Zynara.Submission</c> app (the
+    /// only holder of the payer credential — the reasoning-plane workflow host has
+    /// no Key Vault access). Null falls back to the in-process
+    /// <see cref="SubmissionService"/> (offline demo / tests).
+    /// </param>
     public static Microsoft.Agents.AI.Workflows.Workflow BuildDurable(
-        AuthPipeline pipeline, CaseService cases, SubmissionService submissions)
+        AuthPipeline pipeline, CaseService cases, SubmissionService submissions,
+        Func<string, CancellationToken, Task>? externalSubmit = null)
     {
         // `assemble` is the start node — it takes the full Request, runs the whole
         // pipeline in-process, persists the bulky result to Cosmos, then emits the
@@ -107,7 +115,12 @@ public static class CareApprovalWorkflow
             var reqId = await ctx.ReadStateAsync<string>(ReqIdKey, SharedScope) ?? "";
             var outcome = await cases.RecordDecisionAsync(reqId, d.Action, d.By, d.Role, d.Note);
             if (outcome is { Allowed: true } && d.Action == "approve-send")
-                await submissions.SubmitAsync(reqId);
+            {
+                if (externalSubmit is not null)
+                    await externalSubmit(reqId, CancellationToken.None);
+                else
+                    await submissions.SubmitAsync(reqId);
+            }
             return reqId;
         });
 

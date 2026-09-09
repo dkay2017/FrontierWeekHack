@@ -112,6 +112,9 @@ resource workflowHost 'Microsoft.Web/sites@2024-04-01' = {
         { name: 'AzureWebJobsStorage__clientId', value: reasoningClientId }
         { name: 'AZURE_CLIENT_ID', value: reasoningClientId }
         { name: 'WEBSITE_CONTENTSHARE', value: workflowHostName }
+        // approve-send → the identity-isolated submission app (this host has no
+        // Key Vault access; only Zynara.Submission holds the payer credential).
+        { name: 'SUBMISSION_URL', value: 'https://${submission.properties.defaultHostName}' }
       ], reasoningExtra)
     }
   }
@@ -136,7 +139,6 @@ resource apiProxy 'Microsoft.Web/sites@2024-04-01' = {
         { name: 'AzureWebJobsStorage__clientId', value: reasoningClientId }
         { name: 'AZURE_CLIENT_ID', value: reasoningClientId }
         { name: 'WEBSITE_CONTENTSHARE', value: apiProxyName }
-        { name: 'SUBMISSION_URL', value: 'https://${submission.properties.defaultHostName}' }
         { name: 'WORKFLOW_URL', value: 'https://${workflowHost.properties.defaultHostName}' }
         // MAF's generated /run + /respond endpoints are AuthorizationLevel.Function.
         { name: 'WORKFLOW_KEY', value: listKeys('${workflowHost.id}/host/default', workflowHost.apiVersion).functionKeys.default }

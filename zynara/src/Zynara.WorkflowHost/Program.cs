@@ -46,13 +46,31 @@ if (!string.IsNullOrWhiteSpace(cosmos))
 else
     builder.Services.AddSingleton<IZynaraStore>(_ => DemoWorld.Seed(new InMemoryZynaraStore()));
 
+// Outbound to the payer stays in the identity-isolated Zynara.Submission app —
+// this host runs on id-reasoning and has no Key Vault access. When SUBMISSION_URL
+// is set, an authorised approve-send is an HTTP call to that app; otherwise the
+// in-process SubmissionService (offline demo / tests).
+var submissionUrl = builder.Configuration["SUBMISSION_URL"]?.TrimEnd('/');
+var submissionKey = builder.Configuration["SUBMISSION_KEY"];
+Func<string, CancellationToken, Task>? externalSubmit = string.IsNullOrWhiteSpace(submissionUrl)
+    ? null
+    : async (reqId, ct) =>
+    {
+        using var client = new HttpClient();
+        if (!string.IsNullOrWhiteSpace(submissionKey))
+            client.DefaultRequestHeaders.Add("x-functions-key", submissionKey);
+        var res = await client.PostAsync($"{submissionUrl}/api/submit/{Uri.EscapeDataString(reqId)}", null, ct);
+        res.EnsureSuccessStatusCode();
+    };
+
 // The pipeline / CaseService are stateless (all state is in the store), so
 // capturing one scope's instances at build time is safe for the host.
 var scope = builder.Services.BuildServiceProvider().CreateScope().ServiceProvider;
 var wf = CareApprovalWorkflow.BuildDurable(
     scope.GetRequiredService<AuthPipeline>(),
     scope.GetRequiredService<CaseService>(),
-    scope.GetRequiredService<SubmissionService>());
+    scope.GetRequiredService<SubmissionService>(),
+    externalSubmit);
 
 builder.ConfigureDurableWorkflows(w => w.AddWorkflow(wf));
 

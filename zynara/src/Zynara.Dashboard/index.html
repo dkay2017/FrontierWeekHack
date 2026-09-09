@@ -1042,8 +1042,9 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
         var action = btn.dataset.a;
 
         if (apiBase !== null) {
-          // Live: record the decision, then (on approve-send) hand off to the
-          // Submission Adapter, then reload from the API.
+          // Live: one call. The api-proxy relays it to the workflow's review
+          // port, which records the decision and — on an authorised approve-send —
+          // hands the case to the Submission Adapter itself. Then reload.
           Array.prototype.forEach.call(foot.querySelectorAll(".act"), function (b) { b.disabled = true; });
           fetch(apiBase + "/api/cases/" + c.requestId + "/decision", {
             method: "POST",
@@ -1051,13 +1052,10 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
             body: JSON.stringify({ action: action, by: "reviewer@zynara", note: "via dashboard" })
           }).then(function (r) {
             if (r.status === 403) { toast("Not authorised — needs " + roleLabel(need)); return loadLive(); }
-            var next = action === "approve-send"
-              ? fetch(apiBase + "/api/cases/" + c.requestId + "/submit", { method: "POST" })
-                  .then(function (s) { return s.json(); })
-                  .then(function (j) { toast("Sent — payer ref " + (j.record ? j.record.payerReference : (j.payerReference || "?"))); })
-                  .catch(function () { toast("Decision recorded; submission call failed"); })
-              : Promise.resolve(toast(btn.textContent.trim().split(" — ")[0] + " — recorded"));
-            return next.then(function () { return loadLive(); });
+            toast(action === "approve-send"
+              ? "Approved & sent"
+              : btn.textContent.trim().split(" — ")[0] + " — recorded");
+            return loadLive();
           }).then(function () { openCase(c.requestId); })
             .catch(function () { toast("Action failed"); return loadLive(); });
           return;

@@ -85,9 +85,12 @@ dashboard `package.json`.
   `linkedBackends` resource, set the SWA to **Free**, and point the dashboard at
   the api-proxy with `?api=<apiproxy-url>`.
 - **`/api/submit/{id}` is Anonymous** — guarded by `SubmissionService` (only an
-  `approve-send` case is ever sent, idempotent). The dashboard reaches it through
-  the api-proxy (`POST /api/cases/{id}/submit` → `SUBMISSION_URL`), so it never
-  needs a key. Production would front it with a key or the identity boundary.
+  `approve-send` case is ever sent, idempotent). It is called by the **workflow
+  host** on an authorised `approve-send` (`SUBMISSION_URL` on
+  `func-zynara-workflowhost`) — the reasoning-plane host has no Key Vault access,
+  so the payer credential stays in `Zynara.Submission` alone. The dashboard makes
+  one call (`POST /api/cases/{id}/decision`); there is no separate `/submit` hop
+  (D39). Production would front `/api/submit` with a key.
 
 ## Verified end to end (2026-09-07)
 

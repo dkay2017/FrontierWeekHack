@@ -5,6 +5,28 @@ Each entry: what changed, why, and what it touched.
 
 ---
 
+## D39 · MAF Phase 5 — one-call approve-send; the workflow owns the submission edge
+
+**2026-09-09.** Finished the human-in-the-loop cleanup deferred from Phase 3.
+
+- **Dashboard** — approve / reject is now **one call** (`POST /api/cases/{id}/decision`).
+  The old two-phase (`/decision` then `/api/cases/{id}/submit`) is gone; the
+  api-proxy relays the decision to the workflow's `review` port and the workflow
+  records it and, on an authorised `approve-send`, fires the submission itself.
+- **api-proxy** — the `SendCase` function (`POST /api/cases/{id}/submit`) and its
+  `IHttpClientFactory` / `IConfiguration` dependencies deleted; `SUBMISSION_URL`
+  moved off the api-proxy.
+- **Workflow** — `CareApprovalWorkflow.BuildDurable` gains an optional
+  `externalSubmit` delegate. When `SUBMISSION_URL` is set (deploy), an authorised
+  `approve-send` is an **HTTP call from the workflow host to the
+  identity-isolated `Zynara.Submission` app** — the only holder of the payer
+  credential; the reasoning-plane workflow host has no Key Vault access. Null
+  (offline / tests) falls back to the in-process `SubmissionService`. `infra/`
+  moves `SUBMISSION_URL` to the workflow host.
+
+Net: approve → submission is a single graph edge that still crosses the identity
+boundary. **Build + 119 tests green; `az bicep build` clean.** Tag `v2.0-maf`.
+
 ## D38 · Credible generalist baseline — captured, and it holds up
 
 **2026-09-09.** The V3.1 re-eval (§10, §20) said the one thing that moves the
