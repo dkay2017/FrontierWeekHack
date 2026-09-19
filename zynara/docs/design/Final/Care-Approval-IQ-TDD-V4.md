@@ -1,10 +1,17 @@
 # Zynara Health · Care Approval IQ — Technical Design Document
 
 > *Proof beats paperwork.*
-> Microsoft Agent-a-thon 2026 · Architect Track Submission · Healthcare Prior Authorisation · Deepak Kumar · Original Work
+> **Version 4** · Microsoft Agent-a-thon 2026 · Architect Track Submission · Healthcare Prior Authorisation · Deepak Kumar · Original Work
 
 *(Companion documents: `ARCHITECTURE.md` — design of record; `DECISIONS.md` — delta log;
-`../progress/STATUS.md` — build state. The architecture SVG is the authoritative diagram.)*
+`MAF-MIGRATION.md` — the orchestration rebuild; `../progress/STATUS.md` — build state.
+`Care-Approval-IQ-Architecture_Design-V4.svg` is the authoritative diagram.)*
+
+**What changed in V4:** the orchestration layer is a **Microsoft Agent Framework
+Workflow** (was Azure Durable Functions), there are **five** reasoning agents (a
+`claims-extraction` agent was added for the contradiction check), the Gate route
+`AutoSubmit` is renamed **`ReadyToSubmit`**, and §3.1 / §7.3 now carry the
+**measured** credible-generalist comparison. The hybrid principle is unchanged.
 
 ---
 
@@ -44,9 +51,9 @@ free-text clinical note · payer + plan · (post-decision) the denial letter.
 - Watch approved authorisations for expiry and payer policies for drift
 
 **In scope for this design:**
-- End-to-end pipeline: request → needs-auth → evidence gap → appeal match →
-  **critic** → deterministic Gate → human review → submit → (on denial) appeal
-  draft → review
+- End-to-end pipeline: request → needs-auth → evidence gap → claims extraction /
+  contradiction → precedent match → **critic** → deterministic Gate → human review
+  (a MAF `RequestPort`) → submit → (on denial) appeal draft → review
 - Human-in-the-loop approval for **every** outbound action (submit and appeal)
 - **Payer-agnostic** rules-as-data, with a visible **UK ⇄ US region switch** that
   swaps the criteria set, terminology and appeal-escalation path
@@ -68,48 +75,51 @@ free-text clinical note · payer + plan · (post-decision) the denial letter.
 ### 2.1 Upstream assumptions — the workflow starts *after* document extraction
 
 The pipeline assumes these are done by processes **outside this design**. They
-are stated here and will be marked on the architecture diagram (a shaded
-"upstream / not built" band).
+are stated here and shown on the architecture diagram as the dashed
+"UPSTREAM — NOT BUILT" band under the layers.
 
 | Assumption | What we assume is already done | Owner | Status |
 |---|---|---|---|
 | **Payer criteria are structured data** | Each policy PDF has already been turned into the versioned `Criteria` list (`Criterion(Id, Text, Mandatory)`) in Cosmos. There is **no policy-PDF → criteria ingestion agent** — `PolicyDiff` only *diffs* successive structured versions. | Payer-config / clinical-ops curation (human-approved) | not built; production needs an ingestion tool |
 | **The clinical note is text** | `Request.ClinicalNote` arrives as plain text. Any OCR / PDF / EHR-document parsing has happened upstream. | Intake / document service | not built; `string` in the demo |
-| **The denial letter is text** | Same — the letter body is plain text; `AppealMatch` then scans it deterministically for reason codes. | Intake / document service | not built; `string` in the demo |
+| **The denial letter is text** | Same — the letter body is plain text; the denial-letter scan then reads it deterministically for reason codes. | Intake / document service | not built; `string` in the demo |
 | **Precedent metadata is structured** | Past cases already have `Precedent` records (codes, clauses, outcome, fact-pattern narrative) in Cosmos + the narratives in Blob/File Search. | Case-history ETL | not built; seeded in `DemoWorld` |
 | **Denial-history cohorts are pre-aggregated** | `DenialCohort` counts (denied / appealed / won / not-appealed / mean claim value) are rolled up from the case record; the Estimated Recoverable Value consumes them, it does not compute them from raw claims. | Reporting roll-up | not built; seeded in `DemoWorld` |
 
 What the pipeline **does** own: reading that already-extracted text against the
-already-structured criteria (`evidence-gap`), matching precedents (`AppealMatch` +
-`precedent-strategist`), and grounding the agents in the policy/precedent corpus via
-**Foundry File Search**.
+already-structured criteria (`evidence-gap`), reconciling the claims in the note
+(`claims-extraction`), matching precedents (`PrecedentMatch` + `precedent-strategist`),
+and grounding the agents in the policy/precedent corpus via **Foundry File Search**.
 
 ## 3. Solution Overview
 
 Care Approval IQ is a multi-agent system on:
-- **Microsoft Foundry Agent Service**
-- orchestrated by **Azure Durable Functions**
+- **Microsoft Foundry Agent Service** — five persistent reasoning agents
+- orchestrated by a **Microsoft Agent Framework Workflow** — a typed graph of
+  executors on a **Durable Task** backend, hosted in `Zynara.WorkflowHost`
 - over **Azure Cosmos DB** (serverless) for operational state, with the
   unstructured corpus (policy documents, denial letters, precedent narratives)
   in **Azure Blob Storage** indexed by **Foundry File Search**
 - fronted by a **Static Web App** dashboard
 
-*(Every technology choice below — orchestration model, the deterministic spokes,
-the removed queue, Cosmos over SQL, the split doc store — is recorded with its
-rationale and its rejected alternative in §12 · Technology Decisions.)*
+*(Every technology choice below — the MAF workflow, the executors, the removed
+queue, Cosmos over SQL, the split doc store — is recorded with its rationale and
+its rejected alternative in §12 · Technology Decisions. The rebuild from Durable
+Functions to MAF is `MAF-MIGRATION.md` + `DECISIONS.md` D32–D38.)*
 
 It replaces manual pre-auth assembly and the "don't bother appealing" reflex with
 a small team of reasoning agents that build **and challenge** a case, deterministic
 code that decides, and a human reviewer who authorises.
 
-- **Four reasoning agents that collaborate, not a pipeline of prompts.**
+- **Five reasoning agents that collaborate, not a pipeline of prompts.**
   `needs-auth` reads ambiguous plan language · `evidence-gap` maps the clinical
-  note to the written criteria · `precedent-strategist` reasons over recorded precedent
-  outcomes and drafts the appeal · **`critic`** then tries to *disprove* the
-  assembled recommendation (unsupported claims, non-comparable precedents,
-  over-strong conclusions, hidden contradictions, whether the system should
-  abstain). Agents reason and challenge one another; the deterministic Gate
-  decides; the human authorises.
+  note to the written criteria · `claims-extraction` pulls the discrete
+  assertions from the note so a deterministic check can spot a self-contradiction
+  · `precedent-strategist` reasons over recorded precedent outcomes and drafts the
+  appeal · **`critic`** then tries to *disprove* the assembled recommendation
+  (unsupported claims, non-comparable precedents, over-strong conclusions, hidden
+  contradictions, whether the system should abstain). Agents reason and challenge
+  one another; the deterministic Gate decides; the human authorises.
 - **Two deterministic monitors** — `ExpiryMath` (date arithmetic) and `PolicyDiff`
   (text diff) run continuously and raise advisory Early Warnings. They are
   deterministic services with a thin optional narrator, **not** reasoning agents
@@ -133,9 +143,9 @@ impossible to trust. This design is multi-agent because the agents do genuinely
 different kinds of reasoning **and hold each other to account**:
 
 1. **Different reasoning modes.** Ambiguous-contract reading, free-text
-   comprehension against a rubric, corpus-level fact-pattern matching, and
-   adversarial self-review are four different skills. Each agent has one job, one
-   prompt, and one evaluation target.
+   comprehension against a rubric, claim extraction, corpus-level fact-pattern
+   matching, and adversarial self-review are five different skills. Each agent has
+   one job, one prompt, and one evaluation target.
 2. **A dedicated challenger.** The `critic-agent` never builds — it only tries to
    disprove. It catches unsupported claims, non-comparable precedents,
    over-strong conclusions and hidden contradictions that a single generalist
@@ -144,7 +154,7 @@ different kinds of reasoning **and hold each other to account**:
 3. **Independent evaluation.** `evidence-gap` is scored in isolation against a
    labelled dataset (§7.3 / Challenge 3) — precision, recall, mandatory
    false-negative rate. That is only possible because its job is not entangled
-   with three others.
+   with four others.
 4. **A seam for the human, and for the deterministic Gate.** The Gate sits
    *between* the agents' reasoning and any action. A monolithic agent that both
    decides and acts leaves nowhere for the Gate — or the reviewer — to live.
@@ -152,33 +162,53 @@ different kinds of reasoning **and hold each other to account**:
    criterion, which precedent, which clause, what the Critic challenged. A
    regulator or the Financial Ombudsman Service can follow the whole trail.
 
-The measurable claim — that the agents together beat one generalist on the
-labelled set (agreement, false-negative rate, safe-abstention rate) — is what
-§7.3 sets out to prove.
+**Measured, not asserted.** `Zynara.Eval` runs the same 24 labelled cases through
+the five-agent pipeline and through **one credible GPT-5.4 generalist** — same
+inputs, and a prompt that explicitly tells it to never auto-submit, never call an
+unmet mandatory criterion "met", and abstain on thin evidence (the full prompt is
+`eval/Zynara.Eval/BASELINE.md`):
+
+| | Five-agent pipeline | Credible one-pass generalist |
+|---|---|---|
+| Route agreement with the expert labels | **100%** | 62.5% |
+| **Unsafe automations** (marked ready when an expert would not) | **0** | **4** |
+| Safe abstention (declined when the evidence was too thin) | **4 / 4** | **1 / 4** |
+| Mandatory-criterion false negatives | **0** | 1 |
+| Hallucinated references | 0 | 0 |
+
+The generalist — a current model, carefully prompted — still wanted to submit
+four cases an expert would route to a human, one of them with a note that
+contradicts itself, and abstained on only one of the four cases that call for it.
+That gap is what the architecture buys. The CI gate
+(`EvalGateTests.Agents_beat_the_generalist_baseline_on_unsafe_automation`)
+enforces `pipeline.unsafe ≤ baseline.unsafe` and `pipeline.routeAgreement ≥
+baseline`; the generalist's verbatim responses are committed as replay fixtures so
+CI stays offline (D38).
 
 ## 4. Technical Architecture
 
-![Care Approval IQ — technical architecture](Care-Approval-IQ-Architecture_Design.svg)
+![Care Approval IQ — technical architecture](Care-Approval-IQ-Architecture_Design-V4.svg)
 
-*(`Care-Approval-IQ-Architecture_Design.svg` is the authoritative source.)*
+*(`Care-Approval-IQ-Architecture_Design-V4.svg` is the authoritative source.)*
 
-> **Note — orchestration layer migrated to the Microsoft Agent Framework.**
-> The orchestration described below as *Azure Durable Functions
-> (`Zynara.Orchestrator`)* has been rebuilt as a MAF Workflow graph hosted in
-> `Zynara.WorkflowHost` (`Microsoft.Agents.AI.Workflows` + Durable Task). The
-> hybrid principle is unchanged — the Gate is a deterministic executor, agents
-> still only produce prose. See `MAF-MIGRATION.md` and `DECISIONS.md` D32–D36;
-> §12 (TD-1/TD-2) is rewritten for MAF in the S-6 doc pass.
+The orchestration layer is a **Microsoft Agent Framework Workflow** — a typed
+graph of executors on a Durable Task backend, hosted in `Zynara.WorkflowHost`
+(`Microsoft.Agents.AI.Workflows` + `Microsoft.Agents.AI.Hosting.AzureFunctions`).
+It replaced an Azure Durable Functions orchestrator; the rebuild and its findings
+are `MAF-MIGRATION.md`, the decisions are `DECISIONS.md` D32–D38, and the "why"
+is §12 · TD-1 / TD-2. The hybrid principle is untouched: the Gate is a plain
+deterministic executor + a `switch`, never an agent, and agents still only
+produce prose.
 
 Five layers along the request path — Intake is the request contract plus the
-workflow host's HTTP starter (no separate Function App, no queue) — plus three
-cross-cutting concerns.
+workflow's auto-generated HTTP starter (no separate Function App, no queue) —
+plus three cross-cutting concerns.
 
 | # | Layer | Components |
 |---|-------|-----------|
-| 1 | **Intake** | The request contract (procedure · plan · region · clinical note · prior denial letter — the note and letter as attached files) → **Intake API**: `POST /api/requests`, the orchestrator app's Durable HTTP starter — validates the DTO, starts the orchestration keyed on request id, returns `202` + status URL. Not a separate Function App and not a queue (§12 · TD-3). *Open: portal form vs. API client vs. FHIR bundle for v1 — see §8.* |
-| 2 | **Compute · Orchestration** (Azure Durable Functions) | `Zynara.Orchestrator` (the orchestrator function — sequences `NeedsAuthCheck → EvidenceGapMatch → AppealMatch → CriticCheck`, keyed on request id) as **Durable Activity Functions** — deterministic wrappers, no LLM in the wrapper — for the reasons in §12 · TD-2. `ExpiryMath` / `PolicyDiff` run as advisory timers. Owns the Gate. |
-| 3 | **AI Foundry · Agent Service** | four reasoning agents — `needs-auth-agent` · `evidence-gap-agent` · `precedent-strategist-agent` · **`critic-agent`** — each behind a `Zynara.Core` interface with a deterministic stub twin. `ExpiryMath` / `PolicyDiff` narrator calls are optional and thin (D6). |
+| 1 | **Intake** | The request contract (procedure · plan · region · clinical note · prior denial letter — the note and letter as attached text) → the workflow's generated `POST /api/workflows/CareApprovalPipeline/run?runId={requestId}` starter, fronted by the **API Proxy** so the dashboard keeps one origin. Validates the DTO, dispatches the Durable orchestration keyed on the request id, returns immediately. Not a separate Function App and not a queue (§12 · TD-3). *Open: portal form vs. API client vs. FHIR bundle for v1 — see §8.* |
+| 2 | **Compute · Orchestration** (Microsoft Agent Framework) | `Zynara.WorkflowHost` — a MAF Workflow graph. Executors (`Needs Auth · Evidence Gap · Claims Extraction · Precedent Match · Critic · Gate · Persist · Review-card · Apply-decision · Submit`) are ~3-line adapters over the unchanged `Zynara.Core.Pipeline.*` classes; each runs as a **Durable Task activity** — per-step retry, checkpoint, replay-safe resume — for the reasons in §12 · TD-2. The Gate is a deterministic executor feeding an `AddSwitch`; every case that needs a submission pauses at a `RequestPort` for a human. `ExpiryMath` / `PolicyDiff` run as advisory monitors outside the graph. |
+| 3 | **AI Foundry · Agent Service** | five reasoning agents — `needs-auth-agent` · `evidence-gap-agent` · **`claims-extraction-agent`** · `precedent-strategist-agent` · **`critic-agent`** — bound as **MAF `AIAgents`** (`AIProjectClient.AsAIAgent`) to the existing server-side versions, each behind a `Zynara.Core` interface with a deterministic stub twin. `ExpiryMath` / `PolicyDiff` narrator calls are optional and thin (D6). |
 | 4 | **Data** | Submission Adapter (Azure Function · the only path to payer portal / X12 / FHIR / fax) → **Azure Cosmos DB** serverless (operational state): `requests · submissions · outcomes · auths · earlyWarnings · agentCalls`, plus `precedents` / `policies` **metadata** → **Azure Blob Storage** (the unstructured corpus: policy docs, denial PDFs, precedent narratives) → **Foundry File Search** (vector index the agents query). Split rationale: §12 · TD-4, TD-5. |
 | 5 | **Experience** | Reviewer (human) → Dashboard (`Zynara.Dashboard`, Static Web App Standard + linked backend; tabs = **Review Queue** (drafts · appeals · HITL · Estimated Recoverable Value) · **Early Warnings** (expiry-watch · policy-drift) · **Cost** (£/$ per request · agent · day), with a **UK ⇄ US** header control) → **API Proxy** (Azure Function; read models + reviewer approve/reject actions) |
 
@@ -209,87 +239,106 @@ cross-cutting concerns.
 
 ## 5. End-to-End Flow
 
-`Submit → NeedsAuth → Gap → AppealMatch → Critic → Gate → Review → Send → Decision → Appeal → Review → Track`
+`Run → NeedsAuth → Gap → Claims/Contradiction → PrecedentMatch → Critic → Gate → Persist → Review PORT → Send → Decision → Appeal → Review → Track`
 
-1. **Submit** — `POST /api/requests` (the orchestrator app's Durable HTTP
-   starter) receives a request (procedure, coverage ref, clinical note,
-   payer+plan, region), validates it, starts the orchestration keyed on request
-   id (idempotent), and returns `202` + a status URL. Processing runs async on
-   Durable's own control queues — there is no separate intake function or
-   Storage Queue (§12 · TD-3).
-2. **NeedsAuth** — `NeedsAuthCheck` (deterministic activity) resolves the
+1. **Run** — `POST /api/workflows/CareApprovalPipeline/run?runId={requestId}`
+   (the MAF workflow's generated starter, fronted by the API Proxy) receives a
+   request (procedure, coverage ref, clinical note, payer+plan, region), validates
+   it, dispatches the Durable orchestration keyed on the request id (idempotent),
+   and returns immediately. There is no separate intake function and no Storage
+   Queue (§12 · TD-3).
+2. **NeedsAuth** — `NeedsAuthCheck` (deterministic executor) resolves the
    payer+plan rule set for this procedure and region; `needs-auth-agent` narrates
    any ambiguous plan language and returns `{authRequired, code, policyRef}`. If
-   not required → log, stop, nothing submitted.
-3. **Gap** — `EvidenceGapMatch` (deterministic activity) pulls the payer's
+   not required → `Persist`, end, nothing submitted.
+3. **Gap** — `EvidenceGapMatch` (deterministic executor) pulls the payer's
    written criteria (Foundry File Search over
    `policies/<region>/<payer>/<procedure>` in Blob); `evidence-gap-agent` reads
-   the clinical note against them and returns
-   `{met[], missing[], conflicts[], readiness}`.
-4. **Appeal Builder** — `AppealMatch` (deterministic activity) filters the
-   `precedents` metadata in Cosmos (payer, procedure, outcome, appeal result)
-   and ranks the shortlist by fact-pattern similarity; `precedent-strategist-agent`
+   the clinical note against them and returns per-criterion
+   `{status, evidence-quote}` + an evidence-quality grade.
+4. **Claims / Contradiction** — `claims-extraction-agent` lists the discrete
+   assertions in the note (each with its subject and whether it is negated); the
+   deterministic `ContradictionCheck` pairs an affirmed and a negated claim about
+   the same subject. Any conflict is surfaced and hard-routes the Gate to a human
+   — the system never silently picks a side (D17).
+5. **Precedent Match** — `PrecedentMatch` (deterministic executor) filters the
+   `precedents` metadata in Cosmos (payer, procedure, outcome, appeal result) and
+   ranks the shortlist by fact-pattern similarity; `precedent-strategist-agent`
    reasons over the File-Search-retrieved precedent narratives, reports the
    recorded outcomes and recommends **submit / strengthen / appeal**.
-5. **Critic** — `critic-agent` reviews the assembled case and runs its seven
+6. **Critic** — `critic-agent` reviews the assembled case and runs its seven
    checks; its verdict (`Clear / Concerns / Block / Abstain`) and any flags are
    attached to the case.
-6. **Gate** — deterministic. Weighs the structured decision model (D4):
-   any unmet **mandatory** criterion or a contradiction → `HumanReview`; a Critic
-   `Block` → `HumanReview` regardless of the numbers; a Critic `Abstain` or
+7. **Gate** — a deterministic executor. Weighs the structured decision model
+   (D4): any unmet **mandatory** criterion or a contradiction → `HumanReview`; a
+   Critic `Block` → `HumanReview` regardless of the numbers; a Critic `Abstain` or
    Low-quality evidence with Weak/None precedent support → `Abstain`; value over
    the auto-limit → `HumanReview`; an undocumented supporting criterion, Medium
-   evidence, or Critic `Concerns` → `Strengthen`; otherwise → `ReadyToSubmit`. Every
-   route carries its working.
-8. **Send** — the Submission Adapter submits to the payer in their format
-   (portal / X12 278 / FHIR / fax) — the only outbound path.
-9. **Decision** — approved → step 12; denied → step 10. The denial letter (PDF)
-    is parsed for the reason code and the clause cited.
-10. **Appeal** — `precedent-strategist-agent` drafts the appeal citing the specific policy
-    clause misapplied and the precedent case ids; `critic-agent` reviews the
-    draft; deterministic code fills the dates and the escalation route
+   evidence, or Critic `Concerns` → `Strengthen`; otherwise → `ReadyToSubmit`.
+   Every route carries its working.
+8. **Persist + Review PORT** — `Persist` writes the `CaseRecord` (the dashboard's
+   read model + the audit trail). **Every case that needs a submission then pauses
+   at a MAF `RequestPort`** — the workflow suspends until a reviewer answers via
+   `POST /respond/{runId}`. `ReadyToSubmit` only sets the reviewer's headline
+   ("ready — one click to send"); it is still a human `/respond` that sends (D35).
+   `ApprovalAuthority` runs in the executor that consumes the response and can
+   refuse-and-audit an under-authorised approval.
+9. **Send** — on an authorised `approve-send`, the `Submit` executor calls the
+   Submission Adapter, which submits to the payer in their format (portal / X12
+   278 / FHIR / fax) — the only outbound path.
+10. **Decision** — approved → step 13; denied → step 11. The denial letter text
+    is scanned deterministically for the reason code and the clause cited.
+11. **Appeal** — `precedent-strategist-agent` drafts the appeal citing the specific
+    policy clause misapplied and the precedent case ids; `critic-agent` reviews
+    the draft; deterministic code fills the dates and the escalation route
     (region-specific: state/external review vs. Financial Ombudsman Service).
-11. **Review** — the reviewer approves the appeal; the Adapter files it.
-12. **Track** — `ExpiryMath` watches the approved auth's validity window against
+12. **Review** — the reviewer approves the appeal at the port; the Adapter files it.
+13. **Track** — `ExpiryMath` watches the approved auth's validity window against
     the scheduling feed and raises an `EarlyWarning` if it will expire before the
     procedure date; `PolicyDiff` watches payer policy versions and raises a
     `DriftAlert` naming the affected templates. Both are deterministic and
     advisory — no Gate, no outbound action, no agent (D6).
 
-Throughout: one trace id per request across every hop; every agent call written
-to `agentCalls` (usage fields captured for the §7.1 cost-metering consideration);
-no agent performs an outbound action.
+Throughout: one trace per request (`pipeline.run → spoke.* → invoke_agent * →
+chat *`) across every hop; every agent call written to `agentCalls` with the
+trace id (the §7.1 cost meter reads it); no agent performs an outbound action.
 
 ## 6. Components, Service by Service
 
 **Intake** — the request contract: `{ procedure, plan, region, clinicalNote,
-priorDenialLetter? }`, where `clinicalNote` and `priorDenialLetter` are uploaded
-files (PDF / text), the rest structured fields. Delivered to the **Intake API**
-— `POST /api/requests`, the orchestrator app's Durable HTTP-starter function:
-validates the DTO, uploads the attachments to Blob, starts the orchestration
-keyed on request id, returns `202` + `statusQueryGetUri`. It is a function *in
-the orchestrator app*, not a separate Function App, and there is no queue
-(§12 · TD-3). **Open (§8):** whether the caller is a portal SPA form, a REST
-client, or a FHIR R4 bundle for v1.
+priorDenialLetter? }`, where `clinicalNote` and `priorDenialLetter` are text, the
+rest structured fields. Delivered to the MAF workflow's generated starter
+`POST /api/workflows/CareApprovalPipeline/run?runId={requestId}`, fronted by the
+API Proxy so the dashboard keeps one origin: validates the DTO, dispatches the
+Durable orchestration keyed on the request id, returns immediately. There is no
+separate Function App for intake and no queue (§12 · TD-3). **Open (§8):** whether
+the caller is a portal SPA form, a REST client, or a FHIR R4 bundle for v1.
 
-**Compute · Orchestration (Durable Functions)** — same Function App as the
-Intake API:
-- **Orchestrator function** — sequences the five agents and drives every
-  deterministic activity, keyed on request id for idempotency and replay; owns
-  the Gate.
-- **Activity functions** — NeedsAuthCheck, EvidenceGapMatch, AppealMatch,
-  ExpiryMath, PolicyDiff — all arithmetic and matching, no LLM. Each is a
-  discrete Durable activity (not an orchestrator helper method) for per-step
-  retry isolation, per-step stub twins in CI, and replay-safe resume — full
-  justification in §12 · TD-2.
+**Compute · Orchestration (Microsoft Agent Framework)** — `Zynara.WorkflowHost`,
+a `FunctionsApplication` + `ConfigureDurableWorkflows`:
+- **The workflow graph** — a typed `WorkflowBuilder` graph. A coarse `assemble`
+  executor runs the whole reasoning pipeline in-process and persists the
+  `PipelineResult` to Cosmos (keeping the Durable `CustomStatus` snapshot under
+  its 16 KB cap); from there the message is a slim `Flow` record. The Gate route
+  drives an `AddSwitch`, and every case that needs a submission suspends at a
+  `RequestPort` until a reviewer `/respond`s. A fine-grained per-executor graph
+  (`Needs Auth · Evidence Gap · Claims Extraction · Precedent Match · Critic ·
+  Gate`) is kept for `InProcessExecution` tests and the eval harness.
+- **Executors** — ~3-line `BindAsExecutor` lambdas over the unchanged
+  `Zynara.Core.Pipeline.*` classes. On the durable host each becomes a Durable
+  Task **activity**: per-step retry, checkpoint, replay-safe resume (§12 · TD-2).
+- **`ExpiryMath` / `PolicyDiff`** run as advisory monitors outside the graph.
 
-**AI Foundry · Agent Service** — **four reasoning agents** provisioned via
-`Azure.AI.Projects` (`AgentAdministrationClient.CreateAgentVersion`), each wired
-behind a `Zynara.Core` interface with a deterministic stub twin:
+**AI Foundry · Agent Service** — **five reasoning agents** provisioned via
+`Azure.AI.Projects` and invoked as **MAF `AIAgents`**
+(`AIProjectClient.AsAIAgent(new AgentReference(name))` binds to the existing
+server-side version), each wired behind a `Zynara.Core` interface with a
+deterministic stub twin:
 | Agent | Reasoning job | Tools / grounding |
 |---|---|---|
 | `needs-auth-agent` | Plain-language reading of ambiguous plan text | payer rule-set KB, procedure-code lookup |
 | `evidence-gap-agent` | Free-text clinical note vs. the numbered criteria — per-criterion status + the supporting quote + an evidence-quality grade | Foundry File Search over `policies/` (Blob), the clinical note |
+| **`claims-extraction-agent`** | Lists the discrete assertions in the note — each with its subject and whether it is negated — so `ContradictionCheck` can pair an affirmed and a negated claim about the same subject | the clinical note only |
 | `precedent-strategist-agent` | Corpus-level fact-pattern match over recorded outcomes; drafts the appeal argument | `precedents` metadata (Cosmos) + precedent narratives (File Search), policy clause text |
 | **`critic-agent`** | Tries to disprove the assembled recommendation — the seven checks (§3) — and can force a human or an abstention | the whole assembled case + File Search to verify citations |
 
@@ -317,21 +366,22 @@ in code.
   agents query. Split rationale: §12 · TD-5.
 
 **Experience** — Reviewer (human); Dashboard (`Zynara.Dashboard`, Static Web App
-Standard + `linkedBackends` → apiproxy, same-origin `/api`): three tabs —
-**Review Queue** (the HITL list: pending draft submissions and appeals to approve
-or edit, with the Estimated Recoverable Value as a headline number), **Early Warnings**
-(`expiry-watch` + `policy-drift` output), and **Cost** (£/$ per request · per
-agent · per day, off `agentCalls`); the **UK ⇄ US** region switch is a header
-control, not a tab. **API Proxy** (Function; read models + reviewer
-approve/reject).
+Standard + `linkedBackends` → apiproxy, same-origin `/api`): four tabs —
+**Review queue** (the HITL list: assembled cases and appeals to approve or edit,
+with the Estimated Recoverable Value as a headline number), **Early warnings**
+(`expiry-watch` + `policy-drift` output), **Impact** (Estimated Recoverable Value
++ a before/after benchmark), and a **Pipeline simulator** (an illustrative
+stage-by-stage walk); the **UK ⇄ US** region switch is a header control, not a
+tab. Approve / reject on a case posts to the workflow's `/respond/{runId}` port.
+**API Proxy** (Function; read models + a thin `respond` relay).
 
 **Cross-cutting** — managed identity (Cosmos data-plane RBAC / Foundry / Blob);
-Key Vault (App Insights + content-share strings only, as `@Microsoft.KeyVault`
-refs); App Insights (one trace id per request); `Zynara.Eval` (labelled
-clinical-case set replayed through `evidence-gap-agent`, CI-gated on
-classification accuracy); `Zynara.Seed` (azd post-provision: create Cosmos
-containers, upload the Blob corpus, register/refresh the File Search index, seed
-synthetic data, grant Function App identities).
+Key Vault (App Insights + content-share strings + the one payer credential, as
+`@Microsoft.KeyVault` refs); App Insights (one trace per request); `Zynara.Eval`
+(24 labelled clinical cases + the credible-generalist baseline, CI-gated on the
+§7.3 safety metrics); `Zynara.DbDeploy` (azd post-provision: create Cosmos
+containers, seed the reference data; the Blob corpus + File Search index are
+loaded manually for the demo).
 
 ## 7. Responsible AI
 
@@ -368,7 +418,7 @@ In scope — built and demonstrated:
   (ReadyToSubmit/Strengthen → Coordinator, HumanReview → Reviewer, Abstain → Senior)
   and the **financial-risk tier** (≤ £500 → Coordinator, ≤ £5k → Reviewer,
   ≤ £25k → Senior, above → Medical Director); an appeal is always at least a
-  Senior sign-off. The Gate's auto-limit is just the bottom tier — above it a
+  Senior sign-off. The `ReadyToSubmitLimit` is just the bottom tier — above it a
   case escalates to a more senior human, not to a bigger number. A refused
   decision is itself written to the audit trail. *(Demo: the role is a header /
   a picker; production maps to Entra ID app roles.)*
@@ -394,6 +444,7 @@ following. Each is named so a judge can see the gap is understood, not missed.
 | **CI/CD deployment pipeline** | GitHub Actions: build + test + eval-gate (already in CI) → **`azd deploy` to a staging slot** → smoke test → **manual approval** → production, with **infra drift detection** (`azd provision --preview` / `what-if`) and automatic rollback on health-probe failure. Environments per branch. | CI (build + test + eval) exists from commit 1; the deploy half needs a standing Azure subscription + slots + approvers we don't set up for a demo. |
 | **Model / prompt versioning** | Every agent version + its system prompt pinned and recorded against the outcomes it produced, so any decision is reproducible; prompt changes go through the same PR + eval gate as code. | Foundry versions the agents; wiring the outcome↔version link and a prompt-change gate is a few days of plumbing. |
 | **Continuous quality monitoring** | The `Zynara.Eval` harness (§12) runs against live **de-identified** traffic on a schedule, alerting on accuracy regression and drift; a human-review sampling queue feeds labelled data back. | Eval is CI-only here (gates the build). Live scoring needs a de-identification step + a labelling workflow. |
+| **Cost management (FinOps)** | A running-cost view per case and per tenant: tokens and tool calls per agent (the `IAgentCallRecorder` already records these when the hosted agents run) priced at the negotiated Foundry rate, plus the fixed cloud cost (Functions, Cosmos, Storage, Key Vault), compared against the manual cost per case it replaces. Backed by Azure Cost Management tags, budgets and alerts; feeds the per-tenant spend caps in the AI-governance row. | **Not in scope for this build, but a must for production.** Real pricing and volumes don't exist yet, and an illustrative cost tab would be invented numbers next to a measured eval. Measured today: about 28K tokens and 30–60 s per case on the hosted models. |
 | **HA / DR** | Cosmos multi-region (or zone-redundant) writes; Blob GRS; Function App on a plan with zone redundancy; a documented **RTO/RPO** and a restore runbook tested quarterly. | Single-region serverless is right for a demo; multi-region is a cost + config decision for a real SLA. |
 | **Scale & resilience** | Load test to the real request rate; Durable Functions auto-scales, but tune host concurrency, activity timeouts and retry policies to measured numbers; circuit-breaker on the Submission Adapter. | Demo volume is tens/day; the retry/timeout defaults are fine until there is real traffic to measure. |
 | **Secrets & compliance** | Key Vault secret **rotation** (the two unavoidable strings), a data-residency guarantee per region, a retention + deletion policy for the corpus and the outcomes store, an access-review cadence, and a **PHI handling design** (the demo carries none — production would, and needs de-identification, field-level encryption, and audit). | The demo carries **no PHI** by design; the moment it does, this becomes the largest workstream. |
@@ -402,10 +453,11 @@ following. Each is named so a judge can see the gap is understood, not missed.
 
 The architecture SVG carries a one-line note to this effect under CROSS-CUTTING.
 
-**What would *not* change at production scale:** the deterministic orchestrator
-owning the Gate (TD-1), the pipeline steps as discrete activities (TD-2), the sole
-outbound path, the hybrid principle, and Cosmos + Blob + File Search as the store
-split (TD-4, TD-5) — these are scale-independent choices.
+**What would *not* change at production scale:** the deterministic MAF workflow
+owning the Gate (TD-1), the pipeline steps as discrete executors / Durable
+activities (TD-2), the sole outbound path, the human `RequestPort` before every
+send, the hybrid principle, and Cosmos + Blob + File Search as the store split
+(TD-4, TD-5) — these are scale-independent choices.
 
 ### 7.2 Policy + Regulatory Profile (not a "region switch")
 
@@ -450,9 +502,16 @@ citations) and measures:
 
 CI hard-gates the safety metrics (unsafe automation = 0, mandatory false-negative
 = 0, hallucinated references = 0) and holds a floor on route agreement,
-safe-abstention, strategy-verdict agreement and policy/precedent citation. The
-agents-vs-generalist comparison (§3.1) runs the same set through a single-prompt
-baseline and reports the delta on agreement and safe automation.
+safe-abstention, strategy-verdict agreement and policy/precedent citation.
+
+**The credible-generalist comparison** (§3.1) runs the same 24 cases through one
+GPT-5.4 generalist given identical inputs and a safety-focused prompt, scored on
+the same metrics. The pipeline agrees with the expert labels **100% vs 62.5%**,
+records **0 unsafe automations vs 4**, and abstains **4/4 vs 1/4** where an expert
+would. CI enforces `pipeline ≥ generalist` on both unsafe automation and route
+agreement. The generalist's verbatim responses are committed as replay fixtures
+(`eval/Zynara.Eval/baseline-fixtures/`, each with a prompt hash) so CI stays
+offline; the full prompt and method are `eval/Zynara.Eval/BASELINE.md` (D38).
 
 ## 8. Deployment & Scope Decisions
 
@@ -480,7 +539,7 @@ midnight US).
 - **Payer-agnostic, lead with UK (Bupa/AXA)** — EMEA-region judging; CMS-0057-F
   stays as the "why now" data point, not the framing.
 - **Build priority if time runs short (agreed order):**
-  1. HTTP starter → Orchestrator → NeedsAuth + Gap + AppealMatch → Gate →
+  1. workflow starter → graph → NeedsAuth + Gap + PrecedentMatch → Gate →
      Submission Adapter → Cosmos/Blob (the core mission), with `needs-auth` +
      `evidence-gap` + `precedent-strategist` agents
   2. Dashboard Review Queue + Reviewer loop + the Estimated Recoverable Value, on real
@@ -504,6 +563,9 @@ midnight US).
   valid for the demo.
 - **Peer-to-peer prep** — assembling the clinician's talking points for the
   10-minute call with the insurer's medical director, from all of the above.
+- **Cost management dashboard** — per-case and per-tenant running cost against the
+  manual cost it replaces, with budgets and alerts (see §7.1, Cost management).
+  Not in scope now; definitely required for production.
 - **Learning from reviewer edits** — closing the loop so the Gate threshold and
   the draft templates improve from what reviewers actually change.
 
@@ -512,10 +574,10 @@ midnight US).
 | Challenge | Deliverable here |
 |---|---|
 | **0 — Foundry setup** | `azd provision` — account, project, model, App Insights, **new resource group** |
-| **1 — build agents via SDK** | 4 persistent reasoning agents (incl. the Critic) via `Azure.AI.Projects`, wired behind `Zynara.Core` interfaces with stub twins; agents reason and challenge one another (§3.1) |
-| **2 — agent-keyed traces** | **built** — `Zynara.Core.Diagnostics.ZynaraTelemetry` `ActivitySource` emits `pipeline.run` → `spoke.<name>` → `invoke_agent <name>` → `chat <model>` (the last only on the hosted path); tags carry request id, route, per-`chat` token counts. The Function hosts register the source with the Azure Monitor OpenTelemetry exporter when `APPLICATIONINSIGHTS_CONNECTION_STRING` is set; `IAgentCallRecorder` writes the trace id onto each `agentCalls` cost row. `TelemetryTests` asserts the span tree. |
-| **3 — evaluate an agent** | Two halves. **Quality** — the Foundry *portal* evaluation of `evidence-gap-agent`: Coherence / Fluency over `eval/portal/eval_portal.jsonl` (15 turns), runbook `docs/runbooks/challenge-3-portal-evaluation.md`. **Correctness** — `Zynara.Eval` CI gate on the safety-shaped metric suite (§7.3): precision/recall, mandatory false-negative rate, policy/precedent citation accuracy, hallucination rate, safe-abstention rate, unsafe-automation rate (hard-gated to 0), over 20 labelled cases. |
-| **4 — persistent assets + portal workflow** | agents visible as assets; a 2–3 node portal workflow, the conditional Gate/appeal steps in the Durable orchestrator |
+| **1 — build agents via SDK** | 5 persistent reasoning agents (incl. the Critic) via `Azure.AI.Projects`, invoked as **MAF `AIAgents`**, wired behind `Zynara.Core` interfaces with stub twins; agents reason and challenge one another (§3.1) |
+| **2 — agent-keyed traces** | **built** — `Zynara.Core.Diagnostics.ZynaraTelemetry` `ActivitySource` emits `pipeline.run` → `spoke.<name>` → `invoke_agent <name>` → `chat <model>` (the last only on the hosted path); tags carry request id, route, per-`chat` token counts. The workflow host registers the source with the Azure Monitor OpenTelemetry exporter when `APPLICATIONINSIGHTS_CONNECTION_STRING` is set; `IAgentCallRecorder` writes the trace id onto each `agentCalls` cost row. `TelemetryTests` asserts the span tree; verified live from `zynara-workflowhost`. |
+| **3 — evaluate an agent** | Two halves. **Quality** — the Foundry *portal* evaluation of `evidence-gap-agent`: Coherence / Fluency over `eval/portal/eval_portal.jsonl` (15 turns), runbook `docs/runbooks/challenge-3-portal-evaluation.md`. **Correctness** — `Zynara.Eval` CI gate on the safety-shaped metric suite (§7.3) over **24 labelled cases**, plus the credible-generalist comparison (pipeline 100% vs 62.5% route agreement, 0 vs 4 unsafe automations). |
+| **4 — persistent assets + portal workflow** | agents visible as assets; a 2–3 node portal workflow (`care-approval-reasoning`); the conditional Gate / review-port / appeal branching lives in the **MAF Workflow graph** (`Zynara.WorkflowHost`), where it is deterministic and testable |
 | **AI governance** | cost metering is built (dashboard Cost tab); the enforcement layer — quota / rate limits / spend caps / model allow-list — plus versioning and live drift monitoring are enumerated in §7.1 as production hardening, not built for the demo |
 
 ## 11. How the Design Targets the Three Judging Criteria
@@ -530,83 +592,99 @@ midnight US).
 
 | Question | Where it is answered |
 |---|---|
-| **1. Do the agents make better decisions *together* than one generalist?** | §3.1 (the argument) + §7.3 (the measured comparison — agreement, mandatory false-negative rate, safe-abstention rate vs. a single-prompt baseline on the labelled set). |
-| **2. Does the system know when it is uncertain?** | The `Abstain` route (D4): Low-quality evidence + Weak/None precedent support, or a Critic `Abstain`, and the system declines to advise rather than guessing. Measured as the **safe-abstention rate** (§7.3). |
-| **3. Why should a human trust the recommendation?** | Evidence-first review workspace (P1-1): every criterion shows the clinical statement that satisfies it, the policy clause and version, the precedents considered with their similarity, the Critic's flags, and the Gate's working. Nothing is a black-box number. |
-| **4. Is the business value measurable, not a marketing figure?** | **Estimated Recoverable Value** is built (`RecoveryEstimator` + `GET /api/recovery` + the dashboard tab): the headline number, the four inputs, the arithmetic spelled out, and a confidence level — no invented improvement figure (P2-1 done). Before/after instrumentation of the pipeline (P2-2 — case-prep time, criteria-check time, reviewer effort, cost per case) is still open, with any estimated manual baseline labelled as an estimate. |
+| **1. Do the agents make better decisions *together* than one generalist?** | §3.1 + §7.3 — the **measured** comparison against a credible one-pass GPT-5.4 generalist on the same 24 cases: **100% vs 62.5%** route agreement, **0 vs 4** unsafe automations, **4/4 vs 1/4** safe abstention. Not a straw man — the generalist is told to be safe and still is not. |
+| **2. Does the system know when it is uncertain?** | The `Abstain` route (D4): Low-quality evidence + Weak/None precedent support, or a Critic `Abstain`, and the system declines to advise rather than guessing. Measured as the **safe-abstention rate** (§7.3) — a hard CI floor, and 4/4 on the labelled set. |
+| **3. Why should a human trust the recommendation?** | Evidence-first review workspace: every criterion shows the clinical statement that satisfies it, the policy clause and version, the precedents considered with their similarity, the Critic's flags, and the Gate's working. Nothing is a black-box number. And **nothing is sent without an explicit human `/respond`** — even a `ReadyToSubmit` case pauses (D35). |
+| **4. Is the business value measurable, not a marketing figure?** | **Estimated Recoverable Value** is built (`RecoveryEstimator` + `GET /api/recovery` + the Impact tab): the headline number, the four inputs, the arithmetic spelled out, and a confidence level — no invented improvement figure. A **before/after benchmark** (`BenchmarkService`, `GET /api/benchmark`) pairs each measured pipeline count with a labelled manual estimate — no improvement percentage claimed (D16). |
 
 ## 12. Technology Decisions
 
 ADR-style. TD-1…TD-5 each record the decision, the reasoning, the cost accepted,
 and the rejected alternative; TD-6 groups the platform defaults. `ARCHITECTURE.md`
-§17 carries the one-line summary table. The architecture SVG/PNG (§4) is the
-authoritative picture; this document must agree with it.
+§17 carries the one-line summary table. The architecture SVG (§4) is the
+authoritative picture; this document must agree with it. The orchestration
+decisions (TD-1, TD-2, TD-3) were re-taken when the layer moved from Azure
+Durable Functions to the Microsoft Agent Framework — `MAF-MIGRATION.md`,
+`DECISIONS.md` D32–D38.
 
-### TD-1 · Orchestration is a deterministic Durable Functions orchestrator, not agent-to-agent chaining
+### TD-1 · Orchestration is a deterministic Microsoft Agent Framework Workflow, not agent-to-agent chaining
 
-**Decision.** A Durable Functions orchestrator sequences the pipeline and owns
-every value that drives a decision or an action.
+**Decision.** A **MAF Workflow graph** — typed executors, typed edges, a Gate
+`AddSwitch`, a human `RequestPort` — sequences the pipeline and owns every value
+that drives a decision or an action. It runs on a **Durable Task** backend.
 
-**Why.** The auto-submit-vs-review decision, the `readiness` threshold, the
-pipeline order, and the audit trail must be deterministic and repeatable —
-regulator- and Ombudsman-inspectable. Foundry agents do not reliably sequence
-each other, and an LLM must never own the Gate. Durable Functions also earns its
-place on its own merits: **durable timers** drive `expiry-watch`, and **durable
-wait + replay** covers the slow, out-of-band payer round-trip (portal / fax can
-take days).
+**Why.** The ready-to-submit-vs-review decision, the pipeline order, the Gate's
+structured decision model and the audit trail must be deterministic and
+repeatable — regulator- and Ombudsman-inspectable. A MAF Workflow is exactly
+that: a deterministic typed graph, not "agents orchestrating agents" (TD-1a). It
+also earns its place on its own merits — the Durable Task backend gives
+checkpoint + replay for the slow, out-of-band payer round-trip (portal / fax can
+take days), and a first-class `RequestPort` for the human pause that we would
+otherwise hand-build. MAF is Microsoft's recommended pattern and the reference
+architecture for the team's forthcoming agent projects (D32).
 
-**Rejected.** A single generalist agent orchestrating via connected agents —
-non-deterministic call order, no seam for the human, no auditable Gate.
+**Rejected.** (a) A single generalist agent orchestrating via connected agents —
+non-deterministic call order, no seam for the human, no auditable Gate; the §3.1
+measurement shows the safety cost. (b) Staying on the Durable Functions
+orchestrator — it worked (tag `v1.0-durable`), but MAF folds the HTTP surface,
+the human port and the checkpoint story into one framework-owned model, and is
+the pattern the team is standardising on.
 
-### TD-2 · The pipeline steps are Durable Activity Functions, not orchestrator helper methods
+### TD-1a · A MAF Workflow is a deterministic graph — TD-1's "no agents orchestrating agents" still holds
 
-**Decision.** `NeedsAuthCheck`, `EvidenceGapMatch`, `AppealMatch` and
-`CriticCheck` each ship as their own Durable **activity function** (as do the
-advisory `ExpiryMath` / `PolicyDiff`).
+The V1 rejection of *"a generalist agent orchestrating via connected agents"* was
+about handing **control flow to an LLM**. A MAF Workflow does the opposite: the
+graph, the edges, the Gate `switch` and the `RequestPort` are all deterministic
+code. Agents are leaf executors that return prose; nothing about the sequence,
+the routing or the human pause is model-decided. The hybrid principle is
+unchanged — it is now enforced by the framework's type system rather than by our
+own orchestrator discipline.
 
-**Justification — four concrete properties, none of which a helper method gives:**
+### TD-2 · The pipeline steps are MAF executors / Durable Task activities, not one method
+
+**Decision.** `NeedsAuthCheck`, `EvidenceGapMatch`, `ClaimsExtraction`,
+`PrecedentMatch`, `CriticCheck` and the `Gate` are each a MAF **executor**
+(`BindAsExecutor` over the unchanged `Zynara.Core.Pipeline.*` class); on the
+durable host each runs as its own **Durable Task activity**.
+
+**Justification — four concrete properties, none of which one big method gives:**
 
 1. **Per-step retry isolation.** An agent or File-Search call that 500s or times
-   out is retried *at that step* with its own backoff policy. The other four
-   agent calls are neither re-run nor re-billed. With a single orchestrator
-   function doing five calls in a row, any failure re-runs the whole sequence.
-2. **The prose→value boundary is a named unit.** Each activity is where an
-   agent's free-text reply becomes the typed contract the Gate consumes
-   (`{authRequired, code, policyRef}`, `{met[], missing[], conflicts[],
-   readiness}`, …). Keeping that parsing/scoring in its own function stops it
-   leaking into the orchestrator alongside the decision rule.
-3. **A stub twin per step, exercised in CI.** Each activity has a deterministic
-   double (Challenge-1 requirement). The whole pipeline — ordering, Gate logic,
-   branch conditions — runs in CI with **zero live inference**: fast, free,
-   repeatable.
-4. **Replay-safe resume.** Durable records each completed activity in the
-   orchestration history. A host restart, deploy, or transient fault mid-pipeline
-   resumes at the *next* step, not step 1 — so a case is never double-submitted.
+   out is retried *at that step* with its own backoff. The other agent calls are
+   neither re-run nor re-billed.
+2. **The prose→value boundary is a named unit.** Each executor is where an
+   agent's free-text reply becomes the typed record the Gate consumes. Keeping
+   that parsing/scoring in its own unit stops it leaking into the routing logic.
+3. **A stub twin per step, exercised in CI.** Each agent has a deterministic
+   double (Challenge-1). The whole graph — ordering, Gate logic, the route switch
+   — runs in CI via `InProcessExecution` with **zero live inference and no infra**:
+   fast, free, repeatable. This is where the per-step route-agreement coverage and
+   the §7.3 metrics live.
+4. **Replay-safe resume.** Durable Task records each completed activity. A host
+   restart or transient fault mid-pipeline resumes at the *next* step — a case is
+   never double-submitted, and a paused review survives a redeploy.
 
-**Cost accepted.** Five extra deployables, plus the orchestrator↔activity
-boundary (inputs/outputs must be serialisable). Fine here — the pipeline is
-I/O-bound (LLM + File Search + Cosmos), not a hot loop, so the boundary cost is
-noise.
+**Cost accepted.** MAF serialises the whole workflow snapshot into the Durable
+`CustomStatus`, hard-capped at 16 KB. The fine-grained accumulator overran it, so
+the **durable** graph is coarse — one `assemble` executor runs the pipeline
+in-process and the message downstream is a slim `Flow` record — while the
+fine-grained per-executor graph is kept for `InProcessExecution` / the eval
+harness. Two graphs, one set of `Zynara.Core.Pipeline` classes behind both.
 
-**When we would collapse them.** If the steps became a tight synchronous
-computation with no independent failure modes and no need for per-step CI
-doubles. They are neither.
+### TD-3 · No explicit Requests Queue — the workflow's generated HTTP starter is the async boundary
 
-### TD-3 · No explicit Requests Queue — the Durable HTTP starter is the async boundary
+**Decision.** `POST /api/workflows/CareApprovalPipeline/run?runId={requestId}` is
+the MAF workflow's auto-generated HTTP starter: it validates the DTO, dispatches
+the Durable orchestration keyed on the request id, and returns immediately. There
+is no `Zynara.Intake` function and no Azure Storage Queue. The API Proxy fronts it
+so the dashboard keeps one origin and sends the function key.
 
-**Decision.** `POST /api/requests` is a Durable Functions HTTP starter: it
-validates the request DTO, starts the orchestration keyed on request id, and
-returns `202` + `statusQueryGetUri`. There is no `Zynara.Intake` function and no
-Azure Storage Queue.
-
-**Why.** The earlier design carried a queue over from a streaming-ingest
-project. This workload is request/response at low volume — tens/day for the demo,
+**Why.** This workload is request/response at low volume — tens/day for the demo,
 low-hundreds/day realistically — with no burst to absorb. The only genuine
-requirement is *don't hold the caller open for a multi-second-to-minute
-pipeline* (and Functions cap a single execution at ~230 s). Durable already
-provides exactly that: the starter returns immediately and the orchestration
-runs on Durable's own internal control queues, which still give at-least-once
-execution and back-pressure.
+requirement is *don't hold the caller open for a multi-second-to-minute pipeline*.
+The Durable Task backend already provides that: the starter returns immediately
+and the orchestration runs on Durable's own control queues, which still give
+at-least-once execution and back-pressure.
 
 **Rejected.** A dedicated Storage Queue — an extra resource, an extra failure
 mode, and an extra hop, justified by load that does not exist.
@@ -659,7 +737,7 @@ blobRef, decidedOn}`, `policies = {policyRef, version, blobRef, effectiveFrom}`.
 a note against written criteria, `precedent-strategist` matches fact patterns — which
 is a vector-search job, not a query job. Forcing it into Cosmos means building
 and running our own chunk / embed / index pipeline; File Search does that for
-the agents natively. `AppealMatch` (deterministic) filters the `precedents`
+the agents natively. `PrecedentMatch` (deterministic) filters the `precedents`
 metadata in Cosmos first (payer, procedure, outcome), then the agent reasons
 over the File-Search-retrieved narratives for the shortlist. `PolicyDiff` runs a
 deterministic text diff over two Blob versions — no index needed.
@@ -676,8 +754,8 @@ it beats the obvious alternative.
 
 | Choice | Why | Rejected |
 |---|---|---|
-| **Foundry Agent Service** (persistent hosted agents) over raw model calls | Agents are versioned assets, portal-visible (Challenge 4), come with File Search + tool-calling + tracing wired, and give a clean provision-once / invoke-many surface. Each agent is still behind a `Zynara.Core` interface, so the code doesn't depend on the hosting model. | Hand-rolled chat-completions calls — we'd rebuild retrieval, tool loop, versioning and tracing ourselves, and lose the portal asset view the challenge asks for. |
-| **C# / .NET 8** | Durable Functions' most mature SDK; static types make the prose→typed-contract boundary (TD-2) a compile-time guarantee; the team's prior project is .NET, so patterns transfer. | Python — fine for the agents, weaker for a typed Durable orchestrator and the deterministic engines. |
+| **Foundry Agent Service** (persistent hosted agents), invoked as **MAF `AIAgents`** | Agents are versioned assets, portal-visible (Challenge 4), come with File Search + tool-calling + tracing wired. `AIProjectClient.AsAIAgent(new AgentReference(name))` binds to the existing server-side version — the workflow drives them through MAF's `IChatClient` middleware, so telemetry and fakes come for free. Each agent is still behind a `Zynara.Core` interface. | Hand-rolled chat-completions calls — we'd rebuild retrieval, tool loop, versioning and tracing ourselves, and lose the portal asset view. |
+| **C# / .NET 8** | The Microsoft Agent Framework's primary SDK (`Microsoft.Agents.AI.Workflows`); static types make the prose→typed-record boundary (TD-2) a compile-time guarantee, and the Gate `switch` cases are typed predicates; the team's prior project is .NET, so patterns transfer. | Python — fine for the agents, weaker for a typed workflow graph and the deterministic engines. |
 | **Static Web App** (Standard) + linked backend for the dashboard | One resource for the SPA + its `/api`, same-origin (no CORS), free TLS + global CDN, managed identity to the API Proxy. The dashboard is read-mostly with a few reviewer actions — it doesn't need a full app service. | A container/App Service for the front end — more to run and secure for a static SPA. |
 | **`azd` + Bicep**, subscription-scoped, **new resource group**, managed-identity-first **from commit 1** | One `azd up` provisions and deploys; Bicep is the drift-detectable source of truth; managed identity retrofitted later is the classic security debt, so it's there from the start. | Portal click-ops or retrofitted identity — not reproducible, not reviewable, and a security gap. |
 | **App Insights + W3C trace context** | One correlated trace per request id across every hop (Challenge 2), nested `invoke_agent` / `chat` spans, trace id persisted on the `submissions` document — the audit trail and the cost meter both read from it. | Bespoke logging — no distributed correlation, no portal trace view. |
