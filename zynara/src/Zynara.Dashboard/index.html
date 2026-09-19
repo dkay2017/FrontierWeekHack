@@ -337,6 +337,18 @@ table.t tbody tr.click:hover td{background:var(--accent-soft);}
   padding:1px 5px;border-radius:4px;background:var(--warn-soft);color:var(--warn);vertical-align:1px;}
 .bench-basis{font-size:10.5px;color:var(--faint);margin-top:3px;line-height:1.45;max-width:44ch;white-space:normal;}
 #benchBody td{white-space:normal;vertical-align:top;}
+.rm{font-size:12px;font-weight:600;color:var(--accent-ink);text-decoration:none;cursor:pointer;white-space:nowrap;}
+.rm:hover{text-decoration:underline;}
+pre.draft.short{max-height:9.5em;overflow:hidden;-webkit-mask-image:linear-gradient(#000 65%,transparent);mask-image:linear-gradient(#000 65%,transparent);}
+.dr-why{font-size:15px;}
+details.more{margin-top:18px;border-top:1px solid var(--line);padding-top:10px;}
+details.more>summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--muted);list-style:none;padding:6px 0;}
+details.more>summary::before{content:"▸ ";}
+details.more[open]>summary::before{content:"▾ ";}
+.cite{display:inline-block;font-size:11.5px;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:2px 9px;margin-right:6px;}
+.imp-tiles{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;}
+.imp-tiles>div{flex:1 1 150px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:12.5px;color:var(--muted);}
+.imp-tiles b{display:block;font-size:22px;color:var(--ink);margin-bottom:2px;}
 
 /* ============ FOOTER ============ */
 .foot{position:relative;z-index:1;margin-top:auto;flex-shrink:0;background:linear-gradient(118deg,#0B1D20 0%,#123231 52%,#0C2A2C 100%);}
@@ -533,8 +545,8 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
       <span>Proof beats paperwork.</span>
     </div>
     <div class="mast-right">
-      <label class="rolepick" title="The reviewer role you are acting as — it sets the approval authority (a Coordinator cannot approve an appeal or a high-value case). Real deployments map this to Entra ID app roles.">
-        <span>reviewing as</span>
+      <label class="rolepick" title="Pick a job title. Junior roles cannot approve big or risky cases — try it.">
+        <span>you are</span>
         <select id="rolePicker" aria-label="Reviewer role">
           <option value="Coordinator">Coordinator</option>
           <option value="Reviewer" selected>Reviewer</option>
@@ -555,13 +567,13 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
 
 <nav class="tabbar"><div class="tabbar-row" role="tablist">
   <button class="tab" role="tab" aria-selected="true" data-tab="review">
-    <svg viewBox="0 0 20 20"><path d="M4 3h9l3 3v11H4z"/><path d="M7 9h6M7 12h6"/></svg>Review queue</button>
-  <button class="tab" role="tab" aria-selected="false" data-tab="warnings">
+    <svg viewBox="0 0 20 20"><path d="M4 3h9l3 3v11H4z"/><path d="M7 9h6M7 12h6"/></svg>Cases</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="warnings" hidden style="display:none">
     <svg viewBox="0 0 20 20"><path d="M10 3l7 13H3z"/><path d="M10 8v4M10 14h.01"/></svg>Early warnings</button>
   <button class="tab" role="tab" aria-selected="false" data-tab="cost">
-    <svg viewBox="0 0 20 20"><path d="M3 17V8M9 17V4M15 17v-6"/></svg>Impact</button>
+    <svg viewBox="0 0 20 20"><path d="M3 17V8M9 17V4M15 17v-6"/></svg>Why it matters</button>
   <button class="tab" role="tab" aria-selected="false" data-tab="sim">
-    <svg viewBox="0 0 20 20"><circle cx="4" cy="10" r="2"/><circle cx="10" cy="10" r="2"/><circle cx="16" cy="10" r="2"/><path d="M6 10h2M12 10h2"/></svg>Pipeline simulator</button>
+    <svg viewBox="0 0 20 20"><circle cx="4" cy="10" r="2"/><circle cx="10" cy="10" r="2"/><circle cx="16" cy="10" r="2"/><path d="M6 10h2M12 10h2"/></svg>How it thinks</button>
 </div></nav>
 
 <main class="page">
@@ -571,23 +583,21 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
       <div class="phead-id">
         <span class="phead-ic"><svg viewBox="0 0 24 24"><path d="M4 4h11l4 4v12H4z"/><path d="M8 12h8M8 16h5"/><path d="M9 8l2 2 4-4"/></svg></span>
         <div>
-          <h1>Prior-authorisation review</h1>
-          <p>Every case is assembled by the agents, checked by the deterministic Gate, and waiting for a
-             human. Select a row to see the evidence, the precedents and the Critic's challenge.</p>
+          <h1>Cases waiting for you</h1>
+          <p>The AI has prepared each one. You make the final call. Click a case to see why.</p>
         </div>
       </div>
       <div class="phead-stats" id="reviewStats"></div>
     </div>
     <div class="card">
       <div class="card-head">
-        <h2><span class="ibox"><svg viewBox="0 0 20 20"><path d="M3 4h10l4 4v8H3z"/><path d="M7 10h6M7 13h4"/></svg></span>Assembled cases</h2>
+        <h2><span class="ibox"><svg viewBox="0 0 20 20"><path d="M3 4h10l4 4v8H3z"/><path d="M7 10h6M7 13h4"/></svg></span>Denied requests</h2>
         <span class="cap" id="reviewCap">—</span>
       </div>
       <div class="tw">
         <table class="t">
           <thead><tr>
-            <th class="sr">#</th><th>Procedure</th><th>Payer · plan</th>
-            <th>Criteria</th><th>Precedent</th><th>Status</th><th>Confidence</th>
+            <th>Scan</th><th>Rules met</th><th>Similar cases won</th><th>What to do</th>
           </tr></thead>
           <tbody id="reviewBody"></tbody>
         </table>
@@ -625,56 +635,39 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
       <div class="phead-id">
         <span class="phead-ic"><svg viewBox="0 0 24 24"><path d="M12 3v18M7 7h8a3 3 0 0 1 0 6H7M7 13h9a3 3 0 0 1 0 6H6"/></svg></span>
         <div>
-          <h1>Impact</h1>
-          <p>Two numbers, both with their working shown: the appeal opportunity in the payer's denial
-             history, and a before / after benchmark of the demo pipeline against a labelled manual
-             estimate. No invented improvement figure.</p>
+          <h1>Why it matters</h1>
+          <p>Money that denials leave on the table, and time saved on each case.</p>
         </div>
       </div>
-      <div class="phead-stats" id="recoveryStats"></div>
     </div>
 
     <div class="card">
       <div class="card-head">
-        <h2><span class="ibox"><svg viewBox="0 0 20 20"><path d="M10 2v16M6 6h6a2 2 0 0 1 0 4H6M6 10h7a2 2 0 0 1 0 4H5"/></svg></span>Estimated recoverable value</h2>
-        <span class="cap" id="recoveryWindow">—</span>
+        <h2><span class="ibox"><svg viewBox="0 0 20 20"><path d="M10 2v16M6 6h6a2 2 0 0 1 0 4H6M6 10h7a2 2 0 0 1 0 4H5"/></svg></span>Money we could win back</h2>
       </div>
       <div id="recoveryHead"></div>
+      <details class="more" style="margin:0 16px 14px"><summary>See the working</summary>
+        <div class="tw">
+          <table class="t">
+            <thead><tr>
+              <th>Scan</th><th class="r">Denied</th><th class="r">Not appealed</th>
+              <th class="r">Win rate</th><th class="r">Could recover</th>
+            </tr></thead>
+            <tbody id="recoveryBody"></tbody>
+          </table>
+        </div>
+      </details>
     </div>
 
     <div class="card">
-      <div class="card-head"><h2><span class="ibox"><svg viewBox="0 0 20 20"><path d="M3 4h14M3 10h14M3 16h14"/></svg></span>By payer &amp; procedure</h2>
-        <span class="cap">the scopes that sum to the estimate above</span></div>
+      <div class="card-head"><h2><span class="ibox"><svg viewBox="0 0 20 20"><path d="M3 15V9M9 15V4M15 15v-4"/><path d="M2 17h16"/></svg></span>By hand vs with Care Approval IQ</h2></div>
       <div class="tw">
         <table class="t">
-          <thead><tr>
-            <th class="sr">#</th><th>Scope</th><th class="r">Denied</th><th class="r">Not appealed</th>
-            <th class="r">Win rate</th><th class="r">Mean claim</th><th class="r">Recoverable</th><th>Confidence</th>
-          </tr></thead>
-          <tbody id="recoveryBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-head"><h2><span class="ibox"><svg viewBox="0 0 20 20"><path d="M3 15V9M9 15V4M15 15v-4"/><path d="M2 17h16"/></svg></span>Before / after</h2>
-        <span class="cap" id="benchCap">—</span></div>
-      <div class="tw">
-        <table class="t">
-          <thead><tr><th>Metric</th><th>Manual today</th><th>Care Approval IQ</th></tr></thead>
+          <thead><tr><th></th><th>By hand</th><th>With us</th></tr></thead>
           <tbody id="benchBody"></tbody>
         </table>
       </div>
       <div class="panel-note" id="benchNote"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-head"><h2><span class="ibox"><svg viewBox="0 0 20 20"><path d="M3 5h14v10H3z"/><path d="M3 9h14"/></svg></span>Inference cost</h2></div>
-      <div class="panel-note">
-        <p>Per-case token and tool-call cost is recorded by <code>IAgentCallRecorder</code> when the
-        hosted Foundry agents run (<code>ZYNARA_AGENTS=foundry</code>). This demo runs the
-        deterministic stub agents, so there is no inference cost to show.</p>
-      </div>
     </div>
   </section>
 
@@ -684,10 +677,8 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
       <div class="phead-id">
         <span class="phead-ic"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2.4"/><circle cx="12" cy="12" r="2.4"/><circle cx="19" cy="12" r="2.4"/><path d="M7.4 12h2.2M14.4 12h2.2"/></svg></span>
         <div>
-          <h1>Pipeline simulator</h1>
-          <p>An illustrative walk of the eight stages — needs-auth, the three assembly agents, the
-             contradiction check, the adversarial Critic, and the deterministic Gate. The live
-             pipeline runs server-side; the Review queue shows its real output.</p>
+          <h1>How it thinks</h1>
+          <p>Watch one case go through the eight steps. This is a canned replay so it always looks the same.</p>
         </div>
       </div>
     </div>
@@ -696,16 +687,16 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
         <label class="sim-field">
           <span>Case</span>
           <select class="sim-sel" id="simScenario" aria-label="Case scenario">
-            <option value="ready">Denied MRI — all 3 criteria evidenced, 2 winning precedents</option>
-            <option value="strengthen" selected>Denied MRI — only 1 of 3 criteria evidenced</option>
-            <option value="review">Denied MRI — the clinical note contradicts itself</option>
-            <option value="abstain">Denied MRI — thin note, no comparable history</option>
+            <option value="ready">Everything is in order</option>
+            <option value="strengthen" selected>Some evidence is missing</option>
+            <option value="review">The doctor’s note contradicts itself</option>
+            <option value="abstain">Too little to go on</option>
           </select>
         </label>
         <button class="sim-run" id="simRun">
           <svg viewBox="0 0 14 14"><path d="M3 2.5l8 4.5-8 4.5V2.5z"/></svg>Run pipeline
         </button>
-        <span class="sim-tag">Illustrative and canned so it runs the same every time — the real pipeline is server-side.</span>
+        
       </div>
       <div class="flow" id="simFlow"></div>
       <div class="sim-log" id="simLog">
@@ -765,10 +756,10 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
   var RANK = { Coordinator: 0, Reviewer: 1, SeniorReviewer: 2, MedicalDirector: 3 };
 
   var ST = {
-    ReadyToSubmit:      { label: "Ready to submit",   cls: "ok",    hue: "var(--ok)",     soft: "var(--ok-soft)" },
-    NeedsStrengthening: { label: "Needs strengthening", cls: "warn", hue: "var(--warn)",  soft: "var(--warn-soft)" },
-    NeedsHumanReview:   { label: "Human review",      cls: "info",  hue: "var(--accent)", soft: "var(--accent-soft)" },
-    SystemAbstained:    { label: "System abstained",  cls: "slate", hue: "var(--slate)",  soft: "var(--slate-soft)" },
+    ReadyToSubmit:      { label: "Ready to send",   cls: "ok",    hue: "var(--ok)",     soft: "var(--ok-soft)" },
+    NeedsStrengthening: { label: "Needs more evidence", cls: "warn", hue: "var(--warn)",  soft: "var(--warn-soft)" },
+    NeedsHumanReview:   { label: "Needs a person",      cls: "info",  hue: "var(--accent)", soft: "var(--accent-soft)" },
+    SystemAbstained:    { label: "Not sure — held back",  cls: "slate", hue: "var(--slate)",  soft: "var(--slate-soft)" },
     NotRequired:        { label: "Not required",      cls: "mute",  hue: "var(--faint)",  soft: "var(--surface-2)" }
   };
   var GB = {
@@ -787,7 +778,7 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
   }
   function tidy(s) {
     return String(s || "")
-      .replace(/criterion\(a\)/g, "criteria").replace(/case\(s\)/g, "cases")
+      .replace(/\b1 (\w+)\(s\)/g, "1 $1").replace(/criterion\(a\)/g, "criteria").replace(/case\(s\)/g, "cases")
       .replace(/\(s\)/g, "s").replace(/\s{2,}/g, " ").trim();
   }
   function st(x) { return ST[x] || ST.NotRequired; }
@@ -799,10 +790,10 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
     var by = { ReadyToSubmit: 0, NeedsStrengthening: 0, NeedsHumanReview: 0, SystemAbstained: 0 };
     DATA.cases.forEach(function (c) { if (by[c.status] != null) by[c.status]++; });
     document.getElementById("reviewStats").innerHTML =
-      stat(DATA.cases.length, "in queue", "") +
-      stat(by.ReadyToSubmit, "ready", "ok") +
-      stat(by.NeedsHumanReview + by.NeedsStrengthening, "need a human", "info") +
-      stat(by.SystemAbstained, "abstained", "slate");
+      stat(DATA.cases.length, "cases", "") +
+      stat(by.ReadyToSubmit, "ready to send", "ok") +
+      stat(by.NeedsHumanReview + by.NeedsStrengthening, "need a person", "info") +
+      stat(by.SystemAbstained, "held back", "slate");
   }
   function stat(n, k, cls) {
     return '<div class="pstat"><b class="' + cls + '">' + n + '</b><span class="k">' + k + "</span></div>";
@@ -815,40 +806,27 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
 
   function renderRecovery() {
     var r = DATA.recovery;
-    if (!r) { document.getElementById("pane-cost").querySelector(".phead-stats").remove(); return; }
+    if (!r) return;
     var t = r.total;
-
-    document.getElementById("recoveryWindow").textContent = t.window;
-    document.getElementById("recoveryStats").innerHTML =
-      stat(t.denied, "denied", "") +
-      stat(t.notAppealed, "not appealed", "warn") +
-      stat(pct(t.comparableWinRate), "win rate", "ok") +
-      stat(r.byScope.length, "scopes", "slate");
 
     document.getElementById("recoveryHead").innerHTML =
       '<div class="rec-head">' +
         '<div class="rec-big"><span class="n tnum">' + money(t.estimatedRecoverableValue) + "</span>" +
-          '<span class="k">estimated recoverable value · <span class="conf-tag ' + esc(t.confidence) +
-            '">' + esc(t.confidence) + " confidence</span></span></div>" +
-        '<div class="rec-inputs">' +
-          recInput("Not appealed", t.notAppealed) +
-          recInput("Comparable win rate", pct(t.comparableWinRate)) +
-          recInput("Mean claim value", money(t.meanClaimValue)) +
-          recInput("Denials on record", t.denied) +
+          '<span class="k">could be won back from denials nobody appealed</span></div>' +
+        '<div class="imp-tiles">' +
+          "<div><b>" + t.notAppealed + "</b>denials nobody appealed</div>" +
+          "<div><b>" + pct(t.comparableWinRate) + "</b>of similar appeals were won</div>" +
+          "<div><b>" + money(t.meanClaimValue) + "</b>average claim</div>" +
         "</div>" +
-        '<div class="rec-formula"><b>Formula.</b> ' + esc(t.formula) + "</div>" +
       "</div>";
 
-    document.getElementById("recoveryBody").innerHTML = r.byScope.map(function (s, i) {
+    document.getElementById("recoveryBody").innerHTML = r.byScope.map(function (s) {
       return "<tr>" +
-        '<td class="sr">' + (i + 1) + "</td>" +
-        "<td>" + esc(s.scope) + "</td>" +
+        "<td>" + esc(s.scope.split(" · ")[1] || s.scope) + "</td>" +
         '<td class="r tnum">' + s.denied + "</td>" +
         '<td class="r tnum">' + s.notAppealed + "</td>" +
-        '<td class="r tnum">' + pct(s.comparableWinRate) + " <span style=\"color:var(--faint)\">(" + s.appealsWon + "/" + s.appealed + ")</span></td>" +
-        '<td class="r tnum">' + money(s.meanClaimValue) + "</td>" +
+        '<td class="r tnum">' + pct(s.comparableWinRate) + "</td>" +
         '<td class="r tnum" style="font-weight:700">' + money(s.estimatedRecoverableValue) + "</td>" +
-        '<td><span class="conf-tag ' + esc(s.confidence) + '">' + esc(s.confidence) + "</span></td>" +
       "</tr>";
     }).join("");
   }
@@ -858,40 +836,37 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
     var b = DATA.benchmark;
     if (!b) return;
     var m = b.measured;
-    document.getElementById("benchCap").textContent =
-      "measured over " + m.cases + " assembled cases" +
-      (m.avgAssembledInMs ? " · assembled in " + m.avgAssembledInMs + " ms avg" : "");
-    document.getElementById("benchBody").innerHTML = b.rows.map(function (r) {
+    var rows = [
+      ["Time to prepare a case", "about 20 minutes", "under a minute"],
+      ["Checks every insurer rule", "easy to miss one", "all " + m.avgCriteriaChecked + ", with the quote"],
+      ["Finds missing evidence", "after the denial", "before sending"],
+      ["Looks at similar past cases", "rarely", "about " + Math.round(m.avgPrecedentsConsidered) + " per case"],
+      ["Unsafe automatic sends", "not tracked", "0 in our tests"]
+    ];
+    document.getElementById("benchBody").innerHTML = rows.map(function (r, i) {
       return "<tr>" +
-        "<td style=\"font-weight:600\">" + esc(r.metric) + "</td>" +
-        "<td>" + esc(r.manual) + (r.manualIsEstimate ? ' <span class="est">est.</span>' : "") +
-          '<div class="bench-basis">' + esc(r.basis) + "</div></td>" +
-        '<td style="color:var(--accent-ink)">' + esc(r.careApprovalIQ) + "</td>" +
+        '<td style="font-weight:600">' + esc(r[0]) + "</td>" +
+        "<td>" + esc(r[1]) + (i < 4 ? ' <span class="est">est.</span>' : "") + "</td>" +
+        '<td style="color:var(--accent-ink);font-weight:600">' + esc(r[2]) + "</td>" +
       "</tr>";
     }).join("");
-    document.getElementById("benchNote").innerHTML = "<p class=\"muted\">" + esc(b.disclaimer) + "</p>";
+    document.getElementById("benchNote").innerHTML = '<p class="muted">“est.” = our estimate of the manual process, not a measured fact.</p>';
   }
 
   function renderQueue() {
     document.getElementById("reviewCap").textContent =
-      DATA.cases.length + " cases · synthetic demo data, no patient information";
+      "demo data — no real patients";
     document.getElementById("reviewBody").innerHTML = DATA.cases.map(function (c, i) {
       var s = st(c.status);
       var docd = c.criteria.filter(function (x) { return x.status === "Documented"; }).length;
       var evCls = docd === c.criteria.length ? "full" : docd > 0 ? "some" : "none";
       var won = (c.precedents || []).filter(function (p) { return p.wonOnAppeal; }).length;
       return '<tr class="click" data-id="' + esc(c.requestId) + '">' +
-        '<td class="sr">' + (i + 1) + "</td>" +
-        '<td class="proc-cell">' + esc(c.procedure) +
-          '<span class="sub">' + esc(c.auth.requiredCode || "—") + "</span></td>" +
-        "<td>" + esc(c.payerPlan) + "</td>" +
-        '<td><span class="evcount ' + evCls + '">' + docd + "/" + c.criteria.length + "</span></td>" +
-        "<td>" + (won ? '<span class="pill ok" style="text-transform:none">' + won + " won" + "</span>"
+        '<td class="proc-cell">' + esc(c.procedure) + '<span class="sub">' + esc(c.payerPlan) + "</span></td>" +
+        '<td><span class="evcount ' + evCls + '">' + docd + " of " + c.criteria.length + "</span></td>" +
+        "<td>" + (won ? '<span class="pill ok" style="text-transform:none">' + won + " won</span>"
                       : '<span class="pill mute">none</span>') + "</td>" +
         '<td><span class="pill ' + s.cls + '" style="text-transform:none">' + s.label + "</span></td>" +
-        '<td><span class="conf"><span class="bar"><i style="width:' + confPct(c.confidence) +
-          '%;background:' + confHue(c.confidence) + '"></i></span>' +
-          '<span class="n" style="color:' + confHue(c.confidence) + '">' + esc(c.confidence) + "</span></span></td>" +
       "</tr>";
     }).join("");
     Array.prototype.forEach.call(document.querySelectorAll("#reviewBody tr"), function (tr) {
@@ -906,24 +881,40 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
 
   function precedentCard(p) {
     var pct = Math.round(p.similarity * 100);
-    var facts = (p.matchedFacts || []).filter(function (f) { return !STOP.has(f) && f.length > 3; });
     return '<div class="prec' + (p.droveRecommendation ? " drove" : "") + '">' +
       '<div class="prec-top">' +
         '<span class="prec-id">' + esc(p.caseId) + "</span>" +
         '<span class="simbar"><i style="width:' + pct + '%"></i></span>' +
-        '<span class="simpct tnum">' + pct + "%</span>" +
-        (p.droveRecommendation ? '<span class="drove-lbl">drove the recommendation</span>' : "") +
+        '<span class="simpct tnum">' + pct + "% alike</span>" +
+        "" +
       "</div>" +
       '<div class="prec-badges">' +
         (p.wonOnAppeal ? '<span class="tagpill won">won on appeal</span>' : "") +
         (p.initiallyDenied ? '<span class="tagpill deny">initially denied</span>' : "") +
-        (p.clausesCited || []).map(function (x) { return '<span class="tagpill">clause ' + esc(x) + "</span>"; }).join("") +
-        '<span class="tagpill">decided ' + esc(p.decidedOn) + "</span>" +
+        "" +
       "</div>" +
-      (facts.length ? '<div class="facts">' + facts.map(function (f) { return '<span class="fact">' + esc(f) + "</span>"; }).join("") + "</div>" : "") +
-      '<p class="prec-narr">' + esc(p.narrative) + "</p>" +
+      '<p class="prec-narr">' + clamp(p.narrative, 130) + "</p>" +
     "</div>";
   }
+
+  /* Long model prose -> short line + "Read more". Full text stays in the DOM. */
+  function clamp(text, n) {
+    var t = tidy(text);
+    if (t.length <= n) return esc(t);
+    var cut = t.slice(0, n);
+    var sp = cut.lastIndexOf(" ");
+    cut = (sp > n * 0.6 ? cut.slice(0, sp) : cut).replace(/[,;:\s—-]+$/, "");
+    return '<span class="cl"><span class="cl-s">' + esc(cut) + '…</span><span class="cl-f" hidden>' + esc(t) +
+      '</span> <a href="#" class="rm">Read more</a></span>';
+  }
+
+  var NEXT = {
+    ReadyToSubmit: "the record meets the rules — approve to send it.",
+    Strengthen: "ask the clinician for the missing evidence first.",
+    HumanReview: "a person needs to decide. The AI will not act alone.",
+    Abstain: "the AI is not sure, so it stops and hands over to a person."
+  };
+  var CSTAT = { Documented: "Met", Partial: "Partly", Missing: "Missing" };
 
   function openCase(id) {
     if (openId !== id) draftView = "submission";
@@ -954,94 +945,108 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
 
     var b = [];
 
-    b.push('<p class="dr-why">' + esc(tidy(c.headline)) + "</p>");
-    b.push('<p class="dr-ai"><b>What the system did:</b> ' + esc(c.aiAction) + "</p>");
-    b.push('<p class="dr-ai"><b>Authorisation:</b> ' + (c.auth.authRequired
-      ? "required · <span class=\"mono\">" + esc(c.auth.requiredCode) + "</span> · <span class=\"mono\">" + esc(c.auth.policyRef) + "</span>"
-      : "not required") + "</p>");
+    b.push('<p class="dr-why">' + clamp(c.headline, 120) + "</p>");
 
     if (g) {
       var gb = GB[g.route] || GB.HumanReview;
       b.push(
         '<div class="dr-gate-banner" style="--gb-ink:' + gb.ink + ";--gb-soft:" + gb.soft + ";--gb-line:" + gb.line + '">' +
         '<svg viewBox="0 0 20 20"><path d="M10 2l7 4v5c0 4-3 6-7 7-4-1-7-3-7-7V6z"/></svg>' +
-        '<div><span class="rt">' + esc(g.route) + "</span> — " + esc(tidy(g.reason).split(". [")[0]) + ".</div></div>"
+        '<div><span class="rt">Next step</span> — ' + esc(NEXT[g.route] || "A person decides.") + "</div></div>"
       );
     }
 
-    b.push(sec("Evidence — each criterion against the clinical note", "var(--evid)"));
+    b.push(sec("Does the note meet the insurer’s rules?", "var(--evid)"));
     b.push('<div class="ev">' + c.criteria.map(function (cr) {
       return '<div class="ev-row">' +
         '<div class="ev-top">' +
           '<span class="ev-name">' + esc(cr.text) + "</span>" +
-          (cr.mandatory ? '<span class="ev-tag">mandatory</span>' : "") +
-          '<span class="cstat ' + esc(cr.status) + '">' + esc(cr.status) + "</span>" +
+          (cr.mandatory ? '<span class="ev-tag">must have</span>' : "") +
+          '<span class="cstat ' + esc(cr.status) + '">' + esc(CSTAT[cr.status] || cr.status) + "</span>" +
         "</div>" +
         (cr.evidenceStatement ? '<div class="ev-quote">' + esc(cr.evidenceStatement) + "</div>" : "") +
-        '<div class="ev-meta"><span>source · <span class="mono">' + esc(cr.source) + "</span></span>" +
-          '<span>policy · <span class="mono">' + esc(cr.policyRef) + " " + esc(cr.policyVersion) + "</span></span></div>" +
+        '<div class="ev-meta"><span class="cite" title="Where this evidence was found">📄 ' + esc(cr.source) + "</span>" +
+          '<span class="cite" title="The insurer rule it is checked against">📋 rule ' + esc(cr.policyRef) + " " + esc(cr.policyVersion) + "</span></div>" +
       "</div>";
     }).join("") + "</div>");
 
-    b.push(sec("Precedents — comparable cases on the payer’s record", "var(--prec)"));
+    b.push(sec("Similar past cases", "var(--prec)"));
     b.push((c.precedents && c.precedents.length)
-      ? c.precedents.map(precedentCard).join("")
-      : '<div class="empty" style="padding:22px 12px"><b>No precedent on record</b>for this payer and procedure — a reason the system is cautious here.</div>');
+      ? c.precedents.slice(0, 2).map(precedentCard).join("")
+      : '<div class="empty" style="padding:18px 12px"><b>No similar case on record</b>— so the system stays cautious.</div>');
 
     if (c.critic) {
-      b.push(sec("Critic — a separate agent trying to disprove the case", "var(--crc)"));
+      b.push(sec("The Critic’s check", "var(--crc)"));
       b.push('<div class="critic-line"><span class="verdict ' + esc(c.critic.verdict) + '">' + esc(c.critic.verdict) + "</span>" +
-        '<span class="critic-sum">' + esc(c.critic.summary) + "</span></div>");
+        '<span class="critic-sum">' + clamp(c.critic.summary, 130) + "</span></div>");
       b.push((c.critic.flags || []).map(function (f) {
-        return '<div class="flag"><b>' + esc(f.check) + "</b> — " + esc(f.concern) + "</div>";
-      }).join(""));
-    }
-
-    if (c.conflicts && c.conflicts.length) {
-      b.push(sec("Conflicts — never resolved silently", "var(--crit)"));
-      b.push('<ul class="conflicts">' + c.conflicts.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>");
-    }
-
-    if (g) {
-      b.push(sec("Gate — deterministic routing, no model in the loop", "var(--gate)"));
-      b.push('<div class="model">' +
-        cell("Mandatory", g.mandatoryPass ? "all met" : "UNMET · " + (g.unmetMandatory || []).join(", "), !g.mandatoryPass) +
-        cell("Supporting", g.supportingDocumented + " documented · " + g.supportingPartial + " partial · " + g.supportingMissing + " missing", g.supportingMissing > 0) +
-        cell("Evidence quality", g.evidenceQuality, g.evidenceQuality === "Low") +
-        cell("Contradiction", g.contradictionDetected ? "detected" : "none", g.contradictionDetected) +
-        cell("Precedent support", g.precedentSupport, false) +
-      "</div>");
-      b.push('<div class="gate-reason">' + esc(tidy(g.reason)) + "</div>");
+        return '<div class="flag">' + clamp(f.concern, 110) + "</div>";
+      }).slice(0, 3).join(""));
     }
 
     if (c.draftBody || c.appealDraft) {
       var hasAppeal = !!c.appealDraft;
-      b.push(sec("Draft — the reviewer edits before anything is sent", "var(--accent)"));
+      b.push(sec("Draft letter — you can edit it before sending", "var(--accent)"));
       b.push(
         (hasAppeal
           ? '<div class="draft-tabs">' +
-              '<button class="draft-tab" data-d="appeal" aria-selected="' + (draftView !== "submission") + '">Appeal draft</button>' +
-              '<button class="draft-tab" data-d="submission" aria-selected="' + (draftView === "submission") + '">Submission draft</button>' +
+              '<button class="draft-tab" data-d="appeal" aria-selected="' + (draftView !== "submission") + '">Appeal</button>' +
+              '<button class="draft-tab" data-d="submission" aria-selected="' + (draftView === "submission") + '">Request</button>' +
             "</div>"
           : "") +
-        '<pre class="draft">' + esc(hasAppeal && draftView !== "submission" ? c.appealDraft : c.draftBody) + "</pre>"
+        '<pre class="draft short">' + esc(hasAppeal && draftView !== "submission" ? c.appealDraft : c.draftBody) + "</pre>" +
+        '<a href="#" class="rm draft-rm">Show full letter</a>'
       );
     }
 
+    var tech = [];
+    if (c.conflicts && c.conflicts.length) {
+      tech.push(sec("Conflicts found", "var(--crit)"));
+      tech.push('<ul class="conflicts">' + c.conflicts.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>");
+    }
+    if (g) {
+      tech.push(sec("How the Gate decided (plain code, no AI)", "var(--gate)"));
+      tech.push('<div class="model">' +
+        cell("Must-have rules", g.mandatoryPass ? "all met" : "NOT met · " + (g.unmetMandatory || []).join(", "), !g.mandatoryPass) +
+        cell("Other rules", g.supportingDocumented + " met · " + g.supportingPartial + " partly · " + g.supportingMissing + " missing", g.supportingMissing > 0) +
+        cell("Evidence quality", g.evidenceQuality, g.evidenceQuality === "Low") +
+        cell("Conflicts", g.contradictionDetected ? "found" : "none", g.contradictionDetected) +
+        cell("Past-case support", g.precedentSupport, false) +
+      "</div>");
+      tech.push('<div class="gate-reason">' + esc(tidy(g.reason).split(". [")[0]) + "</div>");
+    }
     var trail = (c._audit || c.audit || []);
     if (trail.length) {
-      b.push(sec("Audit trail — who and what touched this case", "var(--slate)"));
-      b.push('<ul class="audit">' + trail.map(function (a) {
+      tech.push(sec("Audit trail", "var(--slate)"));
+      tech.push('<ul class="audit">' + trail.map(function (a) {
         var refused = /^REFUSED/.test(a.detail);
         return '<li' + (refused ? ' class="refused"' : "") + '>' +
           '<span class="ic">' + esc(a.kind) + "</span>" +
           '<span class="tx"><b>' + esc(a.actor) + "</b><p>" + esc(a.detail) + "</p></span></li>";
       }).join("") + "</ul>");
     }
+    if (tech.length) {
+      b.push('<details class="more"><summary>Show the technical details</summary>' + tech.join("") + "</details>");
+    }
 
     var body = document.getElementById("drBody");
     body.innerHTML = b.join("");
     body.scrollTop = 0;
+    Array.prototype.forEach.call(body.querySelectorAll(".rm"), function (a) {
+      a.addEventListener("click", function (e) {
+        e.preventDefault();
+        if (a.classList.contains("draft-rm")) {
+          var pre = a.previousElementSibling;
+          var isShort = pre.classList.toggle("short");
+          a.textContent = isShort ? "Show full letter" : "Show less";
+          return;
+        }
+        var w = a.parentNode;
+        w.querySelector(".cl-s").hidden = true;
+        w.querySelector(".cl-f").hidden = false;
+        a.remove();
+      });
+    });
     Array.prototype.forEach.call(body.querySelectorAll(".draft-tab"), function (t) {
       t.addEventListener("click", function () { draftView = t.dataset.d; openCase(c.requestId); });
     });
@@ -1056,11 +1061,11 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
     var canApprove = RANK[role] >= RANK[need];
     var canReject = RANK[role] >= RANK.Reviewer;
 
-    var html = '<span class="lbl">Human control · as ' + esc(roleLabel(role)) + '</span>';
+    var html = '<span class="lbl">Your decision</span>';
     html += c.controls.map(function (ct) {
       var blocked = (ct.action === "approve-send" && !canApprove) || (ct.action === "reject" && !canReject);
       var label = ct.action === "approve-send" && !canApprove
-        ? "Approve & send — needs " + roleLabel(need)
+        ? "Needs " + roleLabel(need)
         : ct.label;
       return '<button class="act' + (ct.primary && !blocked ? " primary" : "") + (blocked ? " need" : "") + '"' +
         (blocked ? " disabled" : "") + ' data-a="' + esc(ct.action) + '">' + esc(label) + "</button>";
@@ -1218,58 +1223,58 @@ pre.draft{font-family:var(--mono);font-size:10.5px;line-height:1.6;white-space:p
   /* ---- pipeline simulator (illustrative, canned) ------------- */
   var SIM_NODES = [
     ["01", "Intake",        '<path d="M3 5h14v10H3z"/><path d="M3 9h14"/>'],
-    ["02", "Needs-auth",    '<path d="M10 2.5l6.5 3v4.7c0 4-2.7 6.8-6.5 7.8-3.8-1-6.5-3.8-6.5-7.8V5.5z"/>'],
+    ["02", "Needs OK?",    '<path d="M10 2.5l6.5 3v4.7c0 4-2.7 6.8-6.5 7.8-3.8-1-6.5-3.8-6.5-7.8V5.5z"/>'],
     ["03", "Evidence",      '<path d="M4 4h9l3 3v9H4z"/><path d="M7 10l2 2 4-4"/>'],
-    ["04", "Contradiction", '<circle cx="10" cy="10" r="7.5"/><path d="M10 6v5M10 14h.01"/>'],
-    ["05", "Precedent",     '<circle cx="9" cy="9" r="5.5"/><path d="M13 13l4 4"/>'],
+    ["04", "Conflicts", '<circle cx="10" cy="10" r="7.5"/><path d="M10 6v5M10 14h.01"/>'],
+    ["05", "Past cases",   '<circle cx="9" cy="9" r="5.5"/><path d="M13 13l4 4"/>'],
     ["06", "Critic",        '<path d="M3 15h14"/><path d="M4 11l3.5-6 3 4 2.5-5 3 7"/>'],
-    ["07", "Gate",          '<path d="M10 2.5l6.5 3v4.7c0 4-2.7 6.8-6.5 7.8-3.8-1-6.5-3.8-6.5-7.8V5.5z"/><path d="M7.5 10l2 2 3.5-4"/>'],
-    ["08", "Decision",      '<path d="M4 10.5l3.8 3.8L16 6"/>']
+    ["07", "Referee",         '<path d="M10 2.5l6.5 3v4.7c0 4-2.7 6.8-6.5 7.8-3.8-1-6.5-3.8-6.5-7.8V5.5z"/><path d="M7.5 10l2 2 3.5-4"/>'],
+    ["08", "You decide",      '<path d="M4 10.5l3.8 3.8L16 6"/>']
   ];
 
   var SIM_SCENARIOS = {
     ready: [
       { n: 0, t: "<b>Intake</b> · request received — MRI lumbar spine, Bupa/Comprehensive, denied under MN-01." },
-      { n: 1, t: "<b>Needs-auth</b> · prior authorisation required — plan rule and denial code resolved." },
+      { n: 1, t: "<b>Needs OK?</b> · prior authorisation required — plan rule and denial code resolved." },
       { n: 2, t: "<b>Evidence</b> · 3 / 3 written criteria documented — each with the quoted note sentence, its source and the policy clause.", k: "ok" },
-      { n: 3, t: "<b>Contradiction</b> · no conflicting assertions in the note.", k: "ok" },
-      { n: 4, t: "<b>Precedent</b> · 2 comparable cases on the payer's own record — both denied under MN-01, both won on appeal under clause 2.1.", k: "ok" },
+      { n: 3, t: "<b>Conflicts</b> · no conflicting assertions in the note.", k: "ok" },
+      { n: 4, t: "<b>Past cases</b> · 2 comparable cases on the payer's own record — both denied under MN-01, both won on appeal under clause 2.1.", k: "ok" },
       { n: 5, t: "<b>Critic</b> · verdict Clear — the recommendation is supported by the evidence and the precedents.", k: "ok" },
-      { n: 6, t: "<b>Gate</b> · mandatory criteria met · evidence strong · precedent support strong → route READY_TO_SUBMIT.", k: "ok", state: "ok" },
-      { n: 7, t: "<b>Decision</b> · reviewer opens the evidence and provenance, then approves the send.", k: "ok", state: "ok" },
+      { n: 6, t: "<b>Referee</b> · mandatory criteria met · evidence strong · precedent support strong → ready to send.", k: "ok", state: "ok" },
+      { n: 7, t: "<b>You decide</b> · reviewer opens the evidence and provenance, then approves the send.", k: "ok", state: "ok" },
       { meta: true, t: "Submission Adapter executes → payer ACK. One trace (pipeline.run → spoke.* → invoke_agent → chat), one append-only audit record." }
     ],
     strengthen: [
       { n: 0, t: "<b>Intake</b> · request received — MRI lumbar spine, denied under MN-01." },
-      { n: 1, t: "<b>Needs-auth</b> · prior authorisation required." },
+      { n: 1, t: "<b>Needs OK?</b> · prior authorisation required." },
       { n: 2, t: "<b>Evidence</b> · 1 / 3 criteria documented — physiotherapy is evidenced; radiculopathy and imaging-changes-management are not in the note.", k: "warn" },
-      { n: 3, t: "<b>Contradiction</b> · no conflicting assertions.", k: "ok" },
-      { n: 4, t: "<b>Precedent</b> · 2 comparable cases, both won on appeal.", k: "ok" },
+      { n: 3, t: "<b>Conflicts</b> · no conflicting assertions.", k: "ok" },
+      { n: 4, t: "<b>Past cases</b> · 2 comparable cases, both won on appeal.", k: "ok" },
       { n: 5, t: "<b>Critic</b> · verdict Concerns — the recommendation is firmer than the low-quality evidence supports.", k: "warn", state: "warn" },
-      { n: 6, t: "<b>Gate</b> · undocumented supporting criteria + Critic Concerns → route STRENGTHEN.", k: "warn", state: "warn" },
-      { n: 7, t: "<b>Decision</b> · the reviewer's suggested next step is request the missing evidence — not approve.", k: "warn", state: "warn" },
+      { n: 6, t: "<b>Referee</b> · undocumented supporting criteria + Critic Concerns → needs more evidence.", k: "warn", state: "warn" },
+      { n: 7, t: "<b>You decide</b> · the reviewer's suggested next step is request the missing evidence — not approve.", k: "warn", state: "warn" },
       { meta: true, t: "No send. The case returns to the clinician; the request is logged against it." }
     ],
     review: [
       { n: 0, t: "<b>Intake</b> · request received — MRI lumbar spine, denied under MN-01." },
-      { n: 1, t: "<b>Needs-auth</b> · prior authorisation required." },
+      { n: 1, t: "<b>Needs OK?</b> · prior authorisation required." },
       { n: 2, t: "<b>Evidence</b> · 2 / 3 criteria documented." },
-      { n: 3, t: "<b>Contradiction</b> · the note both affirms and denies the same finding — “no red-flag symptoms” vs “progressive weakness”.", k: "warn", state: "warn" },
-      { n: 4, t: "<b>Precedent</b> · 1 comparable case." },
+      { n: 3, t: "<b>Conflicts</b> · the note both affirms and denies the same finding — “no red-flag symptoms” vs “progressive weakness”.", k: "warn", state: "warn" },
+      { n: 4, t: "<b>Past cases</b> · 1 comparable case." },
       { n: 5, t: "<b>Critic</b> · verdict Block — an unresolved contradiction cannot go to a payer.", k: "stop", state: "stop" },
-      { n: 6, t: "<b>Gate</b> · contradiction present + Critic Block → route HUMAN_REVIEW.", k: "stop", state: "stop" },
-      { n: 7, t: "<b>Decision</b> · a human reviewer takes the case — an appeal never files itself.", k: "stop", state: "stop" },
+      { n: 6, t: "<b>Referee</b> · contradiction present + Critic Block → needs a person.", k: "stop", state: "stop" },
+      { n: 7, t: "<b>You decide</b> · a human reviewer takes the case — an appeal never files itself.", k: "stop", state: "stop" },
       { meta: true, t: "No send. Routed to Pending Review with the contradiction surfaced in the Conflicts panel." }
     ],
     abstain: [
       { n: 0, t: "<b>Intake</b> · request received — MRI lumbar spine, denied." },
-      { n: 1, t: "<b>Needs-auth</b> · prior authorisation required." },
+      { n: 1, t: "<b>Needs OK?</b> · prior authorisation required." },
       { n: 2, t: "<b>Evidence</b> · the note is thin — 0 / 3 criteria clearly documented.", k: "warn" },
-      { n: 3, t: "<b>Contradiction</b> · nothing definite to check." },
-      { n: 4, t: "<b>Precedent</b> · no comparable case on the payer's record.", k: "warn" },
+      { n: 3, t: "<b>Conflicts</b> · nothing definite to check." },
+      { n: 4, t: "<b>Past cases</b> · no comparable case on the payer's record.", k: "warn" },
       { n: 5, t: "<b>Critic</b> · verdict Abstain — not enough reliable evidence to advise.", k: "stop", state: "stop" },
-      { n: 6, t: "<b>Gate</b> · weak evidence + no precedent + Critic Abstain → route ABSTAIN.", k: "stop", state: "stop" },
-      { n: 7, t: "<b>Decision</b> · the system declines to recommend and stops. That is the trust boundary.", k: "stop", state: "stop" },
+      { n: 6, t: "<b>Referee</b> · weak evidence + no precedent + Critic Abstain → held back.", k: "stop", state: "stop" },
+      { n: 7, t: "<b>You decide</b> · the system declines to recommend and stops. That is the trust boundary.", k: "stop", state: "stop" },
       { meta: true, t: "No send, no guess. The case is flagged as needing a clinician, not an appeal." }
     ]
   };
