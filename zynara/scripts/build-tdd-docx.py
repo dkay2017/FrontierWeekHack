@@ -495,6 +495,10 @@ for x in [
      "outcomes it produced; prompt changes through the same PR + eval gate as code."),
     ("Live quality monitoring", " — the eval harness run against de-identified live traffic on a "
      "schedule, alerting on accuracy regression and drift."),
+    ("Cost management (FinOps)", " — a per-case and per-tenant running-cost view: tokens and tool calls per "
+     "agent priced at the negotiated Foundry rate, plus fixed cloud cost, against the manual cost it replaces; "
+     "with Azure budgets and alerts. Not in scope for this build, but a must for production. Measured today: "
+     "about 28K tokens and 30-60 s per case on the hosted models."),
     ("HA / DR", " — Cosmos multi-region or zone-redundant writes; Blob GRS; a documented RTO / RPO "
      "and a tested restore runbook."),
     ("Secrets & compliance", " — Key Vault secret rotation, a data-residency guarantee per region, a "
@@ -509,6 +513,8 @@ for x in ["FHIR R4 bundle intake — v1 takes a simplified request DTO",
           "Early Warnings — ExpiryMath (expiry date arithmetic) + PolicyDiff (policy version diff) as "
           "advisory monitors; interfaces and stubs exist, the feature is unwired",
           "Peer-to-peer prep — the clinician's talking points for the call with the insurer's medical director",
+          "Cost management dashboard — per-case and per-tenant running cost against the manual cost it "
+          "replaces, with budgets and alerts (not in scope now; required for production)",
           "Learning from reviewer edits — the Gate threshold and the draft templates improve from what "
           "reviewers actually change"]:
     bullet([(x, False)])
