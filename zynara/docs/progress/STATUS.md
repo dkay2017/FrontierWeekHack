@@ -4,6 +4,45 @@
 current at every checkpoint and **commit + push** — uncommitted work is lost on a
 Codespace rebuild.
 
+## Session 12 — 2026-09-19/20 checkpoint (READ THIS FIRST)
+
+**State: build complete, deployed, pushed (`main` @ `7d51e69`). Only the video + final polish remain.**
+
+Done this session:
+- **Dashboard simplified for first-time viewers** (live, deployed; live file == local, md5 verified).
+  Tabs: *Cases* · *Why it matters* · *How it thinks* (Early warnings **hidden**, code kept).
+  Plain-English status labels (Ready to send / Needs more evidence / Needs a person / Not sure —
+  held back); 4-column queue; case panel = headline → next step → rules met (quote + 📄 source
+  + 📋 rule chips) → 2 similar past cases → Critic → draft; Gate table + audit trail collapsed
+  under "Show the technical details"; long model prose clamped with "Read more" / "Show full
+  letter". Impact tab cut to £7,164 + 3 tiles + 5-row before/after. Automated headless-Edge check:
+  7 cases open, roles gate approve, no JS errors. **Citations are chips, not links** (data holds
+  text only; real links would need stored source docs).
+- **Cost tab tried and removed** (invented prices next to a measured eval dilutes "proof beats
+  paperwork"). Instead: **TDD V4 §7.1 "Cost management (FinOps)" row + §9 roadmap bullet** — not in
+  scope now, must-have for production (~28K tokens, 30–60 s per case measured). Word doc rebuilt
+  (`scripts/build-tdd-docx.py` edited, it holds the content itself, not the .md).
+- **`docs/design/Final/`** now holds the submission set: `Care-Approval-IQ-TDD-V4.md` + `.docx`,
+  `Care-Approval-IQ-Pitch-Explained.md` (plain-English pitch + tab-by-tab dashboard guide).
+- **Video script + shot list:** `docs/runbooks/video-script.md` — 3:00 with `[CUT]` marks to 2:00,
+  for Agent-a-Thon judges (technical, not a client pitch). Shows: architecture PNG (0:15–0:45),
+  **Foundry portal agents** (0:45–1:05), dashboard `demo-appeal`, simulator Critic block, approve &
+  send, eval slide (100% vs 62.5%, 0 vs 4), CI flash.
+- Live queue verified: exactly 7 demo cases, no duplicates (the simulator is client-side and writes nothing).
+
+**Open for tomorrow (in order):**
+1. **Confirm video length (2:00 vs 3:00)** and **narration voice** — leaning neural TTS
+   (`edge-tts` samples: UK male/female/US) with name on the title/close cards; check Agent-a-Thon
+   rules on synthetic voice / disclosure.
+2. Respell tricky terms for TTS (RequestPort, Foundry, GPT-5.4, MAF); render one clip per shot-list row.
+3. Rehearse twice with a stopwatch; **reseed the 7 demo cases before the real take**.
+4. **Don't use `demo-ready` on camera** — it routes to *Needs more evidence* live (soft-routing
+   item). `demo-appeal` works for approve & send (as Senior reviewer).
+5. Optional: tighten the Critic/agent prompts (one sentence per flag, <25 words) and fix
+   `demo-ready` / `demo-abstain` routing together, then re-verify live — only if time before recording.
+6. S-7 pitch + 5-point doc: not confirmed done — check/finish.
+7. Optional headline nit: clamp can cut mid-sentence ("…A reviewer... Read more").
+
 _Last updated: 2026-09-08 (session 11 — planning the **V3.1 re-eval follow-ups**:
 external re-eval scored **9.2/10, finalist territory** — architecture judged
 strong enough, remaining gap is *proof + framing*. Plan in §C below: credible
