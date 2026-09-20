@@ -4,7 +4,43 @@
 current at every checkpoint and **commit + push** — uncommitted work is lost on a
 Codespace rebuild.
 
-## Session 12 — 2026-09-19/20 checkpoint (READ THIS FIRST)
+## Session 13 — 2026-09-20 checkpoint (READ THIS FIRST; Session 12 below is the build state)
+
+**Decisions:** video stays **3:00**, **synthetic voice = `en-GB-RyanNeural`** (UK male, `edge-tts`, `--rate=-3%`).
+Name **removed** from all judge-facing files (git history is fine). **No version numbers** on submission files.
+Official rules read (PDF `info.microsoft.com/rs/157-GQE-382/images/EN-WBNR-SlideDeck-SREVM92894-pdf.pdf`):
+- Deadline **23:59 PDT 24 Sep 2026** (earlier notes said the 23rd), upload at `learn.founderz.com`.
+- Required: video (≤3 min, ≤150 MB) + brief written description (issue, impact, how built with Foundry) + the
+  agent with purpose/audience, how built & refined, **screenshots + example interactions**, key lessons.
+- Optional supporting docs: **PPTX/PDF/DOCX/DOC/PPT/TXT only** (so .md/.svg/.png are not uploadable as-is).
+- Judged anonymously; 30 pts each for Innovation / Usability / Impact. No rule on synthetic voice; video
+  must be "solely the work of the participant" — put "Narration: AI voice" on the closing card.
+
+**Done this session (all UNCOMMITTED on disk):**
+- `docs/design/Final/` = clean unversioned set: `Care-Approval-IQ-TDD.md/.docx`, `Care-Approval-IQ-Architecture_Design.svg/.png`,
+  `Care-Approval-IQ-Entry-Description.md` (the written description), plus 3 pitch files (original / V2 / V3 — V3 is the
+  short 3-min narration; keep one, drop the rest — pending decision).
+- `scripts/build-tdd-docx.py` now writes the docx into `Final/` and reads the PNG from `Final/`. PNG re-rendered via Edge headless
+  (`msedge --headless=new --force-device-scale-factor=2 --window-size=1300,752 --screenshot=...`).
+- Dashboard footer name removed in `src/Zynara.Dashboard/index.html` — **NOT yet redeployed** (`azd deploy`).
+- Narration: `docs/design/Final/Care-Approval-IQ-Pitch-Explained-V3.md` (8 shots, ~320 words); 8 clips rendered to
+  `video/narration/1..8.mp3` (135 s total, all within slots; clips 1 and 3 have <0.5 s slack). `edge-tts`, `mutagen`, `pypdf` pip-installed; **ffmpeg NOT installed**.
+- Original V4 files in `docs/design/` restored as committed (still contain the name; superseded).
+- Removed the wrong "21 × 66% × £560" formula (it = £7,762, not £7,164) from the pitch files/description.
+
+**⚠ Git trap:** repo root is `FrontierWeekHack` (not `zynara`). The sibling folder `tireforge` was renamed locally to
+`tireforge-Backup Working version`, so git shows **168 deleted files**. NEVER `git add -A` / `commit -a` — stage files by name.
+
+**Open next, in order:**
+1. Cleanup (nothing deleted yet): move superseded files (`docs/design` V4 md/docx/svg/png, older TDD/diagram, V3.1 re-eval docx,
+   extra pitch versions) into an `_archive/`; ask user: is `FrontierWeekHack` the submitted GitHub repo (template files + TireForge visible)?
+   and should the renamed TireForge folder go back?
+2. Redeploy dashboard, then commit (explicit paths) + push.
+3. Screenshots + example interaction (`demo-appeal` → Approve & send → Submitted) → add to description; export description to DOCX/PDF.
+4. Video: install ffmpeg, join clips at shot times, reseed 7 demo cases, record screen (don't use `demo-ready`; use `demo-appeal` as Senior reviewer), captions, closing card "Narration: AI voice", no name.
+5. Confirm registration at `aka.ms/AgentathonSep2026`; check Founderz upload page for extra fields.
+
+## Session 12 — 2026-09-19/20 checkpoint
 
 **State: build complete, deployed, pushed (`main` @ `7d51e69`). Only the video + final polish remain.**
 

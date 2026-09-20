@@ -17,7 +17,8 @@ GREY   = RGBColor(0x44, 0x55, 0x5C)
 HDR    = "EDE6FB"
 
 D = os.path.join(os.path.dirname(__file__), "..", "docs", "design")
-DEST = f"{D}/Care-Approval-IQ-TDD-V4.docx"
+F = os.path.join(D, "Final")
+DEST = f"{F}/Care-Approval-IQ-TDD.docx"
 FIG  = f"{D}/tdd-figures"
 
 doc = Document()
@@ -48,7 +49,7 @@ hp.add_run().add_picture(f"{FIG}/runhead.png", width=Inches(6.9))
 # footer — small line, every page
 fp = sec.footer.paragraphs[0]; fp.alignment = WD_ALIGN_PARAGRAPH.CENTER
 fr = fp.add_run("Zynara Health (fictional) · Care Approval IQ · Microsoft Agent Framework · "
-                "Architect Track Submission · Deepak Kumar")
+                "Architect Track Submission")
 fr.font.size = Pt(8); fr.font.color.rgb = GREY
 
 def shade(cell, hx):
@@ -113,10 +114,9 @@ t = doc.add_paragraph(); t.alignment = WD_ALIGN_PARAGRAPH.CENTER; t.paragraph_fo
 r = t.add_run("TECHNICAL DESIGN DOCUMENT"); r.bold = True; r.font.size = Pt(26); r.font.color.rgb = BLUE
 r.font.name = "Calibri"; r.font.color.rgb = BLUE
 
-para("Version 4", size=13, color=GREY, bold=True, after=18, align=WD_ALIGN_PARAGRAPH.CENTER)
 para("Microsoft Agent-a-thon 2026 · Architect Track Submission · Healthcare Prior Authorisation",
      size=12, color=INK, after=3, align=WD_ALIGN_PARAGRAPH.CENTER)
-para("Deepak Kumar · Original Work", size=12, color=INK, after=24, align=WD_ALIGN_PARAGRAPH.CENTER)
+para("Original Work", size=12, color=INK, after=24, align=WD_ALIGN_PARAGRAPH.CENTER)
 para("Built on the Microsoft Agent Framework. Companion artefacts: the architecture SVG/PNG "
      "(authoritative diagram) and DECISIONS.md (delta log).",
      italic=True, size=10, color=GREY, after=0, align=WD_ALIGN_PARAGRAPH.CENTER)
@@ -216,9 +216,9 @@ bullet([("Orchestrate (Challenge 4) — ", True), ("a Microsoft Agent Framework 
 
 # =========================================================== 4 · ARCHITECTURE
 h1heading("4 · Technical architecture")
-# python-docx needs a raster image. Render Care-Approval-IQ-Architecture_Design-V4.svg
+# python-docx needs a raster image. Render Care-Approval-IQ-Architecture_Design.svg
 # (the authoritative diagram) to this PNG at ~2x before running the build.
-fig(f"{D}/Care-Approval-IQ-Architecture_Design-V4.png", w=6.95)
+fig(f"{F}/Care-Approval-IQ-Architecture_Design.png", w=6.95)
 para("Five layers along the request path, plus three cross-cutting concerns.", after=4)
 
 sub("1 · Intake")
@@ -521,7 +521,7 @@ for x in ["FHIR R4 bundle intake — v1 takes a simplified request DTO",
 
 hr()
 para("Zynara Health (fictional) · Care Approval IQ · Microsoft Agent Framework · Architect Track "
-     "Submission · Deepak Kumar", size=8.5, color=GREY, align=WD_ALIGN_PARAGRAPH.CENTER, before=4)
+     "Submission", size=8.5, color=GREY, align=WD_ALIGN_PARAGRAPH.CENTER, before=4)
 
 doc.save(DEST)
 print("wrote", DEST, os.path.getsize(DEST))
