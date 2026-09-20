@@ -14,10 +14,6 @@ time, and won on appeal when it isn't.**
 Built by **Zynara Health** (fictional) for the **Microsoft Agent-a-thon 2026**
 (Architect track). C#/.NET 8 on Azure AI Foundry, Durable Functions, Azure SQL.
 
-_Standalone project in `zynara/`, alongside `tireforge/` in the same repository.
-Shares no code and no Azure resources with `tireforge/` — that project is
-untouched and complete. Only architectural patterns are reused._
-
 ## The problem
 
 Prior authorisation — the insurer sign-off a clinician needs before treating a
